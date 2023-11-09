@@ -1,5 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'package:api_com/accomodation_page.dart';
+import 'package:api_com/global_variables.dart';
 import 'package:api_com/login_page.dart';
 import 'package:flutter/material.dart';
 
@@ -20,7 +22,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.highContrastLight(background: Colors.white70)
         
       ),
-      home: const LoginPage()
+      home:  AccomodationPage(
+        residenceDetails:residencesCard[0]
+      )
     );
   }
 }

@@ -27,6 +27,11 @@ class _LoginPageState extends State<LoginPage> {
           Navigator.push(context, MaterialPageRoute(builder: ((context) => StudentPage())));
       });
   }
+  void studentLogout(){
+          setState(() {
+          Navigator.push(context, MaterialPageRoute(builder: ((context) => LoginPage())));
+      });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -162,3 +167,25 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+/*Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton.icon(
+                style: ButtonStyle(
+                    foregroundColor: MaterialStatePropertyAll(Colors.blue),
+                    backgroundColor: MaterialStatePropertyAll(Colors.blue),
+                ),   
+                onPressed: (){}, 
+                icon: Icon(Icons.favorite_border,
+                color: Colors.white,), 
+                label: Text('Add to Favorites',
+                style: TextStyle(
+                color: Colors.white,
+                fontSize: 18),
+                
+                ), ),
+                
+
+              
+                ],
+              ) */
