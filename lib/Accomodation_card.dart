@@ -14,8 +14,9 @@ class AccomodationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      return Container(
-      
+    return Padding(
+      padding: const EdgeInsets.only(left: 20),
+      child: Container(
         decoration: BoxDecoration(
             color: Color.fromARGB(179, 231, 228, 228),
             borderRadius: BorderRadius.circular(20)),
@@ -29,7 +30,6 @@ class AccomodationCard extends StatelessWidget {
                   child: Center(
                     child: Image.asset(
                       imagePath,
-                    
                     ),
                   )),
               SizedBox(
@@ -39,9 +39,7 @@ class AccomodationCard extends StatelessWidget {
                 children: [
                   Text(
                     accomodationName,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                   Icon(
                     Icons.verified,
@@ -57,8 +55,7 @@ class AccomodationCard extends StatelessWidget {
             ],
           ),
         ),
-      );
+      ),
+    );
   }
 }
-
- 
