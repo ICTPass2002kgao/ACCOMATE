@@ -1,44 +1,12 @@
 // ignore_for_file: prefer_const_constructors, dead_code, prefer_const_literals_to_create_immutables, sort_child_properties_last, avoid_unnecessary_containers, unnecessary_string_interpolations, sized_box_for_whitespace
 
-import 'package:api_com/student_page.dart';
+import 'package:api_com/userData.dart';
 import 'package:flutter/material.dart';
 
-class AccomodationPage extends StatefulWidget {
-  const AccomodationPage({super.key, required this.residenceDetails});
-  final Map<String, Object> residenceDetails;
+class AccomodationPage extends StatelessWidget {
+  const AccomodationPage({super.key, required this.residence});
 
-  @override
-  State<AccomodationPage> createState() => _AccomodationPageState();
-}
-
-class _AccomodationPageState extends State<AccomodationPage> {
-  Future<void> _connectToServer() async {
-    await Future.delayed(Duration(seconds: 2)); // Simulate a delay
-
-    // Your connecting logic goes here
-
-    print('Connected to the server');
-  }
-
-  void loadingDetails(val) {
-    Center(
-      child: FutureBuilder(
-        future: _connectToServer(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            // While waiting for the connection, show a CircularProgressIndicator
-            return CircularProgressIndicator();
-          } else if (snapshot.hasError) {
-            // If an error occurred during the connection, handle it here
-            return Text('Error: ${snapshot.error}');
-          } else {
-            // If the connection is successful, display your app content
-            return val;
-          }
-        },
-      ),
-    );
-  }
+  final Residence residence;
 
   Future<void> _comfirmedRegistration(BuildContext context) async {
     return showDialog<void>(
@@ -57,9 +25,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
                     Container(
                         width: 200,
                         child: Text("Accomodation registered successfully")),
-                    Icon(Icons.done,
-                        color: const Color.fromARGB(255, 14, 226, 21),
-                        size: 40),
+                    Icon(Icons.done, color: Colors.greenAccent[700], size: 40),
                   ],
                 )
               ],
@@ -69,9 +35,9 @@ class _AccomodationPageState extends State<AccomodationPage> {
             TextButton(
               style: ButtonStyle(
                 backgroundColor:
-                    MaterialStatePropertyAll(Color.fromARGB(255, 14, 226, 21)),
+                    MaterialStatePropertyAll(Colors.greenAccent[700]),
                 foregroundColor:
-                    MaterialStatePropertyAll(Color.fromARGB(255, 14, 226, 21)),
+                    MaterialStatePropertyAll(Colors.greenAccent[700]),
               ),
               child: Text(
                 'Done',
@@ -81,8 +47,8 @@ class _AccomodationPageState extends State<AccomodationPage> {
                 // Perform logout logic here
                 // ...
 
-                loadingDetails(Navigator.push(context,
-                    MaterialPageRoute(builder: ((context) => StudentPage()))));
+                Navigator.popUntil(
+                    context, ModalRoute.withName('/StudentPage'));
                 // Close the dialog
               },
             ),
@@ -105,7 +71,9 @@ class _AccomodationPageState extends State<AccomodationPage> {
               children: <Widget>[
                 Row(
                   children: [
-                    Icon(Icons.warning, color: Colors.yellow, size: 40),
+                    Icon(Icons.warning,
+                        color: const Color.fromARGB(255, 235, 215, 38),
+                        size: 40),
                     SizedBox(width: 5),
                     Container(
                         width: 200,
@@ -143,7 +111,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
                 // ...
                 Navigator.of(context).pop();
 
-                loadingDetails(_comfirmedRegistration(context));
+                _comfirmedRegistration(context);
 
                 // Close the dialog
               },
@@ -188,7 +156,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
                 // Perform logout logic here
                 // ...
                 Navigator.of(context).pop();
-                loadingDetails(_agreeWithTermsAndConditions(context));
+                _agreeWithTermsAndConditions(context);
 
                 // Close the dialog
               },
@@ -204,94 +172,44 @@ class _AccomodationPageState extends State<AccomodationPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.residenceDetails['name'] as String,
+          residence.name,
           style: TextStyle(color: Colors.white, fontSize: 18),
         ),
         centerTitle: true,
         backgroundColor: Colors.blue,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Image.asset(
-                widget.residenceDetails['imagePath'] as String,
-              ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 200, // Set the height based on your design
+            child: PageView.builder(
+              itemCount: residence.images.length,
+              itemBuilder: (context, index) {
+                return Image.network(residence.images[index]);
+              },
             ),
-            SizedBox(
-              height: 10,
-            ),
-            Center(
-              child: Text(widget.residenceDetails['name'] as String,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-            ),
-            Center(
-              child: TextButton.icon(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.favorite_border,
-                    color: Colors.yellow,
-                  ),
-                  label: Text('Add to favorite',
-                      style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.yellow,
-                          fontWeight: FontWeight.bold))),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Text(
-              'Location: ',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-            Row(
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  height: 10,
-                ),
-                Text(
-                  'Status: ',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(
-                  width: 10,
-                ),
-                Text(
-                  widget.residenceDetails['status'] as String,
-                  style: TextStyle(fontSize: 15, color: Colors.green),
-                ),
+                Text('Name: ${residence.name}'),
+                Text('Address: ${residence.location}'),
+                Text('Details: ${residence.moreDetails}'),
+                Text('Status: ${residence.status}'),
               ],
             ),
-            SizedBox(
-              height: 10,
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            TextButton(
-              onPressed: () {
-                loadingDetails(_showLogoutConfirmationDialog(context));
-              },
-              child: Text(
-                'Register Now',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                ),
-              ),
-              style: ButtonStyle(
-                minimumSize:
-                    MaterialStatePropertyAll(Size(double.infinity, 50)),
-                foregroundColor: MaterialStatePropertyAll(Colors.blue),
-                backgroundColor: MaterialStatePropertyAll(Colors.blue),
-              ),
-            ),
-            Spacer(),
-          ],
-        ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Implement the action when the user applies for accommodation
+              print('Apply for accommodation: ${residence.name}');
+            },
+            child: Text('Apply Accommodation'),
+          ),
+        ],
       ),
     );
   }

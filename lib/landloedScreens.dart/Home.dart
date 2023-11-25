@@ -43,6 +43,9 @@ class _HomePageState extends State<HomePage> {
                   TableCell(
                     child: Center(child: Text('Email Address')),
                   ),
+                  TableCell(
+                    child: Center(child: Text('Proof Of Registration')),
+                  ),
                 ],
               ),
               TableRow(
@@ -61,6 +64,17 @@ class _HomePageState extends State<HomePage> {
                   ),
                   TableCell(
                     child: Center(child: Text('')),
+                  ),
+                  TableCell(
+                    child: Center(
+                        child: TextButton(
+                      onPressed: () {
+                        // Implement logic to open the PDF file
+                        // For now, let's just print a message
+                        print('Open PDF');
+                      },
+                      child: Text('View PDF'),
+                    )),
                   ),
                 ],
               ),

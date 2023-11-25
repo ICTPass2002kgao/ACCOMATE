@@ -4,8 +4,9 @@ import 'package:api_com/Pages/HomePage.dart';
 import 'package:api_com/Pages/MessagesPage.dart';
 import 'package:api_com/Pages/NotificationPage.dart';
 import 'package:api_com/Pages/PeersonalPage.dart';
-import 'package:api_com/login_page.dart';
-
+import 'package:api_com/advanced_details.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class StudentPage extends StatefulWidget {
@@ -47,13 +48,13 @@ class _StudentPageState extends State<StudentPage> {
             ),
             TextButton(
               child: Text('Yes'),
-              onPressed: () {
+              onPressed: () async {
                 // Perform logout logic here
                 // ...
-                Navigator.of(context).pop(); // Close the dialog
 
-                Navigator.push(context,
-                    MaterialPageRoute(builder: ((context) => LoginPage())));
+                Navigator.of(context).pop(); // Close the dialog
+                await FirebaseAuth.instance.signOut();
+                Navigator.popUntil(context, ModalRoute.withName('/'));
 
                 // Close the dialog
               },
@@ -71,96 +72,196 @@ class _StudentPageState extends State<StudentPage> {
     NotificationPage(),
     PersonalPage()
   ];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  Future<void> loadData() async {
+    // Simulate loading data
+    await Future.delayed(Duration(seconds: 2));
+
+    // Set isLoading to false when data is loaded
+    setState(() {
+      isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text('Hi Student'),
-          centerTitle: true,
-          backgroundColor: Colors.blue,
-          actions: [
-            IconButton(onPressed: () {}, icon: Icon(Icons.search_rounded))
-          ],
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-            currentIndex: _index,
-            unselectedItemColor: Colors.white54,
-            selectedItemColor: Colors.white,
-            onTap: (value) {
-              setState(() {
-                _index = value;
-              });
-            },
-            items: [
-              BottomNavigationBarItem(
-                backgroundColor: Colors.blue,
-                icon: Icon(Icons.home_outlined, size: 30),
-                label: 'Home',
+      appBar: AppBar(
+        foregroundColor: Colors.white,
+        title: Text('Hi Student'),
+        centerTitle: true,
+        backgroundColor: Colors.blue,
+        actions: [
+          IconButton(
+              onPressed: () {
+                showSearch(context: context, delegate: SearchDelegateWidget());
+              },
+              icon: Icon(Icons.search_rounded))
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _index,
+          unselectedItemColor: Colors.white54,
+          selectedItemColor: Colors.white,
+          onTap: (value) {
+            setState(() {
+              _index = value;
+            });
+          },
+          items: [
+            BottomNavigationBarItem(
+              backgroundColor: Colors.blue,
+              icon: Icon(Icons.home_outlined, size: 30),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              backgroundColor: Colors.blue,
+              icon: Icon(Icons.notifications_active_outlined, size: 30),
+              label: 'Notifications',
+            ),
+            BottomNavigationBarItem(
+              backgroundColor: Colors.blue,
+              icon: Icon(Icons.message_outlined, size: 30),
+              label: 'Messages',
+            ),
+            BottomNavigationBarItem(
+              backgroundColor: Colors.blue,
+              icon: Icon(
+                Icons.person_outlined,
+                size: 30,
               ),
-              BottomNavigationBarItem(
-                backgroundColor: Colors.blue,
-                icon: Icon(Icons.notifications_active_outlined, size: 30),
-                label: 'Notifications',
+              label: 'Personal account',
+            )
+          ]),
+      drawer: Drawer(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            children: [
+              SizedBox(
+                height: 30,
               ),
-              BottomNavigationBarItem(
-                backgroundColor: Colors.blue,
-                icon: Icon(Icons.message_outlined, size: 30),
-                label: 'Messages',
+              Icon(
+                Icons.settings,
+                size: 100,
+                color: Colors.white,
               ),
-              BottomNavigationBarItem(
-                backgroundColor: Colors.blue,
-                icon: Icon(
-                  Icons.person_outlined,
-                  size: 30,
-                ),
-                label: 'Personal account',
-              )
-            ]),
-        drawer: Drawer(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 30,
-                ),
-                Icon(
-                  Icons.settings,
-                  size: 100,
+              SizedBox(
+                height: 50,
+              ),
+              ListTile(
+                leading: Icon(Icons.policy_outlined, color: Colors.white),
+                title: Text('Terms & conditions'),
+                onTap: () {},
+                textColor: Colors.white,
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.info_outline,
                   color: Colors.white,
                 ),
-                SizedBox(
-                  height: 50,
-                ),
-                ListTile(
-                  leading: Icon(Icons.policy_outlined, color: Colors.white),
-                  title: Text('Terms & conditions'),
-                  onTap: () {},
-                  textColor: Colors.white,
-                ),
-                ListTile(
-                  leading: Icon(
-                    Icons.info_outline,
-                    color: Colors.white,
-                  ),
-                  title: Text('More Info'),
-                  onTap: () {},
-                  textColor: Colors.white,
-                ),
-                ListTile(
-                  leading: Icon(Icons.logout_outlined, color: Colors.white),
-                  title: Text('Logout'),
-                  onTap: () {
-                    _showLogoutConfirmationDialog(context);
-                  },
-                  textColor: Colors.white,
-                )
-              ],
-            ),
+                title: Text('More Info'),
+                onTap: () {},
+                textColor: Colors.white,
+              ),
+              ListTile(
+                leading: Icon(Icons.logout_outlined, color: Colors.white),
+                title: Text('Logout'),
+                onTap: () {
+                  _showLogoutConfirmationDialog(context);
+                },
+                textColor: Colors.white,
+              )
+            ],
           ),
-          backgroundColor: Colors.blue,
         ),
-        body: screens[_index]);
+        backgroundColor: Colors.blue,
+      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('accommodations')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return CircularProgressIndicator(); // Loading indicator while data is loading
+                }
+
+                List<Accommodation> accommodations =
+                    snapshot.data!.docs.map((doc) {
+                  Map<String, dynamic> data =
+                      doc.data() as Map<String, dynamic>;
+                  return Accommodation(
+                    name: data['name'],
+                    location: data['location'],
+                    images: List<String>.from(data['images']),
+                    residenceDetails: data['residenceDetails'],
+                  );
+                }).toList();
+                return screens[_index];
+              },
+            ),
+    );
+  }
+}
+
+class SearchDelegateWidget extends SearchDelegate {
+  @override
+  ThemeData appBarTheme(BuildContext context) {
+    // Customize the search box color
+    final ThemeData theme = Theme.of(context);
+    return theme.copyWith(
+      primaryColor: Colors.blue,
+      primaryIconTheme: theme.primaryIconTheme.copyWith(color: Colors.white),
+      textTheme: theme.textTheme.copyWith(
+        headline6: theme.textTheme.titleLarge?.copyWith(color: Colors.white),
+      ),
+    );
+  }
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    // Handle search results
+    return Center(
+      child: Text('Search Results for: $query'),
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    // Show suggestions as the user types
+    return Center(
+      child: Text('Suggestions for: $query'),
+    );
   }
 }

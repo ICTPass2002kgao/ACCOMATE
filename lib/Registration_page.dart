@@ -1,7 +1,6 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last, sized_box_for_whitespace
 
-import 'package:api_com/LandlordRegistrationPage.dart';
-import 'package:api_com/Student_registration_page.dart';
+import 'package:api_com/AppLogicToEnd/either_landlord_or_student.dart';
 import 'package:flutter/material.dart';
 
 class RegistrationOption extends StatefulWidget {
@@ -12,151 +11,105 @@ class RegistrationOption extends StatefulWidget {
 }
 
 class _RegistrationOptionState extends State<RegistrationOption> {
-  String _value = 'Student';
-  bool isChecked = true;
-  void registrationOption() {
+  bool isLandlord = true;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  Future<void> loadData() async {
+    // Simulate loading data
+    await Future.delayed(Duration(seconds: 1));
+
+    // Set isLoading to false when data is loaded
     setState(() {
-      _value == 'Student'
-          ? Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: ((context) => StudentRegistrationPage())))
-          : Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: ((context) => LandlordRegistrationPage())));
+      isLoading = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    double containerWidth =
+        MediaQuery.of(context).size.width < 600 ? double.infinity : 400;
     return Scaffold(
-      appBar: AppBar(
-        title: Text('App Name', style: TextStyle(color: Colors.white)),
-        centerTitle: true,
-        backgroundColor: Colors.blue,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
-        child: Column(
-          children: [
-            MediaQuery.of(context).size.width < 480
-                ? Column(children: [
-                    Icon(
-                      Icons.person_add,
-                      size: 200,
-                      color: Colors.blue,
-                    ),
-                    Row(
-                      children: [
-                        Text(
-                          'You are registering as:',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    RadioListTile(
-                      value: 'Landlord',
-                      groupValue: _value,
-                      onChanged: (value) {
-                        setState(() {
-                          _value = value.toString();
-                        });
-                      },
-                      title: Text('Landlord'),
-                      tileColor: Colors.white,
-                    ),
-                    RadioListTile(
-                      value: 'Student',
-                      groupValue: _value,
-                      onChanged: (value) {
-                        setState(() {
-                          _value = value.toString();
-                        });
-                      },
-                      title: Text('Student'),
-                      tileColor: Colors.white,
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    CheckboxListTile(
-                      value: isChecked,
-                      onChanged: (value) {
-                        setState(() {});
-                      },
-                      title: Text('Agree with terms & conditions'),
-                      tileColor: Colors.white,
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        registrationOption();
-                      },
-                      child: Text(
-                        'Get Started',
-                        style: TextStyle(color: Colors.white, fontSize: 18),
-                      ),
-                      style: ButtonStyle(
-                          foregroundColor:
-                              MaterialStatePropertyAll(Colors.blue),
-                          backgroundColor:
-                              MaterialStatePropertyAll(Colors.blue),
-                          minimumSize: MaterialStatePropertyAll(
-                              Size(double.infinity, 50))),
-                    )
-                  ])
-                : Center(
-                    child: Container(
-                      width: 300,
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.person_add,
-                            size: 200,
-                            color: Colors.blue,
-                          ),
-                          Column(children: [
+        appBar: AppBar(
+          foregroundColor: Colors.white,
+          title: Text(
+            "Kgaogelo's App",
+          ),
+          centerTitle: true,
+          backgroundColor: Colors.blue,
+        ),
+        body: isLoading
+            ? Center(
+                child: CircularProgressIndicator()) // Show a loading indicator
+            : Padding(
+                padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
+                child: Center(
+                  child: Container(
+                    width: containerWidth,
+                    child: Column(children: [
+                      Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Center(
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.person_add,
+                                    size: 200,
+                                    color: Colors.blue,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              'You are registering as:',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 16),
                             Row(
                               children: [
-                                Text(
-                                  'You are registering as:',
-                                  style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold),
+                                Radio(
+                                  activeColor: Colors.blue,
+                                  value: true,
+                                  groupValue: isLandlord,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      isLandlord = true;
+                                    });
+                                  },
                                 ),
+                                Text('Landlord'),
                               ],
                             ),
-                            RadioListTile(
-                              value: 'Landlord',
-                              groupValue: _value,
-                              onChanged: (value) {
-                                setState(() {
-                                  _value = value.toString();
-                                });
-                              },
-                              title: Text('Landlord'),
-                              tileColor: Colors.white,
-                            ),
-                            RadioListTile(
-                              value: 'Student',
-                              groupValue: _value,
-                              onChanged: (value) {
-                                setState(() {
-                                  _value = value.toString();
-                                });
-                              },
-                              title: Text('Student'),
-                              tileColor: Colors.white,
+                            SizedBox(width: 16),
+                            Row(
+                              children: [
+                                Radio(
+                                  activeColor: Colors.blue,
+                                  value: false,
+                                  groupValue: isLandlord,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      isLandlord = false;
+                                    });
+                                  },
+                                ),
+                                Text('Student'),
+                              ],
                             ),
                             SizedBox(
                               height: 20,
                             ),
                             CheckboxListTile(
-                              value: isChecked,
+                              activeColor: Colors.blue,
+                              value: true,
                               onChanged: (value) {
                                 setState(() {});
                               },
@@ -168,7 +121,12 @@ class _RegistrationOptionState extends State<RegistrationOption> {
                             ),
                             TextButton(
                               onPressed: () {
-                                registrationOption();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => StudentOrLandlord(
+                                          isLandlord: isLandlord)),
+                                );
                               },
                               child: Text(
                                 'Get Started',
@@ -182,15 +140,11 @@ class _RegistrationOptionState extends State<RegistrationOption> {
                                       MaterialStatePropertyAll(Colors.blue),
                                   minimumSize: MaterialStatePropertyAll(
                                       Size(double.infinity, 50))),
-                            ),
-                          ]),
-                        ],
-                      ),
-                    ),
-                  )
-          ],
-        ),
-      ),
-    );
+                            )
+                          ])
+                    ]),
+                  ),
+                ),
+              ));
   }
 }

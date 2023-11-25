@@ -23,9 +23,14 @@ if (flutterVersionName == null) {
 }
 
 android {
+
     namespace "com.example.api_com"
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
+
+    lintOptions {
+        disable 'ObsoleteSdkInt'
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -45,10 +50,13 @@ android {
         applicationId "com.example.api_com"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion 20 
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        multiDexEnabled true
+
+        
     }
 
     buildTypes {
@@ -64,4 +72,8 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+     
+        implementation 'com.android.support:multidex:1.0.3'
+        apply plugin: 'com.google.gms.google-services'
+}

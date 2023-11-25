@@ -1,12 +1,12 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:api_com/LandlordDetails/LandlordRegistration.dart';
-import 'package:api_com/landloedScreens.dart/AccountDetails.dart';
+import 'package:api_com/Pages/PeersonalPage.dart';
 import 'package:api_com/landloedScreens.dart/Home.dart';
 import 'package:api_com/landloedScreens.dart/Messages.dart';
-import 'package:api_com/landloedScreens.dart/Notification.dart';
-import 'package:api_com/login_page.dart';
+import 'package:api_com/userData.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LandlordPage extends StatefulWidget {
   const LandlordPage({super.key});
@@ -50,9 +50,9 @@ class _LandlordPageState extends State<LandlordPage> {
               onPressed: () {
                 // Perform logout logic here
                 // ...
-                Navigator.push(context,
-                    MaterialPageRoute(builder: ((context) => LoginPage())));
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
+                Navigator.popUntil(context, ModalRoute.withName('/LoginPage'));
+                // Close the dialog
               },
             ),
           ],
@@ -61,32 +61,34 @@ class _LandlordPageState extends State<LandlordPage> {
     );
   }
 
+  void openRegistrationPage() {
+    setState(() {
+      Navigator.push(context,
+          MaterialPageRoute(builder: ((context) => LandlordRegistration())));
+      print('add details');
+    });
+  }
+
   int _currentIndex = 0;
-  List screens = [
-    HomePage(),
-    Messages(),
-    Notifications(),
-    AccountDetails(),
-  ];
+  List screens = [HomePage(), Messages(), PersonalPage()];
+
   @override
   Widget build(BuildContext context) {
+    final buttonStateProvider = Provider.of<ButtonStateProvider>(context);
     return Scaffold(
       appBar: AppBar(
+        foregroundColor: Colors.white,
         title: Text('Hi Landlord'),
         centerTitle: true,
         backgroundColor: Colors.blue,
         elevation: 0,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: ((context) => LandlordRegistration())));
-            print('add details');
-          });
-        },
+        onPressed: buttonStateProvider.buttonState.isButtonEnabled
+            ? () {
+                openRegistrationPage();
+              }
+            : null,
         child: Icon(Icons.add),
       ),
       drawer: Drawer(
@@ -133,8 +135,9 @@ class _LandlordPageState extends State<LandlordPage> {
           )),
       body: screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: Colors.blue,
           currentIndex: _currentIndex,
-          unselectedItemColor: Colors.white54,
+          unselectedItemColor: Colors.white70,
           selectedItemColor: Colors.white,
           onTap: (value) {
             setState(() {
@@ -146,11 +149,6 @@ class _LandlordPageState extends State<LandlordPage> {
               backgroundColor: Colors.blue,
               icon: Icon(Icons.home_outlined, size: 30),
               label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              backgroundColor: Colors.blue,
-              icon: Icon(Icons.notifications_active_outlined, size: 30),
-              label: 'Notifications',
             ),
             BottomNavigationBarItem(
               backgroundColor: Colors.blue,
