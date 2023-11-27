@@ -1,9 +1,9 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors, prefer_final_fields, sort_child_properties_last, use_function_type_syntax_for_parameters
 
-import 'package:api_com/Pages/HomePage.dart';
-import 'package:api_com/Pages/MessagesPage.dart';
-import 'package:api_com/Pages/NotificationPage.dart';
-import 'package:api_com/Pages/PeersonalPage.dart';
+import 'package:api_com/UpdatedApp/StudentPages/HomePage.dart';
+import 'package:api_com/UpdatedApp/StudentPages/MessagesPage.dart';
+import 'package:api_com/UpdatedApp/StudentPages/NotificationPage.dart';
+import 'package:api_com/UpdatedApp/StudentPages/PeersonalPage.dart';
 import 'package:api_com/advanced_details.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -49,14 +49,9 @@ class _StudentPageState extends State<StudentPage> {
             TextButton(
               child: Text('Yes'),
               onPressed: () async {
-                // Perform logout logic here
-                // ...
-
-                Navigator.of(context).pop(); // Close the dialog
                 await FirebaseAuth.instance.signOut();
-                Navigator.popUntil(context, ModalRoute.withName('/'));
-
-                // Close the dialog
+                Navigator.pushReplacementNamed(
+                    context, '/login'); // navigate to login page
               },
             ),
           ],
@@ -90,12 +85,22 @@ class _StudentPageState extends State<StudentPage> {
     });
   }
 
+  // void displayName(val) async {
+  //   DocumentSnapshot userDoc = await FirebaseFirestore.instance
+  //       .collection('users')
+  //       .doc(FirebaseAuth.instance.currentUser!.uid)
+  //       .get();
+
+  //   String userName = userDoc['name'];
+  //   val = userName;
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         foregroundColor: Colors.white,
-        title: Text('Hi Student'),
+        title: Text('Hi Student!'),
         centerTitle: true,
         backgroundColor: Colors.blue,
         actions: [
@@ -192,7 +197,9 @@ class _StudentPageState extends State<StudentPage> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return CircularProgressIndicator(); // Loading indicator while data is loading
+                  return Center(
+                      child:
+                          CircularProgressIndicator()); // Loading indicator while data is loading
                 }
 
                 List<Accommodation> accommodations =
@@ -263,5 +270,25 @@ class SearchDelegateWidget extends SearchDelegate {
     return Center(
       child: Text('Suggestions for: $query'),
     );
+  }
+}
+
+class FirestoreService {
+  final CollectionReference usersCollection =
+      FirebaseFirestore.instance.collection('users');
+
+  Future<String?> getUserName(String userId) async {
+    try {
+      DocumentSnapshot documentSnapshot =
+          await usersCollection.doc(userId).get();
+      if (documentSnapshot.exists) {
+        return documentSnapshot['name'];
+      } else {
+        return null; // User not found in the database
+      }
+    } catch (e) {
+      print('Error getting user name: $e');
+      return null;
+    }
   }
 }

@@ -1,10 +1,11 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:api_com/LandlordDetails/LandlordRegistration.dart';
-import 'package:api_com/Pages/PeersonalPage.dart';
-import 'package:api_com/landloedScreens.dart/Home.dart';
-import 'package:api_com/landloedScreens.dart/Messages.dart';
+import 'package:api_com/UpdatedApp/StudentPages/PeersonalPage.dart';
+import 'package:api_com/UpdatedApp/LandlordPages/Home.dart';
+import 'package:api_com/UpdatedApp/LandlordPages/Messages.dart';
 import 'package:api_com/userData.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -47,12 +48,10 @@ class _LandlordPageState extends State<LandlordPage> {
             ),
             TextButton(
               child: Text('Yes'),
-              onPressed: () {
-                // Perform logout logic here
-                // ...
-                Navigator.of(context).pop();
-                Navigator.popUntil(context, ModalRoute.withName('/LoginPage'));
-                // Close the dialog
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushReplacementNamed(
+                    context, '/login'); // navigate to login page
               },
             ),
           ],

@@ -1,11 +1,12 @@
-// ignore_for_file: unnecessary_const, prefer_const_constructors, avoid_unnecessary_containers, sort_child_properties_last, prefer_const_literals_to_create_immutables, sized_box_for_whitespace, avoid_print, use_build_context_synchronously
+// ignore_for_file: unnecessary_const, prefer_const_constructors, avoid_unnecessary_containers, sort_child_properties_last, prefer_const_literals_to_create_immutables, sized_box_for_whitespace, avoid_print, use_build_context_synchronously, unrelated_type_equality_checks
 
-import 'package:api_com/LandlordPage.dart';
-import 'package:api_com/Registration_page.dart';
+import 'package:api_com/UpdatedApp/LandlordPage.dart';
 import 'package:api_com/Student_Registration_page2.dart';
+import 'package:api_com/UpdatedApp/CreateAnAccount.dart';
 import 'package:api_com/advanced_details.dart';
-import 'package:api_com/student_page.dart';
+import 'package:api_com/UpdatedApp/student_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -119,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     double buttonWidth =
-        MediaQuery.of(context).size.width < 600 ? double.infinity : 400;
+        MediaQuery.of(context).size.width < 450 ? double.infinity : 400;
     return Scaffold(
       body: isLoading
           ? Center(
@@ -195,43 +196,58 @@ class _LoginPageState extends State<LoginPage> {
                               String password = txtPassword.text;
 
                               try {
-                                DocumentSnapshot userSnapshot =
-                                    await StudentRegistrationService()
-                                        .loginUser(email, password);
+                                // Sign in with email and password
+                                await FirebaseAuth.instance
+                                    .signInWithEmailAndPassword(
+                                  email: email,
+                                  password: password,
+                                );
 
-                                if (userSnapshot.exists) {
-                                  // Retrieve user data
-                                  String userType = userSnapshot['usersType'];
+                                // Fetch additional user information, including the role, from Firestore
+                                DocumentSnapshot userDoc =
+                                    await FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(FirebaseAuth
+                                            .instance.currentUser!.uid)
+                                        .get();
 
-                                  // Navigate to the appropriate page based on user type
-                                  switch (userType) {
-                                    case 'Student':
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => StudentPage(),
-                                        ),
-                                      );
-                                      break;
-                                    case 'Landlord':
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => LandlordPage(),
-                                        ),
-                                      );
-                                      break;
-                                    default:
-                                      _showLogoutConfirmationDialog(
-                                          context, userType);
-                                  }
+                                bool userRole = userDoc['role'];
+
+                                // Navigate based on the user's role
+                                if (userRole == true) {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => StudentPage()),
+                                  );
+                                } else if (userRole == false) {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => LandlordPage()),
+                                  );
                                 } else {
-                                  _showLogoutConfirmationDialog(
-                                      context, 'user type not found');
+                                  // Handle other roles if needed
                                 }
                               } catch (e) {
-                                _showLogoutConfirmationDialog(
-                                    context, e.toString());
+                                print('Error during login: $e');
+                                // Handle login error
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text('Login Error'),
+                                    content: Text(
+                                        'Failed to log in. Please check your email and password.'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                                );
                               }
                             },
                             child: Text(
@@ -314,7 +330,7 @@ class _LoginPageState extends State<LoginPage> {
                               registerPage();
                             },
                             child: Text(
-                              "Register Here",
+                              "Create Account here",
                               style:
                                   TextStyle(color: Colors.blue, fontSize: 18),
                             ),

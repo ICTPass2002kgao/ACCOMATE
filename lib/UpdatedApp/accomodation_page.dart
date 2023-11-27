@@ -4,9 +4,9 @@ import 'package:api_com/userData.dart';
 import 'package:flutter/material.dart';
 
 class AccomodationPage extends StatelessWidget {
-  const AccomodationPage({super.key, required this.residence});
-
-  final Residence residence;
+  const AccomodationPage({
+    super.key,
+  });
 
   Future<void> _comfirmedRegistration(BuildContext context) async {
     return showDialog<void>(
@@ -172,44 +172,66 @@ class AccomodationPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          residence.name,
+          'residence.name',
           style: TextStyle(color: Colors.white, fontSize: 18),
         ),
         centerTitle: true,
         backgroundColor: Colors.blue,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 200, // Set the height based on your design
-            child: PageView.builder(
-              itemCount: residence.images.length,
-              itemBuilder: (context, index) {
-                return Image.network(residence.images[index]);
+      body: Center(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 400,
+              child: Card(
+                elevation: 5,
+                child: Column(
+                  children: [
+                    Center(
+                        child: Image.asset(
+                      'assets/taung.jpeg',
+                    )),
+                    SizedBox(height: 10),
+                    Center(
+                      child: Row(
+                        children: [
+                          Text('Taung Students Accomodation',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
+                          Icon(Icons.verified,
+                              color: Colors.blue[900], size: 15),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          'Nsfas Accredited',
+                          style: TextStyle(color: Colors.green),
+                        ),
+                        ElevatedButton(
+                            onPressed: () {}, child: Text('View All'))
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Implement the action when the user applies for accommodation
+                print('Apply for accommodation');
               },
+              child: Text('Apply Accommodation'),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Name: ${residence.name}'),
-                Text('Address: ${residence.location}'),
-                Text('Details: ${residence.moreDetails}'),
-                Text('Status: ${residence.status}'),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Implement the action when the user applies for accommodation
-              print('Apply for accommodation: ${residence.name}');
-            },
-            child: Text('Apply Accommodation'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

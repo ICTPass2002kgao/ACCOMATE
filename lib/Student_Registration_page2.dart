@@ -3,7 +3,7 @@
 import 'dart:io';
 
 import 'package:api_com/advanced_details.dart';
-import 'package:api_com/student_page.dart';
+import 'package:api_com/UpdatedApp/student_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';

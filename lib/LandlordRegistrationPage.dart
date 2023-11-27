@@ -1,7 +1,7 @@
 // ignore_for_file: prefer_const_constructors, sort_child_properties_last, prefer_const_literals_to_create_immutables
 
-import 'package:api_com/LandlordPage.dart';
-import 'package:api_com/login_page.dart';
+import 'package:api_com/UpdatedApp/LandlordPage.dart';
+import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:flutter/material.dart';
 
 class LandlordRegistrationPage extends StatefulWidget {

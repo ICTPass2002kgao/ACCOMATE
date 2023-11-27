@@ -203,7 +203,7 @@ class _LandlordRegistrationState extends State<LandlordRegistration> {
                 await registerAccommodation();
                 // ...
                 Navigator.popUntil(
-                    context, ModalRoute.withName('/LandlordPage'));
+                    context, ModalRoute.withName('LandlordPage'));
 
                 // Close the dialog
               },
@@ -361,7 +361,7 @@ class _LandlordRegistrationState extends State<LandlordRegistration> {
     double textBoxWidth =
         MediaQuery.of(context).size.width < 600 ? double.infinity : 400;
     double buttonWidth =
-        MediaQuery.of(context).size.width < 600 ? double.infinity : 390;
+        MediaQuery.of(context).size.width < 600 ? double.infinity : 300;
     return Scaffold(
       appBar: AppBar(
         foregroundColor: Colors.white,
@@ -524,6 +524,12 @@ class _LandlordRegistrationState extends State<LandlordRegistration> {
         String address = placemarks.first.locality ?? 'Unknown';
         String country = placemarks.first.country ?? 'Unknown';
         txtLiveLocation.text = '${country} ,${address},${street}';
+      }
+    } catch (e) {
+      print('Error fetching address: $e');
+    }
+  }
+}
 
         // Show map in dialog (same as previous example)
         // showDialog(
@@ -556,9 +562,3 @@ class _LandlordRegistrationState extends State<LandlordRegistration> {
         //     );
         //   },
         // );
-      }
-    } catch (e) {
-      print('Error fetching address: $e');
-    }
-  }
-}

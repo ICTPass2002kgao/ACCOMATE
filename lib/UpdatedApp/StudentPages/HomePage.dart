@@ -1,7 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last
 
 import 'package:api_com/Accomodation_card.dart';
-import 'package:api_com/accomodation_page.dart';
+import 'package:api_com/UpdatedApp/accomodation_page.dart';
 import 'package:api_com/advanced_details.dart';
 import 'package:api_com/global_variables.dart';
 import 'package:api_com/userData.dart';
