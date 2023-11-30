@@ -1,9 +1,5 @@
 // ignore_for_file: prefer_const_constructors
-
-import 'package:api_com/LandlordDetails/LandlordRegistration.dart';
 import 'package:api_com/UpdatedApp/LandlordPage.dart';
-import 'package:api_com/UpdatedApp/CreateAnAccount.dart';
-import 'package:api_com/UpdatedApp/accomodation_page.dart';
 import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:api_com/UpdatedApp/student_page.dart';
 import 'package:api_com/userData.dart';

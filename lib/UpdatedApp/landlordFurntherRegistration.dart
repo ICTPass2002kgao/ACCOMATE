@@ -1,6 +1,10 @@
-// ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors, sort_child_properties_last
+// ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors, sort_child_properties_last,
 
+import 'dart:io' as Platform;
+import 'dart:io';
 import 'package:api_com/UpdatedApp/landlordoffersPage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -11,7 +15,6 @@ import 'package:permission_handler/permission_handler.dart';
 class LandlordFurtherRegistration extends StatefulWidget {
   final String accomodationName;
   final String landlordEmail;
-  final String distance;
   final String password;
 
   final int contactDetails;
@@ -22,7 +25,6 @@ class LandlordFurtherRegistration extends StatefulWidget {
       required this.accomodationName,
       required this.contactDetails,
       required this.landlordEmail,
-      required this.distance,
       required this.isLandlord});
 
   @override
@@ -33,15 +35,90 @@ class LandlordFurtherRegistration extends StatefulWidget {
 class _LandlordFurtherRegistrationState
     extends State<LandlordFurtherRegistration> {
   TextEditingController txtLiveLocation = TextEditingController();
-  TextEditingController txtResName = TextEditingController();
-  List<XFile> pickedImages = [];
-  TextEditingController detailsController = TextEditingController();
+  TextEditingController distanceController = TextEditingController();
+  List<XFile> selectedImages = [];
+  final ImagePicker _picker = ImagePicker();
+  List<XFile>? _imageFiles = [];
+
+  Future<void> _pickWepAppImagesFunction() async {
+    try {
+      List<XFile>? result = await _picker.pickMultiImage(
+        imageQuality: 50,
+      );
+
+      if (result != null && result.isNotEmpty) {
+        setState(() {
+          _imageFiles = result;
+        });
+      }
+    } catch (e) {
+      print('Error picking images: $e');
+    }
+  }
+
+  final CollectionReference _imageCollection =
+      FirebaseFirestore.instance.collection('images');
+
+  Future<void> _uploadImages(List<XFile>? imageFiles) async {
+    if (imageFiles == null || imageFiles.isEmpty) {
+      // No images provided
+      print('No images provided.');
+      return;
+    }
+
+    List<String> imageUrls = [];
+
+    try {
+      for (XFile imageFile in imageFiles) {
+        // Create a unique filename for each image
+        String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+
+        // Get a reference to the Firebase Storage bucket
+        firebase_storage.Reference reference = firebase_storage
+            .FirebaseStorage.instance
+            .ref()
+            .child('images/$fileName.jpg');
+
+        // Upload the image to Firebase Storage
+        await reference.putFile(File(imageFile.path));
+
+        // Get the download URL of the uploaded image
+        String downloadURL = await reference.getDownloadURL();
+
+        // Add the download URL to the list
+        imageUrls.add(downloadURL);
+      }
+
+      // Save the download URLs to Firestore
+      await _imageCollection.add({
+        'imageUrls': imageUrls,
+      });
+    } catch (e) {
+      print('Error uploading images: $e');
+    }
+  }
+
+  Future<void> _pickImages() async {
+    List<XFile>? resultList = [];
+
+    try {
+      resultList = await ImagePicker().pickMultiImage(
+        imageQuality: 85,
+      );
+    } catch (e) {
+      print(e.toString());
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      selectedImages = resultList ?? [];
+    });
+  }
 
   String currentAddress = '';
   bool isLoading = true;
-  late GoogleMapController mapController;
   late LatLng currentLocation;
-  TextEditingController addressController = TextEditingController();
 
   @override
   void initState() {
@@ -87,52 +164,11 @@ class _LandlordFurtherRegistrationState
     }
   }
 
-  List<String> selectedProducts = [];
-  List<String> availableProducts = [
-    'Product A',
-    'Product B',
-    'Product C',
-    'Product D'
-  ];
-
-  void _showAddProductDialog() {
-    String newProduct = '';
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Add Product'),
-          content: TextField(
-            onChanged: (value) {
-              newProduct = value;
-            },
-            decoration: InputDecoration(labelText: 'Product Name'),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close the dialog
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  if (newProduct.isNotEmpty) {
-                    availableProducts.add(newProduct);
-                  }
-                });
-                Navigator.pop(context); // Close the dialog
-              },
-              child: Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
+  Map<String, bool> selectedPaymentsMethods = {
+    'Nsfas': false,
+    'Other External busary': false,
+    'Self Pay': false,
+  };
   @override
   Widget build(BuildContext context) {
     double buttonWidth =
@@ -163,23 +199,22 @@ class _LandlordFurtherRegistrationState
                   ),
                   SizedBox(height: 10),
                   TextField(
-                    controller: txtResName,
+                    controller: distanceController,
                     decoration: InputDecoration(
                         focusColor: Colors.blue,
                         fillColor: Color.fromARGB(255, 230, 230, 230),
                         filled: true,
                         prefixIcon: Icon(
-                          Icons.maps_home_work_outlined,
+                          Icons.location_pin,
                           color: Colors.blue,
                         ),
-                        hintText: 'Name of residence'),
+                        hintText: 'Distance to Campus e.g 4km'),
                   ),
                   SizedBox(height: 5),
                   Tooltip(
                     message:
                         'Click on get location button to get your current location',
                     child: TextField(
-                      readOnly: true,
                       controller: txtLiveLocation,
                       decoration: InputDecoration(
                           focusColor: Colors.blue,
@@ -194,37 +229,31 @@ class _LandlordFurtherRegistrationState
                   ),
                   SizedBox(height: 5),
                   Tooltip(
-                    child: Text(
-                      'Payment Method',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
                     message:
-                        'This tells a student how they will be able to pay',
-                  ),
-                  Row(
-                    children: [
-                      Checkbox(value: false, onChanged: (val) {}),
-                      Text('Nsfas')
-                    ],
-                  ),
-                  SizedBox(height: 5),
-                  Row(
-                    children: [
-                      Checkbox(value: false, onChanged: (val) {}),
-                      Text('Bursary')
-                    ],
-                  ),
-                  SizedBox(height: 5),
-                  Row(
-                    children: [
-                      Checkbox(value: false, onChanged: (val) {}),
-                      Text('Self Pay')
-                    ],
+                        'This determines how ent should pay the accomodation',
+                    child: ExpansionTile(
+                      title: Text('Students Payment Methods'),
+                      children:
+                          selectedPaymentsMethods.keys.map((paymentMethod) {
+                        return CheckboxListTile(
+                          title: Text(paymentMethod),
+                          value:
+                              selectedPaymentsMethods[paymentMethod] ?? false,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedPaymentsMethods[paymentMethod] =
+                                  value ?? false;
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
                   ),
                   SizedBox(height: 5),
                   TextButton.icon(
-                    onPressed: () {},
+                    onPressed: () {
+                      showLocationDialog(context);
+                    },
                     icon: Icon(Icons.location_on_outlined, color: Colors.white),
                     label: Text(
                       'Get Location',
@@ -237,28 +266,62 @@ class _LandlordFurtherRegistrationState
                             MaterialStatePropertyAll(Size(buttonWidth, 50))),
                   ),
                   SizedBox(height: 5),
-                  Row(
-                    children: [
-                      TextButton.icon(
-                        onPressed: () {
-                          //async {
-                          // await pickImages(); // Call method to pick images
-                        },
-                        icon: Icon(Icons.add_photo_alternate_outlined,
-                            color: Colors.white),
-                        label: Text(
-                          'Add Images',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
+                  Container(
+                    width: buttonWidth,
+                    height: 50,
+                    color: const Color.fromARGB(179, 236, 236, 236),
+                    child: Row(
+                      children: [
+                        TextButton.icon(
+                          onPressed: MediaQuery.of(context).size.width < 1400
+                              ? _pickImages
+                              : _pickWepAppImagesFunction,
+                          icon: Icon(Icons.add_photo_alternate_outlined,
+                              color: Colors.white),
+                          label: Text(
+                            'Add Images',
+                            style: TextStyle(color: Colors.white, fontSize: 18),
+                          ),
+                          style: ButtonStyle(
+                              foregroundColor:
+                                  MaterialStatePropertyAll(Colors.blue),
+                              backgroundColor:
+                                  MaterialStatePropertyAll(Colors.blue),
+                              minimumSize:
+                                  MaterialStatePropertyAll(Size(100, 50))),
                         ),
-                        style: ButtonStyle(
-                            foregroundColor:
-                                MaterialStatePropertyAll(Colors.blue),
-                            backgroundColor:
-                                MaterialStatePropertyAll(Colors.blue),
-                            minimumSize:
-                                MaterialStatePropertyAll(Size(100, 50))),
-                      ),
-                    ],
+                        if (MediaQuery.of(context).size.width < 450)
+                          Expanded(
+                            child: GridView.builder(
+                              scrollDirection: Axis.horizontal,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 4.0,
+                                mainAxisSpacing: 4.0,
+                              ),
+                              itemCount: selectedImages.length,
+                              itemBuilder: (context, index) {
+                                return Image.file(
+                                  File(selectedImages[index].path),
+                                  height: 30,
+                                  width: 30,
+                                );
+                              },
+                            ),
+                          )
+                        else if (_imageFiles != null)
+                          Column(
+                            children: [
+                              for (XFile imageFile in _imageFiles!)
+                                Image.file(
+                                  File(imageFile.path),
+                                  height: 100,
+                                ),
+                            ],
+                          ),
+                      ],
+                    ),
                   ),
                   SizedBox(height: 10),
                   ElevatedButton(
@@ -268,18 +331,21 @@ class _LandlordFurtherRegistrationState
                             context,
                             MaterialPageRoute(
                                 builder: ((context) => OffersPage(
+                                      selectedWepAppImages: _imageFiles,
+                                      selectedPaymentsMethods:
+                                          selectedPaymentsMethods,
+                                      bringSelectedImages: selectedImages,
                                       location: txtLiveLocation.text,
                                       password: widget.password,
                                       contactDetails: widget.contactDetails,
                                       isLandlord: widget.isLandlord,
                                       accomodationName: widget.accomodationName,
                                       landlordEmail: widget.landlordEmail,
-                                      distance: widget.distance,
+                                      distance: distanceController.text,
                                     ))));
                         print(widget.isLandlord);
                         print(widget.accomodationName);
                         print(widget.landlordEmail);
-                        print(widget.distance);
                       });
                     },
                     child: Text(

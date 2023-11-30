@@ -1,9 +1,7 @@
 // ignore_for_file: unnecessary_const, prefer_const_constructors, avoid_unnecessary_containers, sort_child_properties_last, prefer_const_literals_to_create_immutables, sized_box_for_whitespace, avoid_print, use_build_context_synchronously, unrelated_type_equality_checks
 
 import 'package:api_com/UpdatedApp/LandlordPage.dart';
-import 'package:api_com/Student_Registration_page2.dart';
 import 'package:api_com/UpdatedApp/CreateAnAccount.dart';
-import 'package:api_com/advanced_details.dart';
 import 'package:api_com/UpdatedApp/student_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,64 +18,6 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController txtEmail = TextEditingController();
   TextEditingController txtPassword = TextEditingController();
 
-  void loginFunction() {
-    setState(() {
-      if (txtEmail.text == 'student@gmail.com' &&
-          txtPassword.text == 'student') {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => StudentPage(),
-            ));
-      } else if (txtEmail.text == 'landlord@gmail.com' &&
-          txtPassword.text == 'landlord') {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => LandlordPage(),
-            ));
-      }
-    });
-  }
-
-  Future<void> _showLogoutConfirmationDialog(BuildContext context, val) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button for close
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text('Login Error'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Row(
-                  children: [
-                    Icon(Icons.warning_outlined, color: Colors.red, size: 40),
-                    SizedBox(width: 10),
-                    Container(width: 180, child: Text(val)),
-                  ],
-                )
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Retry'),
-              onPressed: () {
-                // Perform logout logic here
-                // ...
-                Navigator.of(context).pop(); // Close the dialog
-
-                // Close the dialog
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void registerPage() {
     setState(() {
       Navigator.push(context,
@@ -85,25 +25,13 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  // final FirebaseAuth _auth = FirebaseAuth.instance;
-  // Future<void> _signIn() async {
-  //   try {
-  //     UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-  //       email: txtEmail.text,
-  //       password: txtPassword.text,
-  //     );
-  //     print('User signed in: ${userCredential.user!.email}');
-  //     // Add navigation or other actions after successful login
-  //   } catch (e) {
-  //     print('Login failed: $e');
-  //     // Handle login failure, show error message, etc.
-  //   }
-  // }
   bool isLoading = true;
-
+  late FirebaseAuth _auth;
   @override
   void initState() {
     super.initState();
+
+    _auth = FirebaseAuth.instance;
     loadData();
   }
 
@@ -115,6 +43,19 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       isLoading = false;
     });
+  }
+
+  Future<void> _resetPassword() async {
+    try {
+      // Send a password reset email
+      await _auth.sendPasswordResetEmail(email: txtEmail.text);
+
+      // Password reset email sent successfully
+      print('Password reset email sent to $txtEmail');
+    } catch (e) {
+      // Handle password reset failure
+      print('Password reset failed: $e');
+    }
   }
 
   @override
@@ -178,12 +119,19 @@ class _LoginPageState extends State<LoginPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              Text(
-                                'Forgot Password ?',
-                                style: TextStyle(
-                                    color: Colors.blue,
-                                    fontSize: 15,
-                                    decorationStyle: TextDecorationStyle.solid),
+                              GestureDetector(
+                                onTap: () async {
+                                  // Request a password reset email
+                                  await _resetPassword();
+                                },
+                                child: Text(
+                                  'Forgot Password ?',
+                                  style: TextStyle(
+                                      color: Colors.blue,
+                                      fontSize: 15,
+                                      decorationStyle:
+                                          TextDecorationStyle.solid),
+                                ),
                               ),
                             ],
                           ),

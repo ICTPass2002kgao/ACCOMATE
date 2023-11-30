@@ -3,9 +3,7 @@
 import 'dart:io';
 
 import 'package:api_com/advanced_details.dart';
-import 'package:api_com/advanced_details.dart';
 import 'package:api_com/userData.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';

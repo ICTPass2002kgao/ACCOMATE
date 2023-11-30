@@ -8,7 +8,7 @@ class CodeVerificationPage extends StatefulWidget {
   final String email;
   final String verificationCode;
 
-  CodeVerificationPage(
+  const CodeVerificationPage(
       {required this.isLandlord,
       required this.email,
       required this.verificationCode});

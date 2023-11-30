@@ -107,7 +107,6 @@
 // ),
 import 'dart:math';
 
-import 'package:api_com/UpdatedApp/LandlordPage.dart';
 import 'package:api_com/UpdatedApp/landlordFurntherRegistration.dart';
 import 'package:api_com/UpdatedApp/student_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -132,7 +131,23 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
   final TextEditingController distanceController = TextEditingController();
   final ExpansionTileController _expansionTileController =
       ExpansionTileController();
-  late String selectedUniversity;
+  String selectedUniversity = '';
+  List<String> universities = [
+    'Vaal University of Technology',
+    'University of Johannesburg',
+    'University of pretoria',
+    'University of the Witwatersrand',
+    'Cape Peninsula University of technology',
+    'University of Cape Town',
+    'North West University(vaal campus)',
+    'University of Freestate',
+    'University of Western Cape',
+    'University of Kwa-zulu Natal',
+    'Tshwane University of Technology',
+    'Stellenbosch University',
+    'Durban University of Technology',
+    'North West University'
+  ];
 
   @override
   void initState() {
@@ -287,21 +302,25 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                   color: Colors.blue,
                                 ),
                                 hintText: 'Contact details'),
-                            obscureText: true,
                           ),
                           SizedBox(height: 5),
-                          UniversitySelectionTile(
-                            initialValue: selectedUniversity,
-                            onSelected: (String value) {
-                              setState(() {
-                                selectedUniversity = value;
-                              });
-                              _expansionTileController.collapse();
-                            },
-                            expansionTileController: _expansionTileController,
+                          ExpansionTile(
+                            title: Text('Select University Or College'),
+                            children: universities.map((university) {
+                              return RadioListTile<String>(
+                                title: Text(university),
+                                value: university,
+                                groupValue: selectedUniversity,
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedUniversity = value!;
+                                  });
+                                },
+                              );
+                            }).toList(),
                           ),
                           SizedBox(height: 20.0),
-                          ElevatedButton(
+                          TextButton(
                             onPressed: () async {
                               String email = emailController.text;
                               String password = passwordController.text;
@@ -443,19 +462,6 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                           ),
                           SizedBox(height: 5),
                           TextField(
-                            controller: distanceController,
-                            decoration: InputDecoration(
-                                focusColor: Colors.blue,
-                                fillColor: Color.fromARGB(255, 230, 230, 230),
-                                filled: true,
-                                prefixIcon: Icon(
-                                  Icons.location_pin,
-                                  color: Colors.blue,
-                                ),
-                                hintText: 'Distance to Campus e.g 4km'),
-                          ),
-                          SizedBox(height: 5),
-                          TextField(
                             controller: contactDetails,
                             decoration: InputDecoration(
                                 focusColor: Colors.blue,
@@ -480,7 +486,6 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                               contactDetails:
                                                   contactDetails.hashCode,
                                               isLandlord: widget.isLandlord,
-                                              distance: distanceController.text,
                                               accomodationName:
                                                   accomodationName.text,
                                               landlordEmail:
@@ -512,100 +517,5 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
         ),
       ),
     );
-  }
-}
-
-class UniversitySelectionTile extends StatefulWidget {
-  final String initialValue;
-  final void Function(String) onSelected;
-  final ExpansionTileController expansionTileController;
-
-  UniversitySelectionTile({
-    required this.initialValue,
-    required this.onSelected,
-    required this.expansionTileController,
-  });
-
-  @override
-  _UniversitySelectionTileState createState() =>
-      _UniversitySelectionTileState();
-}
-
-class _UniversitySelectionTileState extends State<UniversitySelectionTile> {
-  String selectedUniversity = '';
-
-  @override
-  void initState() {
-    super.initState();
-    selectedUniversity = widget.initialValue;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ExpansionTile(
-      collapsedBackgroundColor: Color.fromARGB(255, 230, 230, 230),
-      backgroundColor: Color.fromARGB(255, 230, 230, 230),
-      title: Text(
-        selectedUniversity.isNotEmpty
-            ? selectedUniversity
-            : 'Select University',
-      ),
-      onExpansionChanged: (bool isExpanded) {
-        if (isExpanded) {
-          widget.expansionTileController.collapse();
-        }
-      },
-      children: <Widget>[
-        ListTile(
-          title: Text('Vaal University of Technology'),
-          onTap: () => selectUniversity('Vaal University of Technology'),
-        ),
-        ListTile(
-          title: Text('University of Johannesburg'),
-          onTap: () => selectUniversity('University of Johannesburg'),
-        ),
-        ListTile(
-          title: Text('University of pretoria'),
-          onTap: () => selectUniversity('University of pretoria'),
-        ),
-        ListTile(
-          title: Text('University of the Witwatersrand'),
-          onTap: () => selectUniversity('University of the Witwatersrand'),
-        ),
-        ListTile(
-          title: Text('Cape Peninsula University of technology'),
-          onTap: () =>
-              selectUniversity('Cape Peninsula University of technology'),
-        ),
-        ListTile(
-          title: Text('University of Cape Town'),
-          onTap: () => selectUniversity('University of Cape Town'),
-        ),
-        ListTile(
-          title: Text('University of Limpopo'),
-          onTap: () => selectUniversity('University of Limpopo'),
-        ),
-        ListTile(
-          title: Text('University of Freestate'),
-          onTap: () => selectUniversity('University of Freestate'),
-        ),
-        ListTile(
-          title: Text('University of Western Cape'),
-          onTap: () => selectUniversity('University of Western Cape'),
-        ),
-        ListTile(
-          title: Text('North West University'),
-          onTap: () => selectUniversity('North West University'),
-        ),
-        // Add more universities as needed
-      ],
-    );
-  }
-
-  void selectUniversity(String university) {
-    setState(() {
-      selectedUniversity = university;
-    });
-    widget.onSelected(university);
   }
 }

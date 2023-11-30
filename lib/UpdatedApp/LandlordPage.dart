@@ -82,14 +82,6 @@ class _LandlordPageState extends State<LandlordPage> {
         backgroundColor: Colors.blue,
         elevation: 0,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: buttonStateProvider.buttonState.isButtonEnabled
-            ? () {
-                openRegistrationPage();
-              }
-            : null,
-        child: Icon(Icons.add),
-      ),
       drawer: Drawer(
           backgroundColor: Colors.blue,
           child: ListView(

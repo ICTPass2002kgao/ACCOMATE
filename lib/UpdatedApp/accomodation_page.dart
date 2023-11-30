@@ -1,11 +1,17 @@
 // ignore_for_file: prefer_const_constructors, dead_code, prefer_const_literals_to_create_immutables, sort_child_properties_last, avoid_unnecessary_containers, unnecessary_string_interpolations, sized_box_for_whitespace
 
-import 'package:api_com/userData.dart';
 import 'package:flutter/material.dart';
 
 class AccomodationPage extends StatelessWidget {
+  final String accomodationName;
+  final String location;
+  // final List<String> imageUrls;
+
   const AccomodationPage({
     super.key,
+    required this.accomodationName,
+    required this.location,
+    // required this.imageUrls,
   });
 
   Future<void> _comfirmedRegistration(BuildContext context) async {
@@ -172,7 +178,7 @@ class AccomodationPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'residence.name',
+          accomodationName,
           style: TextStyle(color: Colors.white, fontSize: 18),
         ),
         centerTitle: true,
@@ -196,7 +202,7 @@ class AccomodationPage extends StatelessWidget {
                     Center(
                       child: Row(
                         children: [
-                          Text('Taung Students Accomodation',
+                          Text(accomodationName,
                               style: TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.bold)),
                           Icon(Icons.verified,
