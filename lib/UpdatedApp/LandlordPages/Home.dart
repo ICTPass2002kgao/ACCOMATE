@@ -80,6 +80,11 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
+          Center(
+              child: Text(
+            'Shap Ka leboga!!',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ))
         ],
       ),
     ));

@@ -49,12 +49,33 @@ class _LoginPageState extends State<LoginPage> {
     try {
       // Send a password reset email
       await _auth.sendPasswordResetEmail(email: txtEmail.text);
-
+      AlertDialog(
+        title: Text('Password reset Successful'),
+        content: Text('Password reset email sent to ${txtEmail.text}'),
+        actions: [
+          ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Ok'))
+        ],
+      );
       // Password reset email sent successfully
       print('Password reset email sent to $txtEmail');
     } catch (e) {
       // Handle password reset failure
-      print('Password reset failed: $e');
+      AlertDialog(
+        title: Text('Password reset failed'),
+        content: Text(e.toString()),
+        actions: [
+          ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Ok'))
+        ],
+      );
+      print('Password reset failed ${e.toString()}');
     }
   }
 
@@ -122,6 +143,7 @@ class _LoginPageState extends State<LoginPage> {
                               GestureDetector(
                                 onTap: () async {
                                   // Request a password reset email
+
                                   await _resetPassword();
                                 },
                                 child: Text(
@@ -130,7 +152,7 @@ class _LoginPageState extends State<LoginPage> {
                                       color: Colors.blue,
                                       fontSize: 15,
                                       decorationStyle:
-                                          TextDecorationStyle.solid),
+                                          TextDecorationStyle.double),
                                 ),
                               ),
                             ],
@@ -144,6 +166,16 @@ class _LoginPageState extends State<LoginPage> {
                               String password = txtPassword.text;
 
                               try {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible:
+                                      false, // Prevent user from dismissing the dialog
+                                  builder: (BuildContext context) {
+                                    return Center(
+                                      child: CircularProgressIndicator(),
+                                    );
+                                  },
+                                );
                                 // Sign in with email and password
                                 await FirebaseAuth.instance
                                     .signInWithEmailAndPassword(
@@ -162,13 +194,13 @@ class _LoginPageState extends State<LoginPage> {
                                 bool userRole = userDoc['role'];
 
                                 // Navigate based on the user's role
-                                if (userRole == true) {
+                                if (userRole == false) {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
                                         builder: (context) => StudentPage()),
                                   );
-                                } else if (userRole == false) {
+                                } else if (userRole == true) {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(

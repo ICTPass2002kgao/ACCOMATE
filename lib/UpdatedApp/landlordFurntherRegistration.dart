@@ -17,7 +17,7 @@ class LandlordFurtherRegistration extends StatefulWidget {
   final String landlordEmail;
   final String password;
 
-  final int contactDetails;
+  final String contactDetails;
   final bool isLandlord;
   const LandlordFurtherRegistration(
       {super.key,
@@ -37,84 +37,6 @@ class _LandlordFurtherRegistrationState
   TextEditingController txtLiveLocation = TextEditingController();
   TextEditingController distanceController = TextEditingController();
   List<XFile> selectedImages = [];
-  final ImagePicker _picker = ImagePicker();
-  List<XFile>? _imageFiles = [];
-
-  Future<void> _pickWepAppImagesFunction() async {
-    try {
-      List<XFile>? result = await _picker.pickMultiImage(
-        imageQuality: 50,
-      );
-
-      if (result != null && result.isNotEmpty) {
-        setState(() {
-          _imageFiles = result;
-        });
-      }
-    } catch (e) {
-      print('Error picking images: $e');
-    }
-  }
-
-  final CollectionReference _imageCollection =
-      FirebaseFirestore.instance.collection('images');
-
-  Future<void> _uploadImages(List<XFile>? imageFiles) async {
-    if (imageFiles == null || imageFiles.isEmpty) {
-      // No images provided
-      print('No images provided.');
-      return;
-    }
-
-    List<String> imageUrls = [];
-
-    try {
-      for (XFile imageFile in imageFiles) {
-        // Create a unique filename for each image
-        String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-
-        // Get a reference to the Firebase Storage bucket
-        firebase_storage.Reference reference = firebase_storage
-            .FirebaseStorage.instance
-            .ref()
-            .child('images/$fileName.jpg');
-
-        // Upload the image to Firebase Storage
-        await reference.putFile(File(imageFile.path));
-
-        // Get the download URL of the uploaded image
-        String downloadURL = await reference.getDownloadURL();
-
-        // Add the download URL to the list
-        imageUrls.add(downloadURL);
-      }
-
-      // Save the download URLs to Firestore
-      await _imageCollection.add({
-        'imageUrls': imageUrls,
-      });
-    } catch (e) {
-      print('Error uploading images: $e');
-    }
-  }
-
-  Future<void> _pickImages() async {
-    List<XFile>? resultList = [];
-
-    try {
-      resultList = await ImagePicker().pickMultiImage(
-        imageQuality: 85,
-      );
-    } catch (e) {
-      print(e.toString());
-    }
-
-    if (!mounted) return;
-
-    setState(() {
-      selectedImages = resultList ?? [];
-    });
-  }
 
   String currentAddress = '';
   bool isLoading = true;
@@ -169,6 +91,18 @@ class _LandlordFurtherRegistrationState
     'Other External busary': false,
     'Self Pay': false,
   };
+
+  XFile? _imageFile;
+
+  Future<void> _pickImage(ImageSource source) async {
+    XFile? selectedImage = await ImagePicker()
+        .pickImage(source: source, preferredCameraDevice: CameraDevice.rear);
+
+    setState(() {
+      _imageFile = selectedImage;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     double buttonWidth =
@@ -273,13 +207,13 @@ class _LandlordFurtherRegistrationState
                     child: Row(
                       children: [
                         TextButton.icon(
-                          onPressed: MediaQuery.of(context).size.width < 1400
-                              ? _pickImages
-                              : _pickWepAppImagesFunction,
+                          onPressed: () {
+                            _pickImage(ImageSource.gallery);
+                          },
                           icon: Icon(Icons.add_photo_alternate_outlined,
                               color: Colors.white),
                           label: Text(
-                            'Add Images',
+                            'Add Profile',
                             style: TextStyle(color: Colors.white, fontSize: 18),
                           ),
                           style: ButtonStyle(
@@ -290,35 +224,11 @@ class _LandlordFurtherRegistrationState
                               minimumSize:
                                   MaterialStatePropertyAll(Size(100, 50))),
                         ),
-                        if (MediaQuery.of(context).size.width < 450)
-                          Expanded(
-                            child: GridView.builder(
-                              scrollDirection: Axis.horizontal,
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                crossAxisSpacing: 4.0,
-                                mainAxisSpacing: 4.0,
-                              ),
-                              itemCount: selectedImages.length,
-                              itemBuilder: (context, index) {
-                                return Image.file(
-                                  File(selectedImages[index].path),
-                                  height: 30,
-                                  width: 30,
-                                );
-                              },
-                            ),
-                          )
-                        else if (_imageFiles != null)
-                          Column(
-                            children: [
-                              for (XFile imageFile in _imageFiles!)
-                                Image.file(
-                                  File(imageFile.path),
-                                  height: 100,
-                                ),
-                            ],
+                        if (_imageFile != null)
+                          Image.file(
+                            File(_imageFile!.path),
+                            height: 50,
+                            width: 50,
                           ),
                       ],
                     ),
@@ -331,10 +241,9 @@ class _LandlordFurtherRegistrationState
                             context,
                             MaterialPageRoute(
                                 builder: ((context) => OffersPage(
-                                      selectedWepAppImages: _imageFiles,
                                       selectedPaymentsMethods:
                                           selectedPaymentsMethods,
-                                      bringSelectedImages: selectedImages,
+                                      imageFile: _imageFile,
                                       location: txtLiveLocation.text,
                                       password: widget.password,
                                       contactDetails: widget.contactDetails,

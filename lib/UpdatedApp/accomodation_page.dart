@@ -3,14 +3,10 @@
 import 'package:flutter/material.dart';
 
 class AccomodationPage extends StatelessWidget {
-  final String accomodationName;
-  final String location;
-  // final List<String> imageUrls;
-
+  final Map<String, dynamic> landlordData;
   const AccomodationPage({
     super.key,
-    required this.accomodationName,
-    required this.location,
+    required this.landlordData,
     // required this.imageUrls,
   });
 
@@ -178,7 +174,7 @@ class AccomodationPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          accomodationName,
+          landlordData['accomodationName'],
           style: TextStyle(color: Colors.white, fontSize: 18),
         ),
         centerTitle: true,
@@ -198,18 +194,6 @@ class AccomodationPage extends StatelessWidget {
                         child: Image.asset(
                       'assets/taung.jpeg',
                     )),
-                    SizedBox(height: 10),
-                    Center(
-                      child: Row(
-                        children: [
-                          Text(accomodationName,
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold)),
-                          Icon(Icons.verified,
-                              color: Colors.blue[900], size: 15),
-                        ],
-                      ),
-                    ),
                     SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,

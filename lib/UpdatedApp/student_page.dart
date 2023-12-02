@@ -4,8 +4,6 @@ import 'package:api_com/UpdatedApp/StudentPages/HomePage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/MessagesPage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/NotificationPage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/PeersonalPage.dart';
-import 'package:api_com/advanced_details.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -61,12 +59,7 @@ class _StudentPageState extends State<StudentPage> {
   }
 
   int _index = 0;
-  List screens = [
-    HomePage(),
-    MessagesPage(),
-    NotificationPage(),
-    PersonalPage()
-  ];
+
   bool isLoading = true;
 
   @override
@@ -98,125 +91,114 @@ class _StudentPageState extends State<StudentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        foregroundColor: Colors.white,
-        title: Text('Hi Student!'),
-        centerTitle: true,
-        backgroundColor: Colors.blue,
-        actions: [
-          IconButton(
-              onPressed: () {
-                showSearch(context: context, delegate: SearchDelegateWidget());
-              },
-              icon: Icon(Icons.search_rounded))
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _index,
-          unselectedItemColor: Colors.white54,
-          selectedItemColor: Colors.white,
-          onTap: (value) {
-            setState(() {
-              _index = value;
-            });
-          },
-          items: [
-            BottomNavigationBarItem(
-              backgroundColor: Colors.blue,
-              icon: Icon(Icons.home_outlined, size: 30),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              backgroundColor: Colors.blue,
-              icon: Icon(Icons.notifications_active_outlined, size: 30),
-              label: 'Notifications',
-            ),
-            BottomNavigationBarItem(
-              backgroundColor: Colors.blue,
-              icon: Icon(Icons.message_outlined, size: 30),
-              label: 'Messages',
-            ),
-            BottomNavigationBarItem(
-              backgroundColor: Colors.blue,
-              icon: Icon(
-                Icons.person_outlined,
-                size: 30,
+        appBar: AppBar(
+          foregroundColor: Colors.white,
+          title: Text('Hi Student!'),
+          centerTitle: true,
+          backgroundColor: Colors.blue,
+          actions: [
+            IconButton(
+                onPressed: () {
+                  showSearch(
+                      context: context, delegate: SearchDelegateWidget());
+                },
+                icon: Icon(Icons.search_rounded))
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+            currentIndex: _index,
+            unselectedItemColor: Colors.white54,
+            selectedItemColor: Colors.white,
+            onTap: (value) {
+              setState(() {
+                _index = value;
+              });
+            },
+            items: [
+              BottomNavigationBarItem(
+                backgroundColor: Colors.blue,
+                icon: Icon(Icons.home_outlined, size: 30),
+                label: 'Home',
               ),
-              label: 'Personal account',
-            )
-          ]),
-      drawer: Drawer(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              SizedBox(
-                height: 30,
+              BottomNavigationBarItem(
+                backgroundColor: Colors.blue,
+                icon: Icon(Icons.notifications_active_outlined, size: 30),
+                label: 'Notifications',
               ),
-              Icon(
-                Icons.settings,
-                size: 100,
-                color: Colors.white,
+              BottomNavigationBarItem(
+                backgroundColor: Colors.blue,
+                icon: Icon(Icons.message_outlined, size: 30),
+                label: 'Messages',
               ),
-              SizedBox(
-                height: 50,
-              ),
-              ListTile(
-                leading: Icon(Icons.policy_outlined, color: Colors.white),
-                title: Text('Terms & conditions'),
-                onTap: () {},
-                textColor: Colors.white,
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.info_outline,
+              BottomNavigationBarItem(
+                backgroundColor: Colors.blue,
+                icon: Icon(
+                  Icons.person_outlined,
+                  size: 30,
+                ),
+                label: 'Personal account',
+              )
+            ]),
+        drawer: Drawer(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 30,
+                ),
+                Icon(
+                  Icons.settings,
+                  size: 100,
                   color: Colors.white,
                 ),
-                title: Text('More Info'),
-                onTap: () {},
-                textColor: Colors.white,
-              ),
-              ListTile(
-                leading: Icon(Icons.logout_outlined, color: Colors.white),
-                title: Text('Logout'),
-                onTap: () {
-                  _showLogoutConfirmationDialog(context);
-                },
-                textColor: Colors.white,
-              )
-            ],
-          ),
-        ),
-        backgroundColor: Colors.blue,
-      ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('accommodations')
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(
-                      child:
-                          CircularProgressIndicator()); // Loading indicator while data is loading
-                }
-
-                List<Accommodation> accommodations =
-                    snapshot.data!.docs.map((doc) {
-                  Map<String, dynamic> data =
-                      doc.data() as Map<String, dynamic>;
-                  return Accommodation(
-                    name: data['name'],
-                    location: data['location'],
-                    images: List<String>.from(data['images']),
-                    residenceDetails: data['residenceDetails'],
-                  );
-                }).toList();
-                return screens[_index];
-              },
+                SizedBox(
+                  height: 50,
+                ),
+                ListTile(
+                  leading: Icon(Icons.policy_outlined, color: Colors.white),
+                  title: Text('Terms & conditions'),
+                  onTap: () {},
+                  textColor: Colors.white,
+                ),
+                ListTile(
+                  leading: Icon(
+                    Icons.info_outline,
+                    color: Colors.white,
+                  ),
+                  title: Text('More Info'),
+                  onTap: () {},
+                  textColor: Colors.white,
+                ),
+                ListTile(
+                  leading: Icon(Icons.logout_outlined, color: Colors.white),
+                  title: Text('Logout'),
+                  onTap: () {
+                    _showLogoutConfirmationDialog(context);
+                  },
+                  textColor: Colors.white,
+                )
+              ],
             ),
-    );
+          ),
+          backgroundColor: Colors.blue,
+        ),
+        body: _buildBody());
+  }
+
+  Widget _buildBody() {
+    switch (_index) {
+      case 0:
+        return HomePage();
+      case 1:
+        return NotificationPage();
+      case 2:
+        return MessagesPage();
+      case 3:
+        return PersonalPage();
+      default:
+        return Container(); // Handle other cases if needed
+    }
   }
 }
 
@@ -270,25 +252,5 @@ class SearchDelegateWidget extends SearchDelegate {
     return Center(
       child: Text('Suggestions for: $query'),
     );
-  }
-}
-
-class FirestoreService {
-  final CollectionReference usersCollection =
-      FirebaseFirestore.instance.collection('users');
-
-  Future<String?> getUserName(String userId) async {
-    try {
-      DocumentSnapshot documentSnapshot =
-          await usersCollection.doc(userId).get();
-      if (documentSnapshot.exists) {
-        return documentSnapshot['name'];
-      } else {
-        return null; // User not found in the database
-      }
-    } catch (e) {
-      print('Error getting user name: $e');
-      return null;
-    }
   }
 }

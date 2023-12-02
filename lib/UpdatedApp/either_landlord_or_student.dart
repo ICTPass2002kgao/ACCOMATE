@@ -1,110 +1,5 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, sized_box_for_whitespace, sort_child_properties_last, unnecessary_brace_in_string_interps
-// onPressed: () async {
-//   // Implement registration logic here using FirebaseAuth
-//   // You need to validate inputs and handle registration accordingly
-//   // For example:
-//   try {
-//     UserCredential userCredential =
-//         await _auth.createUserWithEmailAndPassword(
-//       email: emailController.text,
-//       password: passwordController.text,
-//     );
-//     if (!widget.isLandlord) {
-//       // If registering as a student, show AlertDialog and navigate to the next page
-//       showDialog(
-//         context: context,
-//         builder: (BuildContext context) {
-//           return AlertDialog(
-//             title: Text('Account Created Successfully'),
-//             content: Text(
-//                 'You can now continue with additional student information.'),
-//             actions: [
-//               TextButton(
-//                   onPressed: () {
-//                     Navigator.of(context)
-//                         .pop(); // Close the AlertDialog
-//                     Navigator.push(
-//                       context,
-//                       MaterialPageRoute(
-//                           builder: (context) =>
-//                               StudentRegistration2(
-//                                 userType: widget.isLandlord
-//                                     ? 'landlord'
-//                                     : 'student',
-//                                 email: emailController.text,
-//                                 password:
-//                                     passwordController.text,
-//                                 name: nameController.text,
-//                                 surname: surnameController.text,
-//                               )),
-//                     );
-//                   },
-//                   child: Text(
-//                     'Continue',
-//                   )),
-//             ],
-//           );
-//         },
-//       );
-//     } else {
-//       showDialog(
-//         context: context,
-//         builder: (BuildContext context) {
-//           return AlertDialog(
-//             title: Text('Account Created Successfully'),
-//             content: Text(
-//                 'You can now continue with additional accomodation information.'),
-//             actions: [
-//               TextButton(
-//                   onPressed: () {
-//                     // Close the AlertDialog
 
-//                     Navigator.push(
-//                       context,
-//                       MaterialPageRoute(
-//                           builder: (context) => LandlordPage()),
-//                     );
-//                   },
-//                   child: Text(
-//                     'Continue',
-//                   )),
-//             ],
-//           );
-//         },
-//       );
-//       // If registering as a landlord, no need for AlertDialog, just navigate to the next page
-//     }
-
-//     print('User registered: ${userCredential.user?.email}');
-//   } catch (e) {
-//     _showLogoutConfirmationDialog(context, e);
-//   }
-// },
-// TextField(
-//   controller: nameController,
-//   decoration: InputDecoration(
-//       focusColor: Colors.blue,
-//       fillColor: Color.fromARGB(255, 230, 230, 230),
-//       filled: true,
-//       prefixIcon: Icon(
-//         Icons.person,
-//         color: Colors.blue,
-//       ),
-//       hintText: 'Name'),
-// ),
-// SizedBox(height: 16),
-// TextField(
-//   controller: surnameController,
-//   decoration: InputDecoration(
-//       focusColor: Colors.blue,
-//       fillColor: Color.fromARGB(255, 230, 230, 230),
-//       filled: true,
-//       prefixIcon: Icon(
-//         Icons.person,
-//         color: Colors.blue,
-//       ),
-//       hintText: 'Surname'),
-// ),
 import 'dart:math';
 
 import 'package:api_com/UpdatedApp/landlordFurntherRegistration.dart';
@@ -329,6 +224,18 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                               String surname = surnameController.text;
 
                               try {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible:
+                                      false, // Prevent user from dismissing the dialog
+                                  builder: (BuildContext context) {
+                                    return Center(
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                      ),
+                                    );
+                                  },
+                                );
                                 // Create a user in Firebase Auth
                                 UserCredential userCredential =
                                     await FirebaseAuth.instance
@@ -352,7 +259,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                   'name': name,
                                   'surname': surname,
                                   'email': email,
-                                  'role': !widget.isLandlord,
+                                  'role': widget.isLandlord,
                                   'university': university,
 
                                   'verificationCode': verificationCode
@@ -484,7 +391,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                             LandlordFurtherRegistration(
                                               password: passwordController.text,
                                               contactDetails:
-                                                  contactDetails.hashCode,
+                                                  contactDetails.text,
                                               isLandlord: widget.isLandlord,
                                               accomodationName:
                                                   accomodationName.text,
