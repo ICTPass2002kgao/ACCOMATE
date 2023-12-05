@@ -1,5 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -10,6 +12,61 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool isLoading = true;
+  List<Map<String, dynamic>> _studentApplications = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    _user = FirebaseAuth.instance.currentUser!;
+    _loadUserData();
+  }
+
+  late User _user;
+  Map<String, dynamic>? _userData; // Make _userData nullable
+
+  Future<void> _loadUserData() async {
+    DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(_user.uid)
+        .get();
+    setState(() {
+      _userData = userDataSnapshot.data() as Map<String, dynamic>?;
+      isLoading = false;
+    });
+    // After loading landlord data, load student applications
+    await _loadStudentApplications();
+  }
+
+  Future<void> _loadStudentApplications() async {
+    try {
+      // Assuming there is a specific landlord ID (replace 'your_landlord_id' with the actual ID)
+      String landlordUserId = _userData?['userId'] ?? '';
+
+      QuerySnapshot applicationsSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(landlordUserId)
+          .collection('applications')
+          .get();
+
+      List<Map<String, dynamic>> studentApplications = [];
+
+      for (QueryDocumentSnapshot documentSnapshot
+          in applicationsSnapshot.docs) {
+        Map<String, dynamic> applicationData =
+            documentSnapshot.data() as Map<String, dynamic>;
+        studentApplications.add(applicationData);
+      }
+
+      setState(() {
+        _studentApplications = studentApplications;
+      });
+    } catch (e) {
+      print('Error loading student applications: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,7 +75,7 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Available Registrations',
+          Text('Available Application',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           SizedBox(
             height: 5,
@@ -26,67 +83,105 @@ class _HomePageState extends State<HomePage> {
           Table(
             border: TableBorder.all(),
             children: [
+              // Table header
               TableRow(
                 children: [
                   TableCell(
-                    child: Center(child: Text('ID No')),
-                  ),
-                  TableCell(
-                    child: Center(child: Text('Name')),
-                  ),
-                  TableCell(
-                    child: Center(child: Text('Surname')),
-                  ),
-                  TableCell(
-                    child: Center(child: Text('Cell No')),
-                  ),
-                  TableCell(
-                    child: Center(child: Text('Email Address')),
-                  ),
-                  TableCell(
-                    child: Center(child: Text('Proof Of Registration')),
-                  ),
-                ],
-              ),
-              TableRow(
-                children: [
-                  TableCell(
-                    child: Center(child: Text('')),
-                  ),
-                  TableCell(
-                    child: Center(child: Text('')),
-                  ),
-                  TableCell(
-                    child: Center(child: Text('')),
-                  ),
-                  TableCell(
-                    child: Center(child: Text('')),
-                  ),
-                  TableCell(
-                    child: Center(child: Text('')),
+                    child: Center(
+                        child: Text('Name',
+                            style: TextStyle(fontWeight: FontWeight.bold))),
                   ),
                   TableCell(
                     child: Center(
-                        child: TextButton(
-                      onPressed: () {
-                        // Implement logic to open the PDF file
-                        // For now, let's just print a message
-                        print('Open PDF');
-                      },
-                      child: Text('View PDF'),
-                    )),
+                        child: Text('Surname',
+                            style: TextStyle(fontWeight: FontWeight.bold))),
+                  ),
+                  TableCell(
+                    child: Center(
+                        child: Text('Gender',
+                            style: TextStyle(fontWeight: FontWeight.bold))),
+                  ),
+                  TableCell(
+                    child: Center(
+                        child: Text('Cell No',
+                            style: TextStyle(fontWeight: FontWeight.bold))),
+                  ),
+                  TableCell(
+                    child: Center(
+                        child: Text('Email Address',
+                            style: TextStyle(fontWeight: FontWeight.bold))),
+                  ),
+                  TableCell(
+                    child: Center(
+                        child: Text('University',
+                            style: TextStyle(fontWeight: FontWeight.bold))),
                   ),
                 ],
               ),
+              // Table rows for student applications
+              for (Map<String, dynamic> studentApplication
+                  in _studentApplications)
+                TableRow(
+                  children: [
+                    TableCell(
+                      child: Center(
+                          child:
+                              Text(studentApplication['name'] ?? 'Kgaogelo')),
+                    ),
+                    TableCell(
+                      child: Center(
+                          child: Text(
+                              studentApplication['surname'] ?? 'Mthimkhulu')),
+                    ),
+                    TableCell(
+                      child: Center(
+                          child: Text(studentApplication['gender'] ?? 'male')),
+                    ),
+                    TableCell(
+                      child: Center(
+                          child: Text(
+                              studentApplication['contactDetails'] ?? 'null')),
+                    ),
+                    TableCell(
+                      child: Center(
+                          child: Text(studentApplication['email'] ?? 'null')),
+                    ),
+                    TableCell(
+                      child: Center(
+                          child:
+                              Text(studentApplication['university'] ?? 'yyyy')),
+                    ),
+                  ],
+                ),
             ],
           ),
-          Center(
-              child: Text(
-            'Shap Ka leboga!!',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ))
         ],
       ),
     ));
   }
 }
+//   Future<void> _loadLandlordData() async {
+//     try {
+//       QuerySnapshot landlordSnapshot = await FirebaseFirestore.instance
+//           .collection('users')
+//           .where('role', isEqualTo: true)
+//           .get();
+
+//       List<Map<String, dynamic>> landlordsData = [];
+
+//       for (QueryDocumentSnapshot documentSnapshot in landlordSnapshot.docs) {
+//         Map<String, dynamic> landlordData =
+//             documentSnapshot.data() as Map<String, dynamic>;
+//         landlordsData.add(landlordData);
+//       }
+
+//       setState(() {
+//         _landlordsData = landlordsData;
+//         isLoading = false;
+//       });
+
+    
+//     } catch (e) {
+//       print('Error loading landlord data: $e');
+//     }
+//   }

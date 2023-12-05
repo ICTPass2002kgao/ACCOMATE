@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, sized_box_for_whitespace, sort_child_properties_last, unnecessary_brace_in_string_interps
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, sized_box_for_whitespace, sort_child_properties_last, unnecessary_brace_in_string_interps, unnecessary_string_interpolations
 
 import 'dart:math';
 
@@ -24,8 +24,6 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
   final TextEditingController contactDetails = TextEditingController();
   final TextEditingController accomodationName = TextEditingController();
   final TextEditingController distanceController = TextEditingController();
-  final ExpansionTileController _expansionTileController =
-      ExpansionTileController();
   String selectedUniversity = '';
   List<String> universities = [
     'Vaal University of Technology',
@@ -43,6 +41,11 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
     'Durban University of Technology',
     'North West University'
   ];
+  String selectedGender = '';
+  List<String> gender = [
+    'Male',
+    'Female',
+  ];
 
   @override
   void initState() {
@@ -56,47 +59,6 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
     // Generate a random 6-digit code
     return '${random.nextInt(999999).toString().padLeft(6, '0')}';
   }
-
-  Future<void> _showLogoutConfirmationDialog(BuildContext context, val) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button for close
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text('Invalid Details'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Row(
-                  children: [
-                    Icon(Icons.warning_outlined, color: Colors.red, size: 40),
-                    SizedBox(width: 10),
-                    Container(
-                        width: 190,
-                        child: Text(
-                          '${val}',
-                        )),
-                  ],
-                )
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Retry!!'),
-              onPressed: () {
-                setState(() {});
-                Navigator.of(context).pop(); // Close the dialog
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-// Default value
 
   @override
   Widget build(BuildContext context) {
@@ -214,14 +176,32 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                               );
                             }).toList(),
                           ),
+                          SizedBox(height: 5),
+                          ExpansionTile(
+                            title: Text('Select Gender'),
+                            children: gender.map((paramgender) {
+                              return RadioListTile<String>(
+                                title: Text(paramgender),
+                                value: paramgender,
+                                groupValue: selectedGender,
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedGender = value!;
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
                           SizedBox(height: 20.0),
                           TextButton(
                             onPressed: () async {
+                              String gender = selectedGender;
                               String email = emailController.text;
                               String password = passwordController.text;
                               String university = selectedUniversity;
                               String name = nameController.text;
                               String surname = surnameController.text;
+                              String contact = contactDetails.text;
 
                               try {
                                 showDialog(
@@ -261,8 +241,10 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                   'email': email,
                                   'role': widget.isLandlord,
                                   'university': university,
-
-                                  'verificationCode': verificationCode
+                                  'contactDetails': contact,
+                                  'verificationCode': verificationCode,
+                                  'userId': userId,
+                                  'gender': gender
                                   // Add more user data as needed
                                 });
 

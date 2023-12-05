@@ -1,10 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last
 
 import 'package:api_com/UpdatedApp/accomodation_page.dart';
-import 'package:api_com/advanced_details.dart';
-import 'package:api_com/global_variables.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -14,7 +11,6 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-final details = residencesCard;
 int isSelected = 0;
 
 class _HomePageState extends State<HomePage> {
@@ -92,21 +88,19 @@ class _HomePageState extends State<HomePage> {
                                 children: [
                                   ClipRRect(
                                       borderRadius: BorderRadius.circular(10.0),
-                                      child: landlordData
-                                              .containsKey('profilePicture')
-                                          ? Image.network(
-                                              '${landlordData['profilePicture']}',
-                                              width: 300.0,
-                                              height: 300.0,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : Container()),
-                                  // Other landlord information
+                                      child: Image.network(
+                                        landlordData['profilePicture'],
+                                        width: 250.0,
+                                        height: 250.0,
+                                        fit: BoxFit.cover,
+                                      )),
                                   SizedBox(height: 5.0),
                                   Row(
                                     children: [
                                       Text(
-                                          ' ${landlordData['accomodationName'] ?? 'N/A'}'),
+                                          ' ${landlordData['accomodationName'] ?? 'N/A'}',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
                                       Icon(
                                         Icons.verified,
                                         color: Colors.blue[900],
@@ -119,22 +113,25 @@ class _HomePageState extends State<HomePage> {
                                     'Available Now',
                                     style: TextStyle(color: Colors.green),
                                   )
-                                  // Text('Surname: ${landlordData['location'] ?? 'N/A'}'),
-                                  // Text(
-                                  //     'Institutions: ${landlordData['selectedUniversity'] ?? 'N/A'}'),
-                                  // Text('Email: ${landlordData['email'] ?? 'N/A'}'),
-                                  // You can add more UI elements to display additional landlord information
                                 ],
                               ),
                             ),
                           ),
                         ),
+                      SizedBox(width: 20),
                     ],
                   ),
                 ),
                 SizedBox(
-                  width: 10,
-                )
+                  height: 10,
+                ),
+                Text(
+                  'Non-Transport Accomodation',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
               ],
             ),
     ));

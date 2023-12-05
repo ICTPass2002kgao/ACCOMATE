@@ -298,8 +298,7 @@ class _LandlordFurtherRegistrationState
       if (placemarks.isNotEmpty) {
         String street = placemarks.first.street ?? 'Unknown';
         String address = placemarks.first.locality ?? 'Unknown';
-        String country = placemarks.first.country ?? 'Unknown';
-        txtLiveLocation.text = '${country} ,${address},${street}';
+        txtLiveLocation.text = '${address},${street}';
       }
     } catch (e) {
       print('Error fetching address: $e');

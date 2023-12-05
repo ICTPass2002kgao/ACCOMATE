@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, sized_box_for_whitespace, use_build_context_synchronously, unnecessary_string_interpolations
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, sized_box_for_whitespace, use_build_context_synchronously, unnecessary_string_interpolations, avoid_print, avoid_unnecessary_containers, sort_child_properties_last
 
 import 'dart:io';
 import 'dart:math';
@@ -7,7 +7,6 @@ import 'package:api_com/UpdatedApp/LandlordPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -207,139 +206,6 @@ class _OffersPageState extends State<OffersPage> {
     );
   }
 
-//   Future<String> uploadImageToFirestoreStorage(File imageFile) async {
-//     try {
-//       // Get a reference to the Firebase Storage bucket
-//       var storage = FirebaseStorage.instance;
-
-//       // Create a unique filename for the image
-//       String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-
-//       // Create a reference to the location you want to upload the image
-//       var reference = storage.ref().child('Profile/$fileName.jpg');
-
-//       // Upload the image to Firebase Storage
-//       await reference.putFile(imageFile);
-
-//       // Get the download URL of the uploaded image
-//       String downloadURL = await reference.getDownloadURL();
-
-//       return downloadURL;
-//     } catch (error) {
-//       print('Error uploading image to Firestore Storage: $error');
-//       throw error;
-//     }
-//   }
-
-//   Future<void> registerUserInFirestore(
-//       // ... existing parameters ...
-//       {required String email,
-//       required String password,
-//       required String accomodationName,
-//       required String location,
-//       required XFile? image,
-//       required bool isLandlord,
-//       required String distance,
-//       required int contactDetails,
-//       required Map<String, bool> selectedOffers,
-//       required Map<String, bool> selectedUniversity,
-//       required Map<String, bool> selectedPaymentsMethods,
-//       required bool usesTransport,
-//       required bool isAccomodation}) async {
-//     try {
-//       // Create a user in Firebase Auth
-  // showDialog(
-  //   context: context,
-  //   barrierDismissible: false, // Prevent user from dismissing the dialog
-  //   builder: (BuildContext context) {
-  //     return Center(
-  //       child: CircularProgressIndicator(),
-  //     );
-  //   },
-  // );
-//       UserCredential userCredential =
-//           await FirebaseAuth.instance.createUserWithEmailAndPassword(
-//         email: email,
-//         password: password,
-//       );
-
-//       await FirebaseAuth.instance.currentUser!.sendEmailVerification();
-//       showDialog(
-//         context: context,
-//         builder: (context) => AlertDialog(
-//           title: Text('Verification Email Sent'),
-//           content: Text(
-//             'Hi, $accomodationName landlord\n A verification email has been sent to $email. Please check your email and verify your account.',
-//           ),
-//           actions: [
-//             TextButton(
-//               onPressed: () async {
-//                 Navigator.of(context).pop();
-
-//                 widget.isLandlord
-//                     ? Navigator.pushReplacement(
-//                         context,
-//                         MaterialPageRoute(
-//                           builder: (context) => LandlordPage(),
-//                         ),
-//                       )
-//                     : print('the user is not a landlord');
-//               },
-//               child: Text('Verify'),
-//             ),
-//           ],
-//         ),
-//       );
-
-//       // Create a document in the 'users' collection
-
-//       // ... existing code ...
-
-//       // Upload each image and add its URL to the 'urls' subcollection
-//       if (image != null) {
-//         String imageUrl = await uploadImageToFirestoreStorage(File(image.path));
-
-//         // Update the 'profilePicture' field with the URL of the first image
-//         DocumentReference userDocRef =
-//             await FirebaseFirestore.instance.collection('users').add({
-//           'accomodationName': widget.accomodationName,
-//           'location': widget.location,
-//           'email': widget.landlordEmail,
-//           'role': widget.isLandlord,
-//           'selectedOffers': selectedOffers,
-//           'selectedUniversity': selectedUniversity,
-//           'distance': widget.distance,
-//           'selectedPaymentsMethods': widget.selectedPaymentsMethods,
-//           'transport availability': usesTransport,
-//           'contactDetails': widget.contactDetails,
-//           'verificationCode': verificationCode,
-//           'profilePicture': imageUrl, // Placeholder for the profile picture URL
-//         });
-
-//         await userDocRef.update({
-//           'profilePicture': imageUrl,
-//         });
-
-//         // Create a document in the 'images' collection
-//         DocumentReference documentReference =
-//             await FirebaseFirestore.instance.collection('images').add({
-//           'timestamp': FieldValue.serverTimestamp(),
-//           'userId': userCredential.user!.uid,
-//         });
-
-//         // Add the image URL to the 'urls' subcollection
-//         await documentReference.collection('urls').add({
-//           'url': imageUrl,
-//         });
-//       }
-//       // ... existing code ...
-//     } catch (error) {
-//       print('Error during user registration: $error');
-//       // Handle registration error
-//     }
-//   }
-// // ...
-
   void _registerUserToFirebase() async {
     try {
       showDialog(
@@ -370,7 +236,7 @@ class _OffersPageState extends State<OffersPage> {
 
       // Step 4: Send verification email
       await userCredential.user!.sendEmailVerification();
-
+      String userId = userCredential.user!.uid;
       // Step 5: Store additional user data in Firestore
       await FirebaseFirestore.instance
           .collection('users')
@@ -389,6 +255,7 @@ class _OffersPageState extends State<OffersPage> {
         'accomodationType': isAccomodation,
         'verificationCode': verificationCode,
         'profilePicture': downloadUrl,
+        'userId': userId
       });
 
       // Registration successful, notify the user to check their email for verification
@@ -610,12 +477,7 @@ class _OffersPageState extends State<OffersPage> {
                     SizedBox(
                       height: 20,
                     ),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {});
-                      },
-                      child: Text('hi'),
-                    ),
+
                     TextButton(
                       onPressed: () async {
                         _showAddProductDialog();

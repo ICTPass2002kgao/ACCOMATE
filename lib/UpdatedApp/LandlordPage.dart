@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:api_com/LandlordDetails/LandlordRegistration.dart';
+import 'package:api_com/UpdatedApp/LandlordPages/AccountDetails.dart';
+import 'package:api_com/UpdatedApp/LandlordPages/Notification.dart';
 import 'package:api_com/UpdatedApp/StudentPages/PeersonalPage.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/Home.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/Messages.dart';
@@ -69,7 +71,7 @@ class _LandlordPageState extends State<LandlordPage> {
   }
 
   int _currentIndex = 0;
-  List screens = [HomePage(), Messages(), PersonalPage()];
+  List screens = [HomePage(), Notifications(), Messages(), AccountDetails()];
 
   @override
   Widget build(BuildContext context) {
@@ -140,6 +142,11 @@ class _LandlordPageState extends State<LandlordPage> {
               backgroundColor: Colors.blue,
               icon: Icon(Icons.home_outlined, size: 30),
               label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              backgroundColor: Colors.blue,
+              icon: Icon(Icons.notifications_active, size: 30),
+              label: 'Notification',
             ),
             BottomNavigationBarItem(
               backgroundColor: Colors.blue,

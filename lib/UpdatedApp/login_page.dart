@@ -246,71 +246,41 @@ class _LoginPageState extends State<LoginPage> {
                           SizedBox(
                             height: 20,
                           ),
-                          Text(
-                            'Or sign-in with',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                          SizedBox(
-                            height: 1,
-                          ),
-                          Divider(
-                            color: Colors.black,
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: isLoading
-                                ? Center(
-                                    child:
-                                        CircularProgressIndicator()) // Show a loading indicator
-                                : Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      GestureDetector(
-                                          onTap: () {
-                                            print('Apple');
-                                          },
-                                          child: ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                            child: isLoading
-                                                ? Center(
-                                                    child:
-                                                        CircularProgressIndicator()) // Show a loading indicator
-                                                : Image.asset(
-                                                    'assets/apple_logo.png',
-                                                    width: 70,
-                                                  ),
-                                          )),
-                                      SizedBox(
-                                        width: 20,
-                                      ),
-                                      GestureDetector(
-                                          onTap: () {
-                                            print('Google');
-                                          },
-                                          child: ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                            child: Image.asset(
-                                              'assets/Google_icon.png',
-                                              width: 70,
-                                            ),
-                                          )),
-                                    ],
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Expanded(
+                                child: Divider(
+                                  color: Colors.black,
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Text(
+                                  'OR',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
                                   ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Divider(
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
                           ),
                           SizedBox(
-                            height: 20,
+                            height: 50,
                           ),
                           GestureDetector(
                             onTap: () {
                               registerPage();
                             },
                             child: Text(
-                              "Create Account here",
+                              "Create new Account here",
                               style:
                                   TextStyle(color: Colors.blue, fontSize: 18),
                             ),

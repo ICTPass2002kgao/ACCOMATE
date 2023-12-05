@@ -4,6 +4,8 @@ import 'package:api_com/UpdatedApp/StudentPages/HomePage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/MessagesPage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/NotificationPage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/PeersonalPage.dart';
+import 'package:api_com/UpdatedApp/accomodation_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -62,12 +64,6 @@ class _StudentPageState extends State<StudentPage> {
 
   bool isLoading = true;
 
-  @override
-  void initState() {
-    super.initState();
-    loadData();
-  }
-
   Future<void> loadData() async {
     // Simulate loading data
     await Future.delayed(Duration(seconds: 2));
@@ -78,32 +74,35 @@ class _StudentPageState extends State<StudentPage> {
     });
   }
 
-  // void displayName(val) async {
-  //   DocumentSnapshot userDoc = await FirebaseFirestore.instance
-  //       .collection('users')
-  //       .doc(FirebaseAuth.instance.currentUser!.uid)
-  //       .get();
+  late User _user;
+  Map<String, dynamic>? _userData; // Make _userData nullable
 
-  //   String userName = userDoc['name'];
-  //   val = userName;
-  // }
+  @override
+  void initState() {
+    super.initState();
+    _user = FirebaseAuth.instance.currentUser!;
+    _loadUserData();
+    loadData();
+  }
+
+  Future<void> _loadUserData() async {
+    DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(_user.uid)
+        .get();
+    setState(() {
+      _userData = userDataSnapshot.data() as Map<String, dynamic>?;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
           foregroundColor: Colors.white,
-          title: Text('Hi Student!'),
+          title: Text("Hi ${_userData?['name'] ?? 'Student'}!"),
           centerTitle: true,
           backgroundColor: Colors.blue,
-          actions: [
-            IconButton(
-                onPressed: () {
-                  showSearch(
-                      context: context, delegate: SearchDelegateWidget());
-                },
-                icon: Icon(Icons.search_rounded))
-          ],
         ),
         bottomNavigationBar: BottomNavigationBar(
             currentIndex: _index,
@@ -202,19 +201,10 @@ class _StudentPageState extends State<StudentPage> {
   }
 }
 
-class SearchDelegateWidget extends SearchDelegate {
-  @override
-  ThemeData appBarTheme(BuildContext context) {
-    // Customize the search box color
-    final ThemeData theme = Theme.of(context);
-    return theme.copyWith(
-      primaryColor: Colors.blue,
-      primaryIconTheme: theme.primaryIconTheme.copyWith(color: Colors.white),
-      textTheme: theme.textTheme.copyWith(
-        headline6: theme.textTheme.titleLarge?.copyWith(color: Colors.white),
-      ),
-    );
-  }
+class _DataSearch extends SearchDelegate<String> {
+  final List<Map<String, dynamic>> landlordsData;
+
+  _DataSearch(this.landlordsData);
 
   @override
   List<Widget> buildActions(BuildContext context) {
@@ -231,26 +221,57 @@ class SearchDelegateWidget extends SearchDelegate {
   @override
   Widget buildLeading(BuildContext context) {
     return IconButton(
-      icon: Icon(Icons.arrow_back),
+      icon: AnimatedIcon(
+        color: Colors.black,
+        icon: AnimatedIcons.menu_arrow,
+        progress: transitionAnimation,
+      ),
       onPressed: () {
-        close(context, null);
+        close(context, '');
       },
     );
   }
 
   @override
   Widget buildResults(BuildContext context) {
-    // Handle search results
-    return Center(
-      child: Text('Search Results for: $query'),
-    );
+    return _buildSearchResults();
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    // Show suggestions as the user types
-    return Center(
-      child: Text('Suggestions for: $query'),
+    return _buildSearchResults();
+  }
+
+  Widget _buildSearchResults() {
+    final filteredLandlords = landlordsData.where((landlord) {
+      final accommodationName =
+          landlord['accommodationName']?.toLowerCase() ?? '';
+      return accommodationName.contains(query.toLowerCase());
+    }).toList();
+
+    return ListView.builder(
+      itemCount: filteredLandlords.length,
+      itemBuilder: (context, index) {
+        final landlordData = filteredLandlords[index];
+        return ListTile(
+          title: Text(
+            landlordData['accommodationName'] ?? '',
+            style: TextStyle(color: Colors.black),
+          ),
+          onTap: () {
+            // Handle the selected search result
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AccomodationPage(
+                  landlordData: landlordData,
+                ),
+              ),
+            );
+            close(context, landlordData['accommodationName'] ?? '');
+          },
+        );
+      },
     );
   }
 }

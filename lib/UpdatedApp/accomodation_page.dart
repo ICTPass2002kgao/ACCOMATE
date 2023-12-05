@@ -1,8 +1,11 @@
-// ignore_for_file: prefer_const_constructors, dead_code, prefer_const_literals_to_create_immutables, sort_child_properties_last, avoid_unnecessary_containers, unnecessary_string_interpolations, sized_box_for_whitespace
+// ignore_for_file: prefer_const_constructors, dead_code, prefer_const_literals_to_create_immutables, sort_child_properties_last, avoid_unnecessary_containers, unnecessary_string_interpolations, sized_box_for_whitespace, use_build_context_synchronously, avoid_print
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class AccomodationPage extends StatelessWidget {
+class AccomodationPage extends StatefulWidget {
   final Map<String, dynamic> landlordData;
   const AccomodationPage({
     super.key,
@@ -10,217 +13,273 @@ class AccomodationPage extends StatelessWidget {
     // required this.imageUrls,
   });
 
-  Future<void> _comfirmedRegistration(BuildContext context) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button for close
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text('Done'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Row(
-                  children: [
-                    SizedBox(width: 10),
-                    Container(
-                        width: 200,
-                        child: Text("Accomodation registered successfully")),
-                    Icon(Icons.done, color: Colors.greenAccent[700], size: 40),
-                  ],
-                )
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              style: ButtonStyle(
-                backgroundColor:
-                    MaterialStatePropertyAll(Colors.greenAccent[700]),
-                foregroundColor:
-                    MaterialStatePropertyAll(Colors.greenAccent[700]),
-              ),
-              child: Text(
-                'Done',
-                style: TextStyle(color: Colors.white),
-              ),
-              onPressed: () {
-                // Perform logout logic here
-                // ...
+  @override
+  State<AccomodationPage> createState() => _AccomodationPageState();
+}
 
-                Navigator.popUntil(
-                    context, ModalRoute.withName('/StudentPage'));
-                // Close the dialog
-              },
-            ),
-          ],
-        );
-      },
-    );
+class _AccomodationPageState extends State<AccomodationPage> {
+  late User _user;
+
+  Map<String, dynamic>? _userData;
+  // Make _userData nullable
+  @override
+  void initState() {
+    super.initState();
+    _user = FirebaseAuth.instance.currentUser!;
+    _loadUserData();
   }
 
-  Future<void> _agreeWithTermsAndConditions(BuildContext context) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button for close
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text('Comfirm the registration'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Row(
-                  children: [
-                    Icon(Icons.warning,
-                        color: const Color.fromARGB(255, 235, 215, 38),
-                        size: 40),
-                    SizedBox(width: 5),
-                    Container(
-                        width: 200,
-                        child: Text(
-                            "Are you sure you're registering the residence?")),
-                  ],
-                )
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text(
-                'Cancel',
-              ),
-              onPressed: () {
-                // Perform logout logic here
-                // ...
-
-                Navigator.of(context).pop(); // Close the dialog
-              },
-            ),
-            SizedBox(width: 5),
-            TextButton(
-              style: ButtonStyle(
-                backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                foregroundColor: MaterialStatePropertyAll(Colors.blue),
-              ),
-              child: Text(
-                'Yes',
-                style: TextStyle(color: Colors.white),
-              ),
-              onPressed: () {
-                // Perform logout logic here
-                // ...
-                Navigator.of(context).pop();
-
-                _comfirmedRegistration(context);
-
-                // Close the dialog
-              },
-            ),
-          ],
-        );
-      },
-    );
+  Future<void> _loadUserData() async {
+    DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(_user.uid)
+        .get();
+    setState(() {
+      _userData = userDataSnapshot.data() as Map<String, dynamic>?;
+    });
   }
 
-  Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button for close
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text('Terms & Conditions'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Column(
-                  children: [
-                    SizedBox(width: 10),
-                    Text('This are the terms and conditions of the app '),
-                  ],
-                )
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              style: ButtonStyle(
-                backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                foregroundColor: MaterialStatePropertyAll(Colors.blue),
-              ),
-              child: Text(
-                'I Agree',
-                style: TextStyle(color: Colors.white),
-              ),
-              onPressed: () {
-                // Perform logout logic here
-                // ...
-                Navigator.of(context).pop();
-                _agreeWithTermsAndConditions(context);
+  Future<void> _saveApplicationDetails() async {
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false, // Prevent user from dismissing the dialog
+        builder: (BuildContext context) {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      );
 
-                // Close the dialog
-              },
+      String landlordUserId = widget.landlordData['userId'] ?? '';
+      String studentUserId = _userData?['userId'] ?? '';
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(landlordUserId)
+          .collection('applications')
+          .doc(studentUserId)
+          .set({
+        'name': _userData?['name'] ?? '',
+        'surname': _userData?['surname'] ?? '',
+        'university': _userData?['university'] ?? '',
+        'email': _userData?['email'] ?? '',
+        'contactDetails': _userData?['contactDetails'] ?? '',
+
+        // Add more details as needed
+      });
+      showDialog(
+        context: context,
+        builder: (context) => Container(
+          height: 400,
+          child: AlertDialog(
+            title: Text(
+              'Application Response',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
-          ],
-        );
-      },
-    );
+            content: Container(
+              child: Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(40),
+                    child: Container(
+                      color: Colors.green,
+                      width: 80,
+                      height: 80,
+                      child: Icon(Icons.done, color: Colors.white),
+                    ),
+                  ),
+                  Text(
+                    'Your application was sent successfully. You will get further communication soon.',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await confirmationEmail(
+                      _userData?['email'] ?? '', // Student's email
+                      'Application sent successfully',
+                      'Hi ${_userData?['name']} , \nYour application was sent successfully to ${widget.landlordData['accomodationName']}, You will get further communication soon.');
+
+                  print('email sent successfully');
+                },
+                child: Text('Done'),
+              ),
+            ],
+          ),
+        ),
+      );
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  final HttpsCallable sendEmailCallable =
+      FirebaseFunctions.instance.httpsCallable('confirmationEmail');
+
+  Future<void> confirmationEmail(String to, String subject, String body) async {
+    try {
+      final result = await sendEmailCallable.call({
+        'to': to,
+        'subject': subject,
+        'body': body,
+      });
+      print(result.data);
+    } catch (e) {
+      print('Error sending email: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    double buttonWidth =
+        MediaQuery.of(context).size.width < 450 ? double.infinity : 400;
     return Scaffold(
       appBar: AppBar(
+        foregroundColor: Colors.white,
         title: Text(
-          landlordData['accomodationName'],
+          widget.landlordData['accomodationName'],
           style: TextStyle(color: Colors.white, fontSize: 18),
         ),
         centerTitle: true,
         backgroundColor: Colors.blue,
       ),
       body: Center(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 400,
-              child: Card(
-                elevation: 5,
-                child: Column(
-                  children: [
-                    Center(
-                        child: Image.asset(
-                      'assets/taung.jpeg',
-                    )),
-                    SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Text(
-                          'Nsfas Accredited',
-                          style: TextStyle(color: Colors.green),
-                        ),
-                        ElevatedButton(
-                            onPressed: () {}, child: Text('View All'))
-                      ],
+        child: Center(
+          child: Container(
+            width: buttonWidth,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 400,
+                  child: Card(
+                    elevation: 5,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                            child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10.0),
+                                child: Image.network(
+                                  widget.landlordData['profilePicture'],
+                                  width: double.infinity,
+                                  height: 300.0,
+                                  fit: BoxFit.cover,
+                                )),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            maxLines: 1, // Set the maximum number of lines
+                            overflow: TextOverflow.visible,
+                            'Location:${widget.landlordData['location']}',
+                            style: TextStyle(color: Colors.black),
+                          ),
+                          SizedBox(height: 5),
+                          Row(
+                            children: [
+                              Text(
+                                'Distance to campus:${widget.landlordData['distance']}',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                              Icon(
+                                Icons.location_on_outlined,
+                                size: 13,
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            'Accomodation type:${widget.landlordData['accomodationType'] == true ? 'Accomodation' : 'House'}',
+                            style: TextStyle(color: Colors.black),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            'Nsfas Accredited',
+                            style: TextStyle(color: Colors.green),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                SizedBox(
+                  height: 20,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16),
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      showDialog(
+                        context: context,
+                        builder: (context) => Container(
+                          height: 400,
+                          child: AlertDialog(
+                            title: Text('Confirm your details'),
+                            content: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                    'Hi ${_userData?['name']}, we are informing you that you are about to apply for ${widget.landlordData['accomodationName']} with the following details'),
+                                SizedBox(height: 16.0),
+                                Text(
+                                    "Name: ${_userData?['name'] ?? 'Loading...'}"),
+                                SizedBox(height: 10),
+                                Text(
+                                    "Surname: ${_userData?['surname'] ?? 'Loading...'}"),
+                                SizedBox(height: 10),
+                                Text(
+                                    "Enrolled Institution: ${_userData?['university']}"),
+                                SizedBox(height: 10),
+                                Text(
+                                    "Email: ${_userData?['email'] ?? 'Loading...'}"),
+                                SizedBox(height: 10),
+                                Text(
+                                    "Gender: ${_userData?['gender'] ?? 'Loading...'}"),
+                                SizedBox(height: 10),
+                                Text(
+                                    "Contact Details: ${_userData?['contactDetails'] ?? 'Loading...'}"),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () async {
+                                  Navigator.of(context).pop();
+                                  await _saveApplicationDetails();
+                                  await confirmationEmail(
+                                      widget.landlordData[
+                                          'email'], // Student's email
+                                      'Application Received',
+                                      'Hi ${widget.landlordData['accomodationName'] ?? ''} landlord, \nYou have new application from student from ${_userData?['university']}.');
+                                  // Optionally, you can navigate to the login screen or do other actions
+                                },
+                                child: Text('Confirmed'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                      // Implement the action when the user applies for accommodation
+
+                      print('Apply for accommodation');
+                    },
+                    child: Text('Apply Accommodation'),
+                    style: ButtonStyle(
+                        backgroundColor: MaterialStatePropertyAll(Colors.blue),
+                        foregroundColor: MaterialStatePropertyAll(Colors.white),
+                        minimumSize:
+                            MaterialStatePropertyAll(Size(buttonWidth, 50))),
+                  ),
+                ),
+              ],
             ),
-            SizedBox(
-              height: 20,
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Implement the action when the user applies for accommodation
-                print('Apply for accommodation');
-              },
-              child: Text('Apply Accommodation'),
-            ),
-          ],
+          ),
         ),
       ),
     );
