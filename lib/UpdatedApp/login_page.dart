@@ -82,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     double buttonWidth =
-        MediaQuery.of(context).size.width < 450 ? double.infinity : 400;
+        MediaQuery.of(context).size.width < 550 ? double.infinity : 400;
     return Scaffold(
       body: isLoading
           ? Center(
@@ -92,205 +92,217 @@ class _LoginPageState extends State<LoginPage> {
           : Padding(
               padding: EdgeInsets.only(top: 50, left: 20, right: 20),
               child: SingleChildScrollView(
+                  physics: AlwaysScrollableScrollPhysics(),
                   child: Center(
-                child: Container(
-                  width: buttonWidth,
-                  child: Center(
-                    child: Column(children: [
-                      Column(
-                        children: [
-                          Icon(Icons.lock_person,
-                              size: 150, color: Colors.blue),
-                          SizedBox(height: 20),
-                          Padding(
-                            padding: EdgeInsets.all(0.0),
-                            child: TextField(
-                              controller: txtEmail,
-                              decoration: InputDecoration(
-                                  focusColor: Colors.blue,
-                                  fillColor: Color.fromARGB(255, 230, 230, 230),
-                                  filled: true,
-                                  prefixIcon: Icon(
-                                    Icons.mail_outline,
-                                    color: Colors.blue,
-                                  ),
-                                  hintText: 'Enter your email'),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(left: 0, top: 10),
-                            child: TextField(
-                              controller: txtPassword,
-                              decoration: InputDecoration(
-                                  focusColor: Colors.blue,
-                                  fillColor: Color.fromARGB(255, 230, 230, 230),
-                                  filled: true,
-                                  prefixIcon: Icon(
-                                    Icons.lock,
-                                    color: Colors.blue,
-                                  ),
-                                  hintText: 'Password'),
-                              obscureText: true,
-                              obscuringCharacter: '*',
-                            ),
-                          ),
-                          SizedBox(
-                            height: 10,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                    child: Container(
+                      width: buttonWidth,
+                      child: Center(
+                        child: Column(children: [
+                          Column(
                             children: [
-                              GestureDetector(
-                                onTap: () async {
-                                  // Request a password reset email
-
-                                  await _resetPassword();
-                                },
-                                child: Text(
-                                  'Forgot Password ?',
-                                  style: TextStyle(
-                                      color: Colors.blue,
-                                      fontSize: 15,
-                                      decorationStyle:
-                                          TextDecorationStyle.double),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          TextButton(
-                            onPressed: () async {
-                              String email = txtEmail.text;
-                              String password = txtPassword.text;
-
-                              try {
-                                showDialog(
-                                  context: context,
-                                  barrierDismissible:
-                                      false, // Prevent user from dismissing the dialog
-                                  builder: (BuildContext context) {
-                                    return Center(
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  },
-                                );
-                                // Sign in with email and password
-                                await FirebaseAuth.instance
-                                    .signInWithEmailAndPassword(
-                                  email: email,
-                                  password: password,
-                                );
-
-                                // Fetch additional user information, including the role, from Firestore
-                                DocumentSnapshot userDoc =
-                                    await FirebaseFirestore.instance
-                                        .collection('users')
-                                        .doc(FirebaseAuth
-                                            .instance.currentUser!.uid)
-                                        .get();
-
-                                bool userRole = userDoc['role'];
-
-                                // Navigate based on the user's role
-                                if (userRole == false) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => StudentPage()),
-                                  );
-                                } else if (userRole == true) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => LandlordPage()),
-                                  );
-                                } else {
-                                  // Handle other roles if needed
-                                }
-                              } catch (e) {
-                                print('Error during login: $e');
-                                // Handle login error
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: Text('Login Error'),
-                                    content: Text(
-                                        'Failed to log in. Please check your email and password.'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text('OK'),
+                              Icon(Icons.lock_person,
+                                  size: 150, color: Colors.blue),
+                              SizedBox(height: 20),
+                              Padding(
+                                padding: EdgeInsets.all(0.0),
+                                child: TextField(
+                                  controller: txtEmail,
+                                  decoration: InputDecoration(
+                                      focusColor: Colors.blue,
+                                      fillColor:
+                                          Color.fromARGB(255, 230, 230, 230),
+                                      filled: true,
+                                      prefixIcon: Icon(
+                                        Icons.mail_outline,
+                                        color: Colors.blue,
                                       ),
-                                    ],
-                                  ),
-                                );
-                              }
-                            },
-                            child: Text(
-                              'Sign-in',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 18),
-                            ),
-                            style: ButtonStyle(
-                                foregroundColor:
-                                    MaterialStatePropertyAll(Colors.blue),
-                                backgroundColor:
-                                    MaterialStatePropertyAll(Colors.blue),
-                                minimumSize: MaterialStatePropertyAll(
-                                    Size(double.infinity, 50))),
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Expanded(
-                                child: Divider(
-                                  color: Colors.black,
+                                      hintText: 'Enter your email'),
                                 ),
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8.0),
-                                child: Text(
-                                  'OR',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
+                                padding: EdgeInsets.only(left: 0, top: 10),
+                                child: TextField(
+                                  controller: txtPassword,
+                                  decoration: InputDecoration(
+                                      focusColor: Colors.blue,
+                                      fillColor:
+                                          Color.fromARGB(255, 230, 230, 230),
+                                      filled: true,
+                                      prefixIcon: Icon(
+                                        Icons.lock,
+                                        color: Colors.blue,
+                                      ),
+                                      hintText: 'Password'),
+                                  obscureText: true,
+                                  obscuringCharacter: '*',
+                                ),
+                              ),
+                              SizedBox(
+                                height: 10,
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () async {
+                                      // Request a password reset email
+
+                                      await _resetPassword();
+                                    },
+                                    child: Text(
+                                      'Forgot Password ?',
+                                      style: TextStyle(
+                                          color: Colors.blue,
+                                          fontSize: 15,
+                                          decorationStyle:
+                                              TextDecorationStyle.double),
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
-                              Expanded(
-                                child: Divider(
-                                  color: Colors.black,
-                                ),
+                              SizedBox(
+                                height: 20,
                               ),
+                              TextButton(
+                                onPressed: () async {
+                                  String email = txtEmail.text;
+                                  String password = txtPassword.text;
+
+                                  try {
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible:
+                                          false, // Prevent user from dismissing the dialog
+                                      builder: (BuildContext context) {
+                                        return Center(
+                                          child: CircularProgressIndicator(
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.blue),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                    // Sign in with email and password
+                                    await FirebaseAuth.instance
+                                        .signInWithEmailAndPassword(
+                                      email: email,
+                                      password: password,
+                                    );
+
+                                    // Fetch additional user information, including the role, from Firestore
+                                    DocumentSnapshot userDoc =
+                                        await FirebaseFirestore.instance
+                                            .collection('users')
+                                            .doc(FirebaseAuth
+                                                .instance.currentUser!.uid)
+                                            .get();
+
+                                    bool userRole = userDoc['role'];
+
+                                    // Navigate based on the user's role
+                                    if (userRole == false) {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                StudentPage()),
+                                      );
+                                    } else if (userRole == true) {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                LandlordPage()),
+                                      );
+                                    } else {
+                                      // Handle other roles if needed
+                                    }
+                                  } catch (e) {
+                                    print('Error during login: $e');
+                                    // Handle login error
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Text('Login Error'),
+                                        content: Text(
+                                            'Failed to log in. Please check your email and password.'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: Text('OK'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: Text(
+                                  'Sign-in',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 18),
+                                ),
+                                style: ButtonStyle(
+                                    shape: MaterialStatePropertyAll(
+                                        RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(5))),
+                                    foregroundColor:
+                                        MaterialStatePropertyAll(Colors.blue),
+                                    backgroundColor:
+                                        MaterialStatePropertyAll(Colors.blue),
+                                    minimumSize: MaterialStatePropertyAll(
+                                        Size(buttonWidth, 50))),
+                              ),
+                              SizedBox(
+                                height: 20,
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  Expanded(
+                                    child: Divider(
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0),
+                                    child: Text(
+                                      'OR',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Divider(
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(
+                                height: 50,
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  registerPage();
+                                },
+                                child: Text(
+                                  "Create new Account here",
+                                  style: TextStyle(
+                                      color: Colors.blue, fontSize: 18),
+                                ),
+                              )
                             ],
-                          ),
-                          SizedBox(
-                            height: 50,
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              registerPage();
-                            },
-                            child: Text(
-                              "Create new Account here",
-                              style:
-                                  TextStyle(color: Colors.blue, fontSize: 18),
-                            ),
                           )
-                        ],
-                      )
-                    ]),
-                  ),
-                ),
-              )),
+                        ]),
+                      ),
+                    ),
+                  )),
             ),
     );
   }

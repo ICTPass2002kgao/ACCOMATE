@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, prefer_final_fields
 
 import 'package:api_com/LandlordDetails/LandlordRegistration.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/AccountDetails.dart';
@@ -62,106 +62,210 @@ class _LandlordPageState extends State<LandlordPage> {
     );
   }
 
-  void openRegistrationPage() {
-    setState(() {
-      Navigator.push(context,
-          MaterialPageRoute(builder: ((context) => LandlordRegistration())));
-      print('add details');
-    });
-  }
+  // void openRegistrationPage() {
+  //   setState(() {
+  //     Navigator.push(context,
+  //         MaterialPageRoute(builder: ((context) => LandlordRegistration())));
+  //     print('add details');
+  //   });
+  // }
 
   int _currentIndex = 0;
   List screens = [HomePage(), Notifications(), Messages(), AccountDetails()];
 
+  List<int> _badgeValues = [10, 0, 10, 99];
+
   @override
   Widget build(BuildContext context) {
-    final buttonStateProvider = Provider.of<ButtonStateProvider>(context);
     return Scaffold(
-      appBar: AppBar(
-        foregroundColor: Colors.white,
-        title: Text('Hi Landlord'),
-        centerTitle: true,
-        backgroundColor: Colors.blue,
-        elevation: 0,
-      ),
-      drawer: Drawer(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          foregroundColor: Colors.white,
+          title: Text('Accomate'),
+          centerTitle: false,
           backgroundColor: Colors.blue,
-          child: ListView(
-            children: [
-              SizedBox(
-                height: 30,
-              ),
-              Icon(
-                Icons.settings,
-                size: 100,
-                color: Colors.white,
-              ),
-              SizedBox(
-                height: 50,
-              ),
-              ListTile(
-                leading: Icon(Icons.policy_outlined, color: Colors.white),
-                title: Text('Terms & conditions'),
-                onTap: () {},
-                textColor: Colors.white,
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.info_outline,
+          elevation: 0,
+        ),
+        endDrawer: Drawer(
+            backgroundColor: Colors.blue,
+            child: ListView(
+              children: [
+                SizedBox(
+                  height: 30,
+                ),
+                Icon(
+                  Icons.settings,
+                  size: 100,
                   color: Colors.white,
                 ),
-                title: Text('More Info'),
-                onTap: () {},
-                textColor: Colors.white,
-              ),
-              ListTile(
-                leading: Icon(Icons.logout_outlined, color: Colors.white),
-                title: Text('Logout'),
-                onTap: () {
-                  setState(() {
-                    _showLogoutConfirmationDialog(context);
-                  });
-                },
-                textColor: Colors.white,
-              )
-            ],
-          )),
-      body: screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-          backgroundColor: Colors.blue,
+                SizedBox(
+                  height: 50,
+                ),
+                ListTile(
+                  leading: Icon(Icons.policy_outlined, color: Colors.white),
+                  title: Text('Terms & conditions'),
+                  onTap: () {},
+                  textColor: Colors.white,
+                ),
+                ListTile(
+                  leading: Icon(
+                    Icons.info_outline,
+                    color: Colors.white,
+                  ),
+                  title: Text('More Info'),
+                  onTap: () {},
+                  textColor: Colors.white,
+                ),
+                ListTile(
+                  leading: Icon(Icons.logout_outlined, color: Colors.white),
+                  title: Text('Logout'),
+                  onTap: () {
+                    setState(() {
+                      _showLogoutConfirmationDialog(context);
+                    });
+                  },
+                  textColor: Colors.white,
+                )
+              ],
+            )),
+        body: _buildBody());
+  }
+
+  // Widget _buildBody() {
+  //   switch (_currentIndex) {
+  //     case 0:
+  //       return HomePage();
+  //     case 1:
+  //       return Notifications();
+  //     case 2:
+  //       return Messages();
+  //     case 3:
+  //       return AccountDetails();
+  //     default:
+  //       return Container(); // Handle other cases if needed
+  //   }
+  // }
+
+  NavigationRailDestination _buildNavigationRailDestination(
+      IconData icon, String label, int badgeValue) {
+    return NavigationRailDestination(
+      indicatorColor: Colors.blue,
+      icon: Stack(
+        alignment: Alignment.bottomRight,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(30.0),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.white, size: 25),
+                if (badgeValue > 0)
+                  Positioned(
+                    top: 0,
+                    right: 110,
+                    child: Center(
+                      child: Container(
+                        padding: EdgeInsets.all(3.0),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.red,
+                        ),
+                        child: Center(
+                          child: Text(
+                            badgeValue.toString(),
+                            style: TextStyle(color: Colors.white, fontSize: 8),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                SizedBox(width: 30),
+                Text(
+                  label,
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      label: Text(label),
+    );
+  }
+
+  BottomNavigationBarItem _buildBottomNavigatorBar(
+      String label, IconData icon) {
+    return BottomNavigationBarItem(
+      backgroundColor: Colors.blue,
+      icon: Icon(
+        icon,
+      ),
+      label: label,
+    );
+  }
+
+  Widget _buildBody() {
+    if (MediaQuery.of(context).size.width > 830) {
+      return Row(
+        children: [
+          IconTheme(
+            data: IconThemeData(size: 100.0), // Adjust the size as needed
+
+            child: NavigationRail(
+              backgroundColor: Colors.blue,
+              minWidth: 250,
+              indicatorColor: Colors.transparent,
+              useIndicator: false,
+              selectedIndex: _currentIndex,
+              onDestinationSelected: (int index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              labelType: NavigationRailLabelType.none,
+              destinations: [
+                _buildNavigationRailDestination(
+                    Icons.home, 'Home', _badgeValues[0]),
+                _buildNavigationRailDestination(Icons.notifications_active,
+                    'Notification', _badgeValues[1]),
+                _buildNavigationRailDestination(
+                    Icons.mail, 'Messages', _badgeValues[2]),
+                _buildNavigationRailDestination(
+                    Icons.person, 'Account Details', _badgeValues[3]),
+              ],
+            ),
+          ),
+          // Your main content goes here
+          Expanded(
+            child: Navigator(
+              onGenerateRoute: (settings) {
+                return MaterialPageRoute(
+                  builder: (context) => screens[_currentIndex],
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Scaffold(
+        body: screens[_currentIndex],
+        bottomNavigationBar: BottomNavigationBar(
+          items: [
+            _buildBottomNavigatorBar('Home', Icons.home),
+            _buildBottomNavigatorBar(
+                'Notification', Icons.notifications_active),
+            _buildBottomNavigatorBar('Messages', Icons.mail),
+            _buildBottomNavigatorBar('Account Details', Icons.person),
+          ],
           currentIndex: _currentIndex,
-          unselectedItemColor: Colors.white70,
-          selectedItemColor: Colors.white,
-          onTap: (value) {
+          onTap: (index) {
             setState(() {
-              _currentIndex = value;
+              _currentIndex = index;
+              screens[index];
             });
           },
-          items: [
-            BottomNavigationBarItem(
-              backgroundColor: Colors.blue,
-              icon: Icon(Icons.home_outlined, size: 30),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              backgroundColor: Colors.blue,
-              icon: Icon(Icons.notifications_active, size: 30),
-              label: 'Notification',
-            ),
-            BottomNavigationBarItem(
-              backgroundColor: Colors.blue,
-              icon: Icon(Icons.message_outlined, size: 30),
-              label: 'Messages',
-            ),
-            BottomNavigationBarItem(
-              backgroundColor: Colors.blue,
-              icon: Icon(
-                Icons.person_outlined,
-                size: 30,
-              ),
-              label: 'Personal account',
-            )
-          ]),
-    );
+        ),
+      );
+    }
   }
 }

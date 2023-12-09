@@ -20,6 +20,8 @@ class OffersPage extends StatefulWidget {
   final String location;
   final XFile? imageFile;
   final Map<String, bool> selectedPaymentsMethods;
+  final String contract;
+  final String contractPath;
 
   // final bool paymentMethods;
 
@@ -33,7 +35,9 @@ class OffersPage extends StatefulWidget {
       required this.contactDetails,
       required this.landlordEmail,
       required this.distance,
-      required this.isLandlord});
+      required this.isLandlord,
+      required this.contract,
+      required this.contractPath});
 
   @override
   State<OffersPage> createState() => _OffersPageState();
@@ -60,6 +64,13 @@ class _OffersPageState extends State<OffersPage> {
 
     // Add more amenities as needed
   };
+  Map<String, bool> selectedRoomTypes = {
+    'Single Rooms': false,
+    'Sharing/double Rooms': false,
+    "Bachelor's room": false,
+
+    // Add more amenities as needed
+  };
 
   Map<String, bool> selectedUniversity = {
     'Vaal University of Technology': false,
@@ -77,13 +88,7 @@ class _OffersPageState extends State<OffersPage> {
     'Durban University of Technology': false,
     'North West University': false
   };
-  // List<String> selectedProducts = [];
-  // List<String> availableProducts = [
-  //   'Wifi',
-  //   'Swimming Pool',
-  //   'Study room',
-  //   'Braai Stands',
-  // ];
+
   bool usesTransport = true;
   bool isAccomodation = true;
 
@@ -100,21 +105,6 @@ class _OffersPageState extends State<OffersPage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                // await registerUserInFirestore(
-                //   image: widget.imageFile,
-                //   isAccomodation: isAccomodation,
-                //   email: widget.landlordEmail,
-                //   password: widget.password,
-                //   accomodationName: widget.accomodationName,
-                //   location: widget.location,
-                //   isLandlord: widget.isLandlord,
-                //   distance: widget.distance,
-                //   contactDetails: widget.contactDetails,
-                //   selectedOffers: selectedOffers,
-                //   selectedUniversity: selectedUniversity,
-                //   selectedPaymentsMethods: widget.selectedPaymentsMethods,
-                //   usesTransport: usesTransport,
-                // );
                 _registerUserToFirebase();
                 // Close the dialog
               },
@@ -255,7 +245,10 @@ class _OffersPageState extends State<OffersPage> {
         'accomodationType': isAccomodation,
         'verificationCode': verificationCode,
         'profilePicture': downloadUrl,
-        'userId': userId
+        'userId': userId,
+        'roomType': selectedRoomTypes,
+        'contract': widget.contract,
+        'contractPath': widget.contractPath
       });
 
       // Registration successful, notify the user to check their email for verification
@@ -330,27 +323,25 @@ class _OffersPageState extends State<OffersPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Center(
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
           child: Container(
             width: containerWidth,
-            child: Center(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Icon(
+                    Icons.home_work_rounded,
+                    size: 150,
+                    color: Colors.blue,
+                  ),
+                ),
+                //usesTransport
+
+                ExpansionTile(
+                  title: Text('Available Transport'),
                   children: [
-                    Center(
-                      child: Icon(
-                        Icons.home_work_rounded,
-                        size: 150,
-                        color: Colors.blue,
-                      ),
-                    ),
-                    Text(
-                      'Transport Available',
-                      style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                    ), //usesTransport
                     Row(
                       children: [
                         Radio(
@@ -382,14 +373,16 @@ class _OffersPageState extends State<OffersPage> {
                         Text('Yes'),
                       ],
                     ),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    Text(
-                      'Residence Type:',
-                      style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                    ), //usesTransport
+                  ],
+                ),
+
+                SizedBox(
+                  height: 5,
+                ),
+
+                ExpansionTile(
+                  title: Text('Select residence type'),
+                  children: [
                     Row(
                       children: [
                         Radio(
@@ -421,79 +414,98 @@ class _OffersPageState extends State<OffersPage> {
                         Text('House'),
                       ],
                     ),
-                    SizedBox(
-                      height: 5,
-                    ),
-
-                    ExpansionTile(
-                      title: Text('Select accomodation offers'),
-                      children: selectedOffers.keys.map((offers) {
-                        return CheckboxListTile(
-                          title: Text(offers),
-                          value: selectedOffers[offers] ?? false,
-                          onChanged: (value) {
-                            setState(() {
-                              selectedOffers[offers] = value ?? false;
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    ElevatedButton.icon(
-                        onPressed: () {
-                          _showAddOffersDialog();
-                        },
-                        icon: Icon(Icons.add),
-                        label: Text('Others')),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    ExpansionTile(
-                      title: Text('Select accomodated University/College'),
-                      children: selectedUniversity.keys.map((university) {
-                        return CheckboxListTile(
-                          title: Text(university),
-                          value: selectedUniversity[university] ?? false,
-                          onChanged: (value) {
-                            setState(() {
-                              selectedUniversity[university] = value ?? false;
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    ElevatedButton.icon(
-                        onPressed: () {
-                          _showAddUniversityDialog();
-                        },
-                        icon: Icon(Icons.add),
-                        label: Text('Others')),
-                    SizedBox(
-                      height: 20,
-                    ),
-
-                    TextButton(
-                      onPressed: () async {
-                        _showAddProductDialog();
-                      },
-                      child: Text('Register Accomodaton'),
-                      style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStatePropertyAll(Colors.blue),
-                          foregroundColor:
-                              MaterialStatePropertyAll(Colors.white),
-                          minimumSize: MaterialStatePropertyAll(
-                              Size(containerWidth, 50))),
-                    ) //21h24b
                   ],
                 ),
-              ),
+                SizedBox(
+                  height: 5,
+                ),
+
+                ExpansionTile(
+                  title: Text('Select Room types'),
+                  children: selectedRoomTypes.keys.map((roomTypes) {
+                    return CheckboxListTile(
+                      title: Text(roomTypes),
+                      value: selectedRoomTypes[roomTypes] ?? false,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedRoomTypes[roomTypes] = value ?? false;
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+
+                SizedBox(
+                  height: 5,
+                ),
+
+                ExpansionTile(
+                  title: Text('Select accomodation offers'),
+                  children: selectedOffers.keys.map((offers) {
+                    return CheckboxListTile(
+                      title: Text(offers),
+                      value: selectedOffers[offers] ?? false,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedOffers[offers] = value ?? false;
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                SizedBox(
+                  height: 5,
+                ),
+                ElevatedButton.icon(
+                    onPressed: () {
+                      _showAddOffersDialog();
+                    },
+                    icon: Icon(Icons.add),
+                    label: Text('Others')),
+                SizedBox(
+                  height: 5,
+                ),
+                ExpansionTile(
+                  title: Text('Select accomodated University/College'),
+                  children: selectedUniversity.keys.map((university) {
+                    return CheckboxListTile(
+                      title: Text(university),
+                      value: selectedUniversity[university] ?? false,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedUniversity[university] = value ?? false;
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                SizedBox(
+                  height: 5,
+                ),
+                ElevatedButton.icon(
+                    onPressed: () {
+                      _showAddUniversityDialog();
+                    },
+                    icon: Icon(Icons.add),
+                    label: Text('Others')),
+                SizedBox(
+                  height: 20,
+                ),
+
+                TextButton(
+                  onPressed: () async {
+                    _showAddProductDialog();
+                  },
+                  child: Text('Register Accomodaton'),
+                  style: ButtonStyle(
+                      shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5))),
+                      backgroundColor: MaterialStatePropertyAll(Colors.blue),
+                      foregroundColor: MaterialStatePropertyAll(Colors.white),
+                      minimumSize:
+                          MaterialStatePropertyAll(Size(containerWidth, 50))),
+                ) //21h24b
+              ],
             ),
           ),
         ),

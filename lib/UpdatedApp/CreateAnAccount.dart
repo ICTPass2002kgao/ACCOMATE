@@ -40,120 +40,119 @@ class _RegistrationOptionState extends State<RegistrationOption> {
 
   @override
   Widget build(BuildContext context) {
-    double containerWidth =
-        MediaQuery.of(context).size.width < 450 ? double.infinity : 400;
+    double buttonWidth =
+        MediaQuery.of(context).size.width < 550 ? double.infinity : 400;
+
     return Scaffold(
-        appBar: AppBar(
-          foregroundColor: Colors.white,
-          title: Text(
-            "Accomate",
-          ),
-          centerTitle: true,
-          backgroundColor: Colors.blue,
+      appBar: AppBar(
+        foregroundColor: Colors.white,
+        title: Text(
+          "Accomate",
         ),
-        body: isLoading
-            ? Center(
-                child: CircularProgressIndicator()) // Show a loading indicator
-            : Padding(
-                padding: const EdgeInsets.only(top: 50, left: 20, right: 20),
-                child: Center(
-                  child: Container(
-                    width: containerWidth,
-                    child: SingleChildScrollView(
-                      child: Column(children: [
-                        Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Center(
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.person_add,
-                                      size: 200,
-                                      color: Colors.blue,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              Text(
-                                'You are registering as:',
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                              SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  Radio(
-                                    activeColor: Colors.blue,
-                                    value: true,
-                                    groupValue: isLandlord,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        isLandlord = true;
-                                      });
-                                    },
-                                  ),
-                                  Text('Landlord'),
-                                ],
-                              ),
-                              SizedBox(width: 16),
-                              Row(
-                                children: [
-                                  Radio(
-                                    activeColor: Colors.blue,
-                                    value: false,
-                                    groupValue: isLandlord,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        isLandlord = false;
-                                      });
-                                    },
-                                  ),
-                                  Text('Student'),
-                                ],
-                              ),
-                              SizedBox(
-                                height: 20,
-                              ),
-                              CheckboxListTile(
-                                activeColor: Colors.blue,
-                                value: isCheckboxChecked,
-                                onChanged: (value) {
-                                  setState(() {
-                                    isCheckboxChecked = value!;
-                                  });
-                                },
-                                title: Text('Agree with terms & conditions'),
-                                tileColor: Colors.white,
-                              ),
-                              SizedBox(
-                                height: 20,
-                              ),
-                              TextButton(
-                                onPressed: !isCheckboxChecked
-                                    ? null
-                                    : () => _disabledButton(),
-                                child: Text(
-                                  'Get Started',
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 18),
-                                ),
-                                style: ButtonStyle(
-                                    foregroundColor:
-                                        MaterialStatePropertyAll(Colors.blue),
-                                    backgroundColor: !isCheckboxChecked
-                                        ? MaterialStatePropertyAll(
-                                            Color.fromARGB(255, 211, 211, 211))
-                                        : MaterialStatePropertyAll(Colors.blue),
-                                    minimumSize: MaterialStatePropertyAll(
-                                        Size(double.infinity, 50))),
-                              )
-                            ])
-                      ]),
-                    ),
+        centerTitle: true,
+        backgroundColor: Colors.blue,
+      ),
+      body: isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            ) // Show a loading indicator
+          : SingleChildScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 20, left: 20, right: 20),
+                child: Container(
+                  width: buttonWidth,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Icon(
+                          Icons.person_add,
+                          size: 200,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'You are registering as:',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Radio(
+                            activeColor: Colors.blue,
+                            value: true,
+                            groupValue: isLandlord,
+                            onChanged: (value) {
+                              setState(() {
+                                isLandlord = true;
+                              });
+                            },
+                          ),
+                          Text('Landlord'),
+                        ],
+                      ),
+                      SizedBox(width: 16),
+                      Row(
+                        children: [
+                          Radio(
+                            activeColor: Colors.blue,
+                            value: false,
+                            groupValue: isLandlord,
+                            onChanged: (value) {
+                              setState(() {
+                                isLandlord = false;
+                              });
+                            },
+                          ),
+                          Text('Student'),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      CheckboxListTile(
+                        activeColor: Colors.blue,
+                        value: isCheckboxChecked,
+                        onChanged: (value) {
+                          setState(() {
+                            isCheckboxChecked = value!;
+                          });
+                        },
+                        title: Text('Agree with terms & conditions'),
+                        tileColor: Colors.white,
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      TextButton(
+                        onPressed:
+                            !isCheckboxChecked ? null : () => _disabledButton(),
+                        child: Text(
+                          'Get Started',
+                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        ),
+                        style: ButtonStyle(
+                          shape: MaterialStatePropertyAll(
+                              RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5))),
+                          foregroundColor:
+                              MaterialStatePropertyAll(Colors.blue),
+                          backgroundColor: !isCheckboxChecked
+                              ? MaterialStatePropertyAll(
+                                  Color.fromARGB(255, 211, 211, 211))
+                              : MaterialStatePropertyAll(Colors.blue),
+                          minimumSize: MaterialStatePropertyAll(
+                              Size(double.infinity, 50)),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ));
+              ),
+            ),
+    );
   }
 }

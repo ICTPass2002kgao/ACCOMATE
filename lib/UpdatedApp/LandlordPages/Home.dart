@@ -11,13 +11,17 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   bool isLoading = true;
   List<Map<String, dynamic>> _studentApplications = [];
-
+  late TabController _tabController;
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(
+        length: 2,
+        vsync: this); // Adjust the length based on the number of tabs
 
     _user = FirebaseAuth.instance.currentUser!;
     _loadUserData();
@@ -75,85 +79,222 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Available Application',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          SizedBox(
-            height: 5,
-          ),
-          Table(
-            border: TableBorder.all(),
-            children: [
-              // Table header
-              TableRow(
-                children: [
-                  TableCell(
-                    child: Center(
-                        child: Text('Name',
-                            style: TextStyle(fontWeight: FontWeight.bold))),
-                  ),
-                  TableCell(
-                    child: Center(
-                        child: Text('Surname',
-                            style: TextStyle(fontWeight: FontWeight.bold))),
-                  ),
-                  TableCell(
-                    child: Center(
-                        child: Text('Gender',
-                            style: TextStyle(fontWeight: FontWeight.bold))),
-                  ),
-                  TableCell(
-                    child: Center(
-                        child: Text('Cell No',
-                            style: TextStyle(fontWeight: FontWeight.bold))),
-                  ),
-                  TableCell(
-                    child: Center(
-                        child: Text('Email Address',
-                            style: TextStyle(fontWeight: FontWeight.bold))),
-                  ),
-                  TableCell(
-                    child: Center(
-                        child: Text('University',
-                            style: TextStyle(fontWeight: FontWeight.bold))),
-                  ),
-                ],
-              ),
-              // Table rows for student applications
-              for (Map<String, dynamic> studentApplication
-                  in _studentApplications)
-                TableRow(
-                  children: [
-                    TableCell(
-                      child: Center(
-                          child:
-                              Text(studentApplication['name'] ?? 'Kgaogelo')),
-                    ),
-                    TableCell(
-                      child: Center(
-                          child: Text(
-                              studentApplication['surname'] ?? 'Mthimkhulu')),
-                    ),
-                    TableCell(
-                      child: Center(
-                          child: Text(studentApplication['gender'] ?? 'male')),
-                    ),
-                    TableCell(
-                      child: Center(
-                          child: Text(
-                              studentApplication['contactDetails'] ?? 'null')),
-                    ),
-                    TableCell(
-                      child: Center(
-                          child: Text(studentApplication['email'] ?? 'null')),
-                    ),
-                    TableCell(
-                      child: Center(
-                          child:
-                              Text(studentApplication['university'] ?? 'yyyy')),
-                    ),
-                  ],
-                ),
+          TabBar(
+            labelColor: Colors.blue,
+            indicatorColor: Colors.blue,
+            controller: _tabController,
+            tabs: [
+              Tab(text: 'Available Applications'),
+              Tab(text: 'Available Registrations'),
             ],
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Available Applications',
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold)),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      Table(
+                        border: TableBorder.all(),
+                        children: [
+                          // Table header
+                          TableRow(
+                            children: [
+                              TableCell(
+                                child: Center(
+                                    child: Text('Name',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                              ),
+                              TableCell(
+                                child: Center(
+                                    child: Text('Surname',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                              ),
+                              TableCell(
+                                child: Center(
+                                    child: Text('Gender',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                              ),
+                              TableCell(
+                                child: Center(
+                                    child: Text('Cell No',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                              ),
+                              TableCell(
+                                child: Center(
+                                    child: Text('Email Address',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                              ),
+                              TableCell(
+                                child: Center(
+                                    child: Text('University',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                              ),
+                            ],
+                          ),
+                          // Table rows for student applications
+                          for (Map<String, dynamic> studentApplication
+                              in _studentApplications)
+                            TableRow(
+                              children: [
+                                TableCell(
+                                  child: Center(
+                                      child: Text(studentApplication['name'] ??
+                                          'Kgaogelo')),
+                                ),
+                                TableCell(
+                                  child: Center(
+                                      child: Text(
+                                          studentApplication['surname'] ??
+                                              'Mthimkhulu')),
+                                ),
+                                TableCell(
+                                  child: Center(
+                                      child: Text(
+                                          studentApplication['gender'] ??
+                                              'male')),
+                                ),
+                                TableCell(
+                                  child: Center(
+                                      child: Text(studentApplication[
+                                              'contactDetails'] ??
+                                          'null')),
+                                ),
+                                TableCell(
+                                  child: Center(
+                                      child: Text(studentApplication['email'] ??
+                                          'null')),
+                                ),
+                                TableCell(
+                                  child: Center(
+                                      child: Text(
+                                          studentApplication['university'] ??
+                                              'yyyy')),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                SingleChildScrollView(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Available Registration',
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold)),
+                        SizedBox(
+                          height: 5,
+                        ),
+                        Table(
+                          border: TableBorder.all(),
+                          children: [
+                            // Table header
+                            TableRow(
+                              children: [
+                                TableCell(
+                                  child: Center(
+                                      child: Text('Name',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold))),
+                                ),
+                                TableCell(
+                                  child: Center(
+                                      child: Text('Surname',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold))),
+                                ),
+                                TableCell(
+                                  child: Center(
+                                      child: Text('Gender',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold))),
+                                ),
+                                TableCell(
+                                  child: Center(
+                                      child: Text('Cell No',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold))),
+                                ),
+                                TableCell(
+                                  child: Center(
+                                      child: Text('Email Address',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold))),
+                                ),
+                                TableCell(
+                                  child: Center(
+                                      child: Text('University',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold))),
+                                ),
+                              ],
+                            ),
+                            // Table rows for student applications
+                            for (Map<String, dynamic> studentApplication
+                                in _studentApplications)
+                              TableRow(
+                                children: [
+                                  TableCell(
+                                    child: Center(
+                                        child: Text(
+                                            studentApplication['name'] ??
+                                                'Kgaogelo')),
+                                  ),
+                                  TableCell(
+                                    child: Center(
+                                        child: Text(
+                                            studentApplication['surname'] ??
+                                                'Mthimkhulu')),
+                                  ),
+                                  TableCell(
+                                    child: Center(
+                                        child: Text(
+                                            studentApplication['gender'] ??
+                                                'male')),
+                                  ),
+                                  TableCell(
+                                    child: Center(
+                                        child: Text(studentApplication[
+                                                'contactDetails'] ??
+                                            'null')),
+                                  ),
+                                  TableCell(
+                                    child: Center(
+                                        child: Text(
+                                            studentApplication['email'] ??
+                                                'null')),
+                                  ),
+                                  TableCell(
+                                    child: Center(
+                                        child: Text(
+                                            studentApplication['university'] ??
+                                                'yyyy')),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ]),
+                )
+              ],
+            ),
           ),
         ],
       ),

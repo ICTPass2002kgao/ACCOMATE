@@ -1,9 +1,12 @@
-// ignore_for_file: prefer_const_constructors, dead_code, prefer_const_literals_to_create_immutables, sort_child_properties_last, avoid_unnecessary_containers, unnecessary_string_interpolations, sized_box_for_whitespace, use_build_context_synchronously, avoid_print
+// ignore_for_file: prefer_const_constructors, dead_code, prefer_const_literals_to_create_immutables, sort_child_properties_last, avoid_unnecessary_containers, unnecessary_string_interpolations, sized_box_for_whitespace, use_build_context_synchronously, avoid_print, unrelated_type_equality_checks
+
+import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class AccomodationPage extends StatefulWidget {
   final Map<String, dynamic> landlordData;
@@ -18,7 +21,13 @@ class AccomodationPage extends StatefulWidget {
 }
 
 class _AccomodationPageState extends State<AccomodationPage> {
+  List<String> roomType = [
+    'Single room',
+    'Sharing/double room',
+    "Bachelor's room",
+  ];
   late User _user;
+  String selectedRoomsType = '';
 
   Map<String, dynamic>? _userData;
   // Make _userData nullable
@@ -48,6 +57,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
           return Center(
             child: CircularProgressIndicator(),
           );
+          Navigator.of(context).pop();
         },
       );
 
@@ -65,47 +75,52 @@ class _AccomodationPageState extends State<AccomodationPage> {
         'university': _userData?['university'] ?? '',
         'email': _userData?['email'] ?? '',
         'contactDetails': _userData?['contactDetails'] ?? '',
-
+        'gender': _userData?['gender'] ?? '',
+        'userId': _userData?['userId'] ?? '',
+        'ProofOfRegistration': _userData?['ProofOfRegistration'] ?? '',
+        'IdDocument': _userData?['IdDocument'] ?? '',
+        'studentId': _userData?['studentId'] ?? '',
+        'studentNumber': _userData?['studentNumber'] ?? '',
+        'roomType': selectedRoomsType,
         // Add more details as needed
       });
       showDialog(
         context: context,
         builder: (context) => Container(
-          height: 400,
+          height: 350,
           child: AlertDialog(
             title: Text(
               'Application Response',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
-            content: Container(
-              child: Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(40),
-                    child: Container(
-                      color: Colors.green,
-                      width: 80,
-                      height: 80,
-                      child: Icon(Icons.done, color: Colors.white),
-                    ),
+            content: Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(40),
+                  child: Container(
+                    color: Colors.green,
+                    width: 80,
+                    height: 80,
+                    child: Icon(Icons.done, color: Colors.white, size: 20),
                   ),
-                  Text(
-                    'Your application was sent successfully. You will get further communication soon.',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ],
-              ),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Your application was sent successfully. You will get further communication soon.',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
             ),
             actions: [
               TextButton(
                 onPressed: () async {
-                  Navigator.of(context).pop();
-                  await confirmationEmail(
-                      _userData?['email'] ?? '', // Student's email
-                      'Application sent successfully',
-                      'Hi ${_userData?['name']} , \nYour application was sent successfully to ${widget.landlordData['accomodationName']}, You will get further communication soon.');
+                  Navigator.pushReplacementNamed(context, '/studentPage');
+                  // await confirmationEmail(
+                  //     _userData?['email'] ?? '', // Student's email
+                  //     'Application sent successfully',
+                  //     'Hi ${_userData?['name']} , \nYour application was sent successfully to ${widget.landlordData['accomodationName']}, You will get further communication soon.');
 
-                  print('email sent successfully');
+                  // print('email sent successfully');
                 },
                 child: Text('Done'),
               ),
@@ -148,12 +163,12 @@ class _AccomodationPageState extends State<AccomodationPage> {
         centerTitle: true,
         backgroundColor: Colors.blue,
       ),
-      body: Center(
+      body: SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
         child: Center(
           child: Container(
             width: buttonWidth,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
                   width: 400,
@@ -175,18 +190,26 @@ class _AccomodationPageState extends State<AccomodationPage> {
                                 )),
                           ),
                           SizedBox(height: 5),
-                          Text(
-                            maxLines: 1, // Set the maximum number of lines
-                            overflow: TextOverflow.visible,
-                            'Location:${widget.landlordData['location']}',
-                            style: TextStyle(color: Colors.black),
+                          Row(
+                            children: [
+                              Text('Location: ',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              Text(
+                                widget.landlordData['location'],
+                                maxLines: 1, // Set the maximum number of lines
+                                overflow: TextOverflow.clip,
+                              ),
+                            ],
                           ),
                           SizedBox(height: 5),
                           Row(
                             children: [
+                              Text('Distance to campus: ',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                               Text(
-                                'Distance to campus:${widget.landlordData['distance']}',
-                                style: TextStyle(color: Colors.black),
+                                widget.landlordData['distance'],
                               ),
                               Icon(
                                 Icons.location_on_outlined,
@@ -195,15 +218,56 @@ class _AccomodationPageState extends State<AccomodationPage> {
                             ],
                           ),
                           SizedBox(height: 5),
-                          Text(
-                            'Accomodation type:${widget.landlordData['accomodationType'] == true ? 'Accomodation' : 'House'}',
-                            style: TextStyle(color: Colors.black),
-                          ),
+                          Text('Accommodated institutions',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                           SizedBox(height: 5),
-                          Text(
-                            'Nsfas Accredited',
-                            style: TextStyle(color: Colors.green),
-                          ),
+                          for (String university
+                              in widget.landlordData['selectedUniversity'].keys)
+                            if (widget.landlordData['selectedUniversity']
+                                    ?[university] ??
+                                false)
+                              Text('$university'),
+                          SizedBox(height: 5),
+                          ExpansionTile(
+                            title: Text('More details',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                            children: [
+                              ListTile(
+                                title: Text('Offered amities',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                              for (String offers
+                                  in widget.landlordData['selectedOffers'].keys)
+                                if (widget.landlordData['selectedOffers']
+                                        ?[offers] ??
+                                    false)
+                                  ListTile(
+                                    title: Text(offers),
+                                  ),
+                              SizedBox(height: 5),
+                              ListTile(
+                                title: Text('Payment Methods',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                              for (String paymentMethods in widget
+                                  .landlordData['selectedPaymentsMethods'].keys)
+                                if (widget.landlordData[
+                                            'selectedPaymentsMethods']
+                                        ?[paymentMethods] ??
+                                    false)
+                                  ListTile(
+                                    title: Text(paymentMethods),
+                                  ),
+                              SizedBox(height: 5),
+                              ListTile(
+                                  title: Text(
+                                'Nsfas Accredited',
+                                style: TextStyle(color: Colors.green),
+                              )),
+                            ],
+                          )
                         ],
                       ),
                     ),
@@ -220,7 +284,9 @@ class _AccomodationPageState extends State<AccomodationPage> {
                         context: context,
                         builder: (context) => Container(
                           height: 400,
+                          width: 400,
                           child: AlertDialog(
+                            scrollable: true,
                             title: Text('Confirm your details'),
                             content: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,6 +311,22 @@ class _AccomodationPageState extends State<AccomodationPage> {
                                 SizedBox(height: 10),
                                 Text(
                                     "Contact Details: ${_userData?['contactDetails'] ?? 'Loading...'}"),
+                                SizedBox(height: 10),
+                                ExpansionTile(
+                                  title: Text('Select type of a room'),
+                                  children: roomType.map((roomTypeNeeded) {
+                                    return RadioListTile<String>(
+                                      title: Text(roomTypeNeeded),
+                                      value: roomTypeNeeded,
+                                      groupValue: selectedRoomsType,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          selectedRoomsType = value!;
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
                               ],
                             ),
                             actions: [
@@ -259,7 +341,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
                                       'Hi ${widget.landlordData['accomodationName'] ?? ''} landlord, \nYou have new application from student from ${_userData?['university']}.');
                                   // Optionally, you can navigate to the login screen or do other actions
                                 },
-                                child: Text('Confirmed'),
+                                child: Text('Confirm'),
                               ),
                             ],
                           ),
@@ -271,6 +353,8 @@ class _AccomodationPageState extends State<AccomodationPage> {
                     },
                     child: Text('Apply Accommodation'),
                     style: ButtonStyle(
+                        shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10))),
                         backgroundColor: MaterialStatePropertyAll(Colors.blue),
                         foregroundColor: MaterialStatePropertyAll(Colors.white),
                         minimumSize:
