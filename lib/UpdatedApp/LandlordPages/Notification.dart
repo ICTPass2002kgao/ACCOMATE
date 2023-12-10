@@ -17,6 +17,8 @@ class _NotificationsState extends State<Notifications>
   bool isLoading = true;
   List<Map<String, dynamic>> _studentApplications = [];
   late TabController _tabController;
+  bool isTileClicked = false; // State to track if a ListTile is clicked
+
   @override
   void initState() {
     super.initState();
@@ -72,82 +74,137 @@ class _NotificationsState extends State<Notifications>
     }
   }
 
+  Set<int> clickedTiles = Set<int>();
+  int getUnclickedApplicationsCount() {
+    // Calculate the number of unclicked applications
+    return _studentApplications.where((application) => !isTileClicked).length;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TabBar(
-          labelColor: Colors.blue,
-          indicatorColor: Colors.blue,
-          controller: _tabController,
-          tabs: [
-            Tab(text: 'Available Applications'),
-            Tab(text: 'Available Registrations'),
-          ],
-        ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
             children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 16, right: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Available Applications Notifications',
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold)),
-                    for (Map<String, dynamic> studentApplication
-                        in _studentApplications)
-                      Column(
-                        children: [
-                          Container(
-                            child: Card(
-                              color: Color.fromARGB(255, 243, 243, 243),
-                              elevation: 4,
-                              child: ListTile(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          ViewApplicantDetails(
-                                        studentApplicationData:
-                                            studentApplication,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                title: Text(
-                                    'New application from ${studentApplication['name']}'),
-                                trailing: Icon(Icons.arrow_forward_ios_rounded),
+              TabBar(
+                labelColor: Colors.blue,
+                indicatorColor: Colors.blue,
+                controller: _tabController,
+                tabs: [
+                  Tab(
+                    child: Stack(
+                      children: [
+                        Row(
+                          children: [
+                            Text('Available Applications'),
+                          ],
+                        ),
+                        if (getUnclickedApplicationsCount() > 0)
+                          Positioned(
+                            right: 0,
+                            child: Container(
+                              height: 15,
+                              width: 15,
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(7.5),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  getUnclickedApplicationsCount().toString(),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                  ),
+                                ),
                               ),
                             ),
-                          )
-                        ],
-                      )
-                  ],
-                ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Tab(text: 'Available Registrations'),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0, right: 16),
-                child: Column(
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Available Registration Notifications',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
+                      // for (Map<String, dynamic> studentApplication
+                      //     in _studentApplications)
+                      for (int index = 0;
+                          index < _studentApplications.length;
+                          index++)
+                        Column(
+                          children: [
+                            Container(
+                              child: Card(
+                                color: Color.fromARGB(255, 243, 243, 243),
+                                elevation: 4,
+                                child: ListTile(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ViewApplicantDetails(
+                                          studentApplicationData:
+                                              _studentApplications[index],
+                                        ),
+                                      ),
+                                    );
+                                    setState(() {
+                                      // Toggle the clicked state of the tile
+                                      if (clickedTiles.contains(index)) {
+                                        clickedTiles.remove(index);
+                                      } else {
+                                        clickedTiles.add(index);
+                                      }
+                                    });
+                                  },
+                                  title: Text(
+                                    'You have a new application from ${_studentApplications[index]['name']}',
+                                    style: TextStyle(
+                                      fontWeight: clickedTiles.contains(index)
+                                          ? FontWeight.normal
+                                          : FontWeight.bold,
+                                    ),
+                                  ),
+                                  trailing:
+                                      Icon(Icons.arrow_forward_ios_rounded),
+                                ),
+                              ),
+                            )
+                          ],
+                        )
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 16.0, right: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       SizedBox(
                         height: 5,
                       ),
-                    ]),
-              )
-            ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
-    ));
+        ],
+      ),
+    );
   }
 }

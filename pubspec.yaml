@@ -48,6 +48,8 @@ dependencies:
   insta_assets_picker: ^2.2.0
   mailer: ^6.0.1
   cloud_functions: ^4.5.6
+  shared_preferences: ^2.2.2
+  url_launcher: ^6.2.2
   
 
 dev_dependencies:

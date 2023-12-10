@@ -17,6 +17,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   TextEditingController txtEmail = TextEditingController();
   TextEditingController txtPassword = TextEditingController();
+  bool _obscureText = true;
 
   void registerPage() {
     setState(() {
@@ -128,12 +129,25 @@ class _LoginPageState extends State<LoginPage> {
                                       fillColor:
                                           Color.fromARGB(255, 230, 230, 230),
                                       filled: true,
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          _obscureText
+                                              ? Icons.visibility
+                                              : Icons.visibility_off,
+                                          color: Colors.blue,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _obscureText = !_obscureText;
+                                          });
+                                        },
+                                      ),
                                       prefixIcon: Icon(
                                         Icons.lock,
                                         color: Colors.blue,
                                       ),
                                       hintText: 'Password'),
-                                  obscureText: true,
+                                  obscureText: _obscureText,
                                   obscuringCharacter: '*',
                                 ),
                               ),

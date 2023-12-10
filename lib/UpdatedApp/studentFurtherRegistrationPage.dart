@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, sized_box_for_whitespace, use_build_context_synchronously
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, sized_box_for_whitespace, use_build_context_synchronously, unnecessary_string_interpolations
 
 import 'dart:io';
 import 'dart:math';
@@ -38,6 +38,8 @@ class StudentFurtherRegister extends StatefulWidget {
 class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
   TextEditingController studentIdController = TextEditingController();
   TextEditingController studentNumberController = TextEditingController();
+
+  TextEditingController proofOfRegistrationPath = TextEditingController();
   String verificationCode = _generateRandomCode();
   static String _generateRandomCode() {
     final random = Random();
@@ -45,70 +47,9 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
     return '${random.nextInt(999999).toString().padLeft(6, '0')}';
   }
 
-  String _pdfDownloadIDURL = '';
   String _pdfDownloadPORURL = '';
   String _pdfPorDocumentPath = '';
-  String _pdfIdDocumentPath = '';
-
-  Future<String?> _uploadPDFToStorage(File pdfFile) async {
-    try {
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      firebase_storage.Reference reference = firebase_storage
-          .FirebaseStorage.instance
-          .ref('contracts')
-          .child('$fileName.pdf');
-
-      await reference.putFile(pdfFile);
-
-      return await reference.getDownloadURL();
-    } catch (e) {
-      print('Error uploading PDF to storage: $e');
-      return null;
-    }
-  }
-
-  Future<String?> _UploadpickProofOfRegistration(File pdfFile) async {
-    try {
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      firebase_storage.Reference reference = firebase_storage
-          .FirebaseStorage.instance
-          .ref('contracts')
-          .child('$fileName.pdf');
-
-      await reference.putFile(pdfFile);
-
-      return await reference.getDownloadURL();
-    } catch (e) {
-      print('Error uploading PDF to storage: $e');
-      return null;
-    }
-  }
-
-  Future<void> _pickPDFFile() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf'],
-      );
-
-      if (result != null) {
-        File pdfFile = File(result.files.single.path!);
-        setState(() {
-          _pdfIdDocumentPath = pdfFile.path;
-        });
-
-        String? downloadURL = await _uploadPDFToStorage(pdfFile);
-
-        if (downloadURL != null) {
-          setState(() {
-            _pdfDownloadIDURL = downloadURL;
-          });
-        }
-      }
-    } catch (e) {
-      print('Error picking PDF file: $e');
-    }
-  }
+  bool isFileChosen = false;
 
   Future<void> _pickProofOfRegistrationPDFFile() async {
     try {
@@ -121,18 +62,125 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
         File pdfFile = File(result.files.single.path!);
         setState(() {
           _pdfPorDocumentPath = pdfFile.path;
+          isFileChosen = true; // Set the flag to true when a file is chosen
         });
 
-        String? downloadURL = await _UploadpickProofOfRegistration(pdfFile);
+        String? downloadURL = await _uploadPickProofOfRegistration(pdfFile);
 
         if (downloadURL != null) {
           setState(() {
             _pdfDownloadPORURL = downloadURL;
           });
         }
+      } else {
+        // No file chosen
+        setState(() {
+          isFileChosen = false;
+        });
       }
     } catch (e) {
-      print('Error picking PDF file: $e');
+      _showErrorDialog(e.toString());
+    }
+  }
+
+  Future<String?> _uploadPickProofOfRegistration(File pdfFile) async {
+    try {
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      firebase_storage.Reference reference = firebase_storage
+          .FirebaseStorage.instance
+          .ref('contracts')
+          .child('$fileName.pdf');
+
+      await reference.putFile(pdfFile);
+
+      return await reference.getDownloadURL();
+    } catch (e) {
+      _showErrorDialog(e.toString());
+      return null;
+    }
+  }
+
+  void _showErrorDialog(String errorMessage) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Error Occurred',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          errorMessage,
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('OK'),
+            style: ButtonStyle(
+              shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5),
+              )),
+              foregroundColor: MaterialStateProperty.all(Colors.white),
+              backgroundColor: MaterialStateProperty.all(Colors.blue),
+              minimumSize: MaterialStateProperty.all(Size(double.infinity, 50)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool isFileIdChosen = false;
+  String _pdfIdDocumentPath = '';
+  String _pdfDownloadIDURL = '';
+  Future<void> _pickIdDocumentPDFFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+
+      if (result != null) {
+        File pdfFile = File(result.files.single.path!);
+        setState(() {
+          _pdfIdDocumentPath = pdfFile.path;
+          isFileChosen = true; // Set the flag to true when a file is chosen
+        });
+
+        String? downloadURL = await _uploadIdDocumentPDFFile(pdfFile);
+
+        if (downloadURL != null) {
+          setState(() {
+            _pdfDownloadIDURL = downloadURL;
+          });
+        }
+      } else {
+        // No file chosen
+        setState(() {
+          isFileChosen = false;
+        });
+      }
+    } catch (e) {
+      _showErrorDialog(e.toString());
+    }
+  }
+
+  Future<String?> _uploadIdDocumentPDFFile(File pdfFile) async {
+    try {
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      firebase_storage.Reference reference = firebase_storage
+          .FirebaseStorage.instance
+          .ref('contracts')
+          .child('$fileName.pdf');
+
+      await reference.putFile(pdfFile);
+
+      return await reference.getDownloadURL();
+    } catch (e) {
+      _showErrorDialog(e.toString());
+      return null;
     }
   }
 
@@ -183,7 +231,7 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
                     controller: studentNumberController,
                     decoration: InputDecoration(
                         focusColor: Colors.blue,
-                        fillColor: Color.fromARGB(255, 230, 230, 230),
+                        
                         filled: true,
                         prefixIcon: Icon(
                           Icons.person,
@@ -193,13 +241,16 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
                   ),
                   SizedBox(height: 5),
                   Container(
-                      color: Colors.white70,
+                      color: Color.fromARGB(255, 230, 230, 230),
                       width: buttonWidth,
                       height: 50,
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           ElevatedButton(
-                            onPressed: _pickPDFFile,
+                            onPressed: () {
+                              _pickIdDocumentPDFFile();
+                            },
                             style: ButtonStyle(
                                 shape: MaterialStatePropertyAll(
                                     RoundedRectangleBorder(
@@ -211,12 +262,25 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
                                     MaterialStatePropertyAll(Colors.blue),
                                 minimumSize:
                                     MaterialStatePropertyAll(Size(60, 50))),
-                            child: Text('Upload Id Document'),
+                            child: Text('Choose file'),
                           ),
                           SizedBox(
                             width: 5,
                           ),
-                          Text(_pdfIdDocumentPath),
+                          Expanded(
+                            child: TextField(
+                              readOnly: true, // Prevent manual editing
+                              controller: TextEditingController(
+                                  text: '$_pdfIdDocumentPath'),
+                              decoration: InputDecoration(
+                                disabledBorder: OutlineInputBorder(),
+                                focusColor: Color.fromARGB(255, 230, 230, 230),
+                                fillColor: Color.fromARGB(255, 230, 230, 230),
+                                filled: true,
+                                hintText: 'Your proof of registration',
+                              ),
+                            ),
+                          )
                         ],
                       )),
                   SizedBox(height: 5),
@@ -227,24 +291,39 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
                       child: Row(
                         children: [
                           ElevatedButton(
-                            onPressed: _pickProofOfRegistrationPDFFile,
+                            onPressed: () {
+                              _pickProofOfRegistrationPDFFile();
+                            },
                             style: ButtonStyle(
                                 shape: MaterialStatePropertyAll(
                                     RoundedRectangleBorder(
                                         borderRadius:
-                                            BorderRadius.circular(10))),
+                                            BorderRadius.circular(5))),
                                 foregroundColor:
                                     MaterialStatePropertyAll(Colors.white),
                                 backgroundColor:
                                     MaterialStatePropertyAll(Colors.blue),
                                 minimumSize:
                                     MaterialStatePropertyAll(Size(60, 50))),
-                            child: Text('Upload Proof of registration'),
+                            child: Text('Choose file'),
                           ),
                           SizedBox(
                             width: 5,
                           ),
-                          Text(_pdfPorDocumentPath),
+                          Expanded(
+                            child: TextField(
+                              readOnly: true, // Prevent manual editing
+                              controller: TextEditingController(
+                                  text: '$_pdfPorDocumentPath'),
+                              decoration: InputDecoration(
+                                disabledBorder: OutlineInputBorder(),
+                                focusColor: Color.fromARGB(255, 230, 230, 230),
+                                fillColor: Color.fromARGB(255, 230, 230, 230),
+                                filled: true,
+                                hintText: 'Your Idenification Document',
+                              ),
+                            ),
+                          )
                         ],
                       )),
                   SizedBox(height: 20),
@@ -361,7 +440,7 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
                     },
                     style: ButtonStyle(
                         shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10))),
+                            borderRadius: BorderRadius.circular(5))),
                         foregroundColor: MaterialStatePropertyAll(Colors.blue),
                         backgroundColor: MaterialStatePropertyAll(Colors.blue),
                         minimumSize:

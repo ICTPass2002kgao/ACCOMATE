@@ -261,6 +261,8 @@ class _OffersPageState extends State<OffersPage> {
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
           ),
           content: Container(
+            width: 300,
+            height: 300,
             child: Column(
               children: [
                 ClipRRect(
@@ -305,7 +307,38 @@ class _OffersPageState extends State<OffersPage> {
       // For example, you can navigate to a home screen:
     } catch (e) {
       // Handle registration errors
-      print('Error during registration: $e');
+      showDialog(
+        context: context,
+        builder: (context) => Container(
+          height: 350,
+          width: 250,
+          child: AlertDialog(
+            title: Text(
+              'Error occured',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+            content: Text(
+              e.toString(),
+              style: TextStyle(fontSize: 16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop;
+                },
+                child: Text('Submit'),
+                style: ButtonStyle(
+                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5))),
+                    foregroundColor: MaterialStatePropertyAll(Colors.white),
+                    backgroundColor: MaterialStatePropertyAll(Colors.blue),
+                    minimumSize:
+                        MaterialStatePropertyAll(Size(double.infinity, 50))),
+              ),
+            ],
+          ),
+        ),
+      );
       // You might want to show an error message to the user
     }
   }

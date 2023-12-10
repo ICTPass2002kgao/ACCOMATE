@@ -43,33 +43,18 @@ class _LandlordFurtherRegistrationState
   bool isLoading = true;
   late LatLng currentLocation;
 
-  String _pdfDownloadContractURL = '';
-  String _pdfContractPath = '';
-
   @override
   void initState() {
     super.initState();
     requestLocationPermission();
   }
 
-  Future<String?> _UploadpickContract(File pdfFile) async {
-    try {
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      firebase_storage.Reference reference = firebase_storage
-          .FirebaseStorage.instance
-          .ref('contracts')
-          .child('$fileName.pdf');
+  String _pdfDownloadContractURL = '';
+  String _pdfContractPath = '';
 
-      await reference.putFile(pdfFile);
+  bool isFileChosen = false;
 
-      return await reference.getDownloadURL();
-    } catch (e) {
-      print('Error uploading PDF to storage: $e');
-      return null;
-    }
-  }
-
-  Future<void> _pickProofOfRegistrationPDFFile() async {
+  Future<void> _pickSignedContract() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -80,24 +65,81 @@ class _LandlordFurtherRegistrationState
         File pdfFile = File(result.files.single.path!);
         setState(() {
           _pdfContractPath = pdfFile.path;
+          isFileChosen = true; // Set the flag to true when a file is chosen
         });
 
-        String? downloadURL = await _UploadpickContract(pdfFile);
+        String? downloadURL = await _uploadSignedContact(pdfFile);
 
         if (downloadURL != null) {
           setState(() {
             _pdfDownloadContractURL = downloadURL;
           });
         }
+      } else {
+        // No file chosen
+        setState(() {
+          isFileChosen = false;
+        });
       }
     } catch (e) {
-      print('Error picking PDF file: $e');
+      _showErrorDialog(e.toString());
     }
+  }
+
+  Future<String?> _uploadSignedContact(File pdfFile) async {
+    try {
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      firebase_storage.Reference reference = firebase_storage
+          .FirebaseStorage.instance
+          .ref('contract')
+          .child('$fileName.pdf');
+
+      await reference.putFile(pdfFile);
+
+      return await reference.getDownloadURL();
+    } catch (e) {
+      _showErrorDialog(e.toString());
+      return null;
+    }
+  }
+
+  void _showErrorDialog(String errorMessage) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Error Occurred',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          errorMessage,
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('OK'),
+            style: ButtonStyle(
+              shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5),
+              )),
+              foregroundColor: MaterialStateProperty.all(Colors.white),
+              backgroundColor: MaterialStateProperty.all(Colors.blue),
+              minimumSize: MaterialStateProperty.all(Size(double.infinity, 50)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> getCurrentLocation() async {
     try {
-      List<Location> locations = await locationFromAddress('Your Address');
+      List<Location> locations = await locationFromAddress(
+        'address',
+      );
       if (locations.isNotEmpty) {
         List<Placemark> placemarks = await placemarkFromCoordinates(
           locations.first.latitude,
@@ -205,7 +247,7 @@ class _LandlordFurtherRegistrationState
                           Icons.location_on_outlined,
                           color: Colors.blue,
                         ),
-                        hintText: 'Live Location'),
+                        hintText: 'Address e.g Province,town,street'),
                   ),
                 ),
                 SizedBox(height: 5),
@@ -270,7 +312,7 @@ class _LandlordFurtherRegistrationState
                             backgroundColor:
                                 MaterialStatePropertyAll(Colors.blue),
                             minimumSize:
-                                MaterialStatePropertyAll(Size(100, 50))),
+                                MaterialStatePropertyAll(Size(130, 50))),
                       ),
                       if (_imageFile != null)
                         Image.file(
@@ -289,8 +331,10 @@ class _LandlordFurtherRegistrationState
                   child: Row(
                     children: [
                       TextButton.icon(
-                        onPressed: () {},
-                        icon: Icon(Icons.add_photo_alternate_outlined,
+                        onPressed: () {
+                          _pickSignedContract();
+                        },
+                        icon: Icon(Icons.file_present_outlined,
                             color: Colors.white),
                         label: Text(
                           'Add Contract',
@@ -305,14 +349,26 @@ class _LandlordFurtherRegistrationState
                             backgroundColor:
                                 MaterialStatePropertyAll(Colors.blue),
                             minimumSize:
-                                MaterialStatePropertyAll(Size(100, 50))),
+                                MaterialStatePropertyAll(Size(130, 50))),
                       ),
-                      if (_imageFile != null)
-                        Image.file(
-                          File(_imageFile!.path),
-                          height: 50,
-                          width: 50,
+                      SizedBox(
+                        width: 5,
+                      ),
+                      Expanded(
+                        child: TextField(
+                          readOnly: true, // Prevent manual editing
+                          controller:
+                              TextEditingController(text: _pdfContractPath),
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            enabledBorder: OutlineInputBorder(),
+                            focusColor: Color.fromARGB(255, 230, 230, 230),
+                            fillColor: Color.fromARGB(255, 230, 230, 230),
+                            filled: true,
+                            hintText: 'Upload your signed contract',
+                          ),
                         ),
+                      )
                     ],
                   ),
                 ),
@@ -386,7 +442,8 @@ class _LandlordFurtherRegistrationState
       if (placemarks.isNotEmpty) {
         String street = placemarks.first.street ?? 'Unknown';
         String address = placemarks.first.locality ?? 'Unknown';
-        txtLiveLocation.text = '${address},${street}';
+        String country = placemarks.first.administrativeArea ?? 'Unknown';
+        txtLiveLocation.text = ' $country,${address},${street}';
       }
     } catch (e) {
       print('Error fetching address: $e');

@@ -26,6 +26,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
   final TextEditingController accomodationName = TextEditingController();
   final TextEditingController distanceController = TextEditingController();
   String selectedUniversity = '';
+  bool _obscureText = true;
   List<String> universities = [
     'Vaal University of Technology',
     'University of Johannesburg',
@@ -145,16 +146,26 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                             focusColor: Colors.blue,
                             fillColor: Color.fromARGB(255, 230, 230, 230),
                             filled: true,
-                            suffixIcon: Icon(
-                              Icons.remove_red_eye_outlined,
-                              color: Colors.blue,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureText
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: Colors.blue,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureText = !_obscureText;
+                                });
+                              },
                             ),
                             prefixIcon: Icon(
                               Icons.lock,
                               color: Colors.blue,
                             ),
                             hintText: 'Password'),
-                        obscureText: true,
+                        obscureText: _obscureText,
+                        obscuringCharacter: '*',
                       ),
                     ),
                     SizedBox(height: 5),
@@ -234,10 +245,13 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                         style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
                       style: ButtonStyle(
-                          shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5))),
-                          foregroundColor: MaterialStatePropertyAll(Colors.blue),
-                          backgroundColor: MaterialStatePropertyAll(Colors.blue),
+                          shape: MaterialStatePropertyAll(
+                              RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5))),
+                          foregroundColor:
+                              MaterialStatePropertyAll(Colors.blue),
+                          backgroundColor:
+                              MaterialStatePropertyAll(Colors.blue),
                           minimumSize:
                               MaterialStatePropertyAll(Size(buttonWidth, 50))),
                     ),
@@ -246,125 +260,126 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
               )
 
             //User registering as a landlord
-            : Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: SingleChildScrollView(
-                  physics: AlwaysScrollableScrollPhysics(),
-                  child: Center(
-                    child: Container(
-                      width: buttonWidth,
-                      child: Column(children: [
-                        Icon(
-                          Icons.maps_home_work_outlined,
-                          size: 150,
-                          color: Colors.blue,
+            : SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Center(
+                  child: Container(
+                    width: buttonWidth,
+                    child: Column(children: [
+                      Icon(
+                        Icons.maps_home_work_outlined,
+                        size: 150,
+                        color: Colors.blue,
+                      ),
+                      Container(
+                        width: buttonWidth,
+                        child: TextField(
+                          controller: emailController,
+                          decoration: InputDecoration(
+                              focusColor: Colors.blue,
+                              fillColor: Color.fromARGB(255, 230, 230, 230),
+                              filled: true,
+                              prefixIcon: Icon(
+                                Icons.mail,
+                                color: Colors.blue,
+                              ),
+                              hintText: 'Email'),
                         ),
-                        Container(
-                          width: buttonWidth,
-                          child: TextField(
-                            controller: emailController,
-                            decoration: InputDecoration(
-                                focusColor: Colors.blue,
-                                fillColor: Color.fromARGB(255, 230, 230, 230),
-                                filled: true,
-                                prefixIcon: Icon(
-                                  Icons.mail,
+                      ),
+                      SizedBox(height: 5),
+                      Container(
+                        width: buttonWidth,
+                        child: TextField(
+                          controller: passwordController,
+                          decoration: InputDecoration(
+                              focusColor: Colors.blue,
+                              fillColor: Color.fromARGB(255, 230, 230, 230),
+                              filled: true,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureText
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
                                   color: Colors.blue,
                                 ),
-                                hintText: 'Email'),
-                          ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureText = !_obscureText;
+                                  });
+                                },
+                              ),
+                              prefixIcon: Icon(
+                                Icons.lock,
+                                color: Colors.blue,
+                              ),
+                              hintText: 'Password'),
+                          obscureText: _obscureText,
+                          obscuringCharacter: '*',
                         ),
-                        SizedBox(height: 5),
-                        Container(
-                          width: buttonWidth,
-                          child: TextField(
-                            controller: passwordController,
-                            decoration: InputDecoration(
-                                focusColor: Colors.blue,
-                                fillColor: Color.fromARGB(255, 230, 230, 230),
-                                filled: true,
-                                suffixIcon: Icon(
-                                  Icons.remove_red_eye_outlined,
-                                  color: Colors.blue,
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.lock,
-                                  color: Colors.blue,
-                                ),
-                                hintText: 'Password'),
-                            obscureText: true,
-                          ),
+                      ),
+                      SizedBox(height: 5),
+                      TextField(
+                        controller: accomodationName,
+                        decoration: InputDecoration(
+                            focusColor: Colors.blue,
+                            fillColor: Color.fromARGB(255, 230, 230, 230),
+                            filled: true,
+                            prefixIcon: Icon(
+                              Icons.maps_home_work_outlined,
+                              color: Colors.blue,
+                            ),
+                            hintText: 'Accomodation Name'),
+                      ),
+                      SizedBox(height: 5),
+                      TextField(
+                        controller: contactDetails,
+                        decoration: InputDecoration(
+                            focusColor: Colors.blue,
+                            fillColor: Color.fromARGB(255, 230, 230, 230),
+                            filled: true,
+                            prefixIcon: Icon(
+                              Icons.phone_enabled_sharp,
+                              color: Colors.blue,
+                            ),
+                            hintText: 'Contact details'),
+                      ),
+                      SizedBox(height: 20.0),
+                      ElevatedButton(
+                        onPressed: () async {
+                          setState(() {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: ((context) =>
+                                        LandlordFurtherRegistration(
+                                          password: passwordController.text,
+                                          contactDetails: contactDetails.text,
+                                          isLandlord: widget.isLandlord,
+                                          accomodationName:
+                                              accomodationName.text,
+                                          landlordEmail: emailController.text,
+                                        ))));
+                            print(
+                              widget.isLandlord,
+                            );
+                          });
+                        },
+                        child: Text(
+                          widget.isLandlord ? 'Create account' : 'Continue',
+                          style: TextStyle(color: Colors.white, fontSize: 18),
                         ),
-                        SizedBox(height: 5),
-                        Container(
-                          width: buttonWidth,
-                          child: TextField(
-                            controller: accomodationName,
-                            decoration: InputDecoration(
-                                focusColor: Colors.blue,
-                                fillColor: Color.fromARGB(255, 230, 230, 230),
-                                filled: true,
-                                prefixIcon: Icon(
-                                  Icons.maps_home_work_outlined,
-                                  color: Colors.blue,
-                                ),
-                                hintText: 'Accomodation Name'),
-                          ),
-                        ),
-                        SizedBox(height: 5),
-                        Container(
-                          width: buttonWidth,
-                          child: TextField(
-                            controller: contactDetails,
-                            decoration: InputDecoration(
-                                focusColor: Colors.blue,
-                                fillColor: Color.fromARGB(255, 230, 230, 230),
-                                filled: true,
-                                prefixIcon: Icon(
-                                  Icons.phone_enabled_sharp,
-                                  color: Colors.blue,
-                                ),
-                                hintText: 'Contact details'),
-                          ),
-                        ),
-                        SizedBox(height: 20.0),
-                        ElevatedButton(
-                          onPressed: () async {
-                            setState(() {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: ((context) =>
-                                          LandlordFurtherRegistration(
-                                            password: passwordController.text,
-                                            contactDetails: contactDetails.text,
-                                            isLandlord: widget.isLandlord,
-                                            accomodationName:
-                                                accomodationName.text,
-                                            landlordEmail: emailController.text,
-                                          ))));
-                              print(
-                                widget.isLandlord,
-                              );
-                            });
-                          },
-                          child: Text(
-                            widget.isLandlord ? 'Create account' : 'Continue',
-                            style: TextStyle(color: Colors.white, fontSize: 18),
-                          ),
-                          style: ButtonStyle(
-                              shape: MaterialStatePropertyAll(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(5))),
-                              foregroundColor:
-                                  MaterialStatePropertyAll(Colors.blue),
-                              backgroundColor:
-                                  MaterialStatePropertyAll(Colors.blue),
-                              minimumSize: MaterialStatePropertyAll(
-                                  Size(buttonWidth, 50))),
-                        )
-                      ]),
-                    ),
+                        style: ButtonStyle(
+                            shape: MaterialStatePropertyAll(
+                                RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5))),
+                            foregroundColor:
+                                MaterialStatePropertyAll(Colors.blue),
+                            backgroundColor:
+                                MaterialStatePropertyAll(Colors.blue),
+                            minimumSize: MaterialStatePropertyAll(
+                                Size(buttonWidth, 50))),
+                      )
+                    ]),
                   ),
                 ),
               ),
