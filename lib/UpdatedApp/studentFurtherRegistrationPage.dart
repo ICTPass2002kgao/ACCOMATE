@@ -3,8 +3,10 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:api_com/UpdatedApp/student_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
@@ -39,7 +41,152 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
   TextEditingController studentIdController = TextEditingController();
   TextEditingController studentNumberController = TextEditingController();
 
-  TextEditingController proofOfRegistrationPath = TextEditingController();
+  void checkStudentValues() async {
+    if (studentIdController.text == '' &&
+        studentNumberController.text == '' &&
+        _pdfPorDocumentPath == '' &&
+        _pdfIdDocumentPath == '') {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          title: Text('Missing information',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          content:
+              Text('Please make sure you fill in all the required details'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Retry'),
+              style: ButtonStyle(
+                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5))),
+                  foregroundColor: MaterialStatePropertyAll(Colors.white),
+                  backgroundColor: MaterialStatePropertyAll(Colors.red[300]),
+                  minimumSize:
+                      MaterialStatePropertyAll(Size(double.infinity, 50))),
+            ),
+          ],
+        ),
+      );
+    } else {
+      String gender = widget.gender;
+      String email = widget.email;
+      String password = widget.password;
+      String university = widget.university;
+      String name = widget.name;
+      String surname = widget.surname;
+      String contact = widget.contactDetails;
+      String studentId = studentIdController.text;
+      String studentNumber = studentNumberController.text;
+
+      try {
+        showDialog(
+          context: context,
+          barrierDismissible: false, // Prevent user from dismissing the dialog
+          builder: (BuildContext context) {
+            return Center(
+              child: CircularProgressIndicator(
+                color: Colors.blue,
+              ),
+            );
+          },
+        );
+        // Create a user in Firebase Auth
+        UserCredential userCredential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        // Get the user ID
+        String userId = userCredential.user!.uid;
+
+        // Save user data to Firestore
+        await FirebaseFirestore.instance.collection('users').doc(userId).set({
+          'name': name,
+          'surname': surname,
+          'email': email,
+          'role': widget.isLandlord,
+          'university': university,
+          'contactDetails': contact,
+          'verificationCode': verificationCode,
+          'userId': userId,
+          'gender': gender,
+          'ProofOfRegistration': _pdfDownloadPORURL,
+          'IdDocument': _pdfDownloadIDURL,
+          'studentNumber': studentNumber,
+          'studentId': studentId,
+          // Add more user data as needed
+        });
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
+            title: Text('Registration response',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+            content: Text('Your account have been created successfully'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  // Navigator.pushReplacement(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) => LoginPage(),
+                  //   ),
+                  // );
+                  Navigator.pushReplacementNamed(context, '/login');
+                },
+                style: ButtonStyle(
+                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5))),
+                    foregroundColor: MaterialStatePropertyAll(Colors.white),
+                    backgroundColor: MaterialStatePropertyAll(Colors.green),
+                    minimumSize: MaterialStatePropertyAll(Size(300, 50))),
+                child: Text('Continue'),
+              ),
+            ],
+          ),
+        );
+      } on FirebaseException catch (e) {
+        // Handle login error
+        Navigator.pop(context);
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
+            title: Text('Registration Error',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+            content: Text(e.message.toString()),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Retry'),
+                style: ButtonStyle(
+                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5))),
+                    foregroundColor: MaterialStatePropertyAll(Colors.white),
+                    backgroundColor: MaterialStatePropertyAll(Colors.red[300]),
+                    minimumSize: MaterialStatePropertyAll(Size(300, 50))),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
   String verificationCode = _generateRandomCode();
   static String _generateRandomCode() {
     final random = Random();
@@ -104,6 +251,9 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(5),
+        ),
         title: Text(
           'Error Occurred',
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
@@ -162,8 +312,34 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
           isFileChosen = false;
         });
       }
-    } catch (e) {
-      _showErrorDialog(e.toString());
+    } on firebase_storage.FirebaseException catch (e) {
+      // Handle login error
+      Navigator.pop(context);
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          title: Text('Registration Error',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          content: Text(e.message.toString()),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Retry'),
+              style: ButtonStyle(
+                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5))),
+                  foregroundColor: MaterialStatePropertyAll(Colors.white),
+                  backgroundColor: MaterialStatePropertyAll(Colors.red[300]),
+                  minimumSize: MaterialStatePropertyAll(Size(300, 50))),
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -178,10 +354,115 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
       await reference.putFile(pdfFile);
 
       return await reference.getDownloadURL();
-    } catch (e) {
-      _showErrorDialog(e.toString());
+    } on firebase_storage.FirebaseException catch (e) {
+      // Handle login error
+      Navigator.pop(context);
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          title: Text('Upload Error',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          content: Text(e.message.toString()),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Retry'),
+              style: ButtonStyle(
+                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5))),
+                  foregroundColor: MaterialStatePropertyAll(Colors.white),
+                  backgroundColor: MaterialStatePropertyAll(Colors.red[300]),
+                  minimumSize: MaterialStatePropertyAll(Size(300, 50))),
+            ),
+          ],
+        ),
+      );
       return null;
     }
+  }
+
+  final HttpsCallable sendEmailCallable =
+      FirebaseFunctions.instance.httpsCallable('sendEmail');
+
+  Future<void> sendEmail(String to, String subject, String body) async {
+    try {
+      final result = await sendEmailCallable.call({
+        'to': to,
+        'subject': subject,
+        'body': body,
+      });
+      print(result.data);
+    } catch (e) {
+      print('Error  $e');
+    }
+  }
+
+  Future<void> _verifyEmail() async {
+    TextEditingController verifyEmailController = TextEditingController();
+
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          title: Text('Email Verification',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          content: TextField(
+            controller: verifyEmailController,
+            decoration: InputDecoration(labelText: 'Enter Verification Codes'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                String verifyCodes = verifyEmailController.text;
+
+                Navigator.of(context).pop();
+                verifyCodes == verificationCode
+                    ? checkStudentValues()
+                    : AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        title: Text('Incorrect Verification',
+                            style: TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.bold)),
+                        content: Text('Incorrect verification codes'),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () async {
+                              Navigator.pop(context);
+                              // Close the dialog
+                              sendEmail(
+                                  widget.email, // Student's email
+                                  'Verification Code',
+                                  widget.gender == 'Male'
+                                      ? 'Hello Mr ${widget.surname},\nA verification code have been sent to ${widget.email} provide the codes to proceed'
+                                      : 'Hello Mrs ${widget.surname},\nA verification code have been sent to ${widget.email} provide the codes to proceed');
+                            },
+                            child: Text('Resend'),
+                          ),
+                        ],
+                      );
+              },
+              child: Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -190,7 +471,7 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
         MediaQuery.of(context).size.width < 550 ? double.infinity : 400;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Student Registration Page'),
+        title: const Text('Registration Page(2/2)'),
         centerTitle: true,
         foregroundColor: Colors.white,
         backgroundColor: Colors.blue,
@@ -201,6 +482,7 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
           physics: AlwaysScrollableScrollPhysics(),
           child: Center(
             child: Container(
+              width: buttonWidth,
               child: Column(
                 children: [
                   Center(
@@ -227,11 +509,10 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
                   ),
                   SizedBox(height: 5),
                   TextField(
-                    cursorWidth: buttonWidth,
                     controller: studentNumberController,
                     decoration: InputDecoration(
                         focusColor: Colors.blue,
-                        
+                        fillColor: Color.fromARGB(255, 230, 230, 230),
                         filled: true,
                         prefixIcon: Icon(
                           Icons.person,
@@ -320,7 +601,7 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
                                 focusColor: Color.fromARGB(255, 230, 230, 230),
                                 fillColor: Color.fromARGB(255, 230, 230, 230),
                                 filled: true,
-                                hintText: 'Your Idenification Document',
+                                hintText: 'Your Identification Document',
                               ),
                             ),
                           )
@@ -329,114 +610,42 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () async {
-                      String gender = widget.gender;
-                      String email = widget.email;
-                      String password = widget.password;
-                      String university = widget.university;
-                      String name = widget.name;
-                      String surname = widget.surname;
-                      String contact = widget.contactDetails;
-                      String studentId = studentIdController.text;
-                      String studentNumber = studentNumberController.text;
+                      sendEmail(
+                          widget.email, // Student's email
+                          'Verification Code',
+                          widget.gender == 'Male'
+                              ? 'Hello Mr ${widget.surname},\nWe are aware that you are trying to register your account with accomate\nHere  is your verification code: $verificationCode'
+                              : 'Hello Ms ${widget.surname},\nWe are aware that you are trying to register your account with accomate\nHere  is your verification code: $verificationCode');
+                      // Send email verification
 
-                      try {
-                        showDialog(
-                          context: context,
-                          barrierDismissible:
-                              false, // Prevent user from dismissing the dialog
-                          builder: (BuildContext context) {
-                            return Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                              ),
-                            );
-                          },
-                        );
-                        // Create a user in Firebase Auth
-                        UserCredential userCredential = await FirebaseAuth
-                            .instance
-                            .createUserWithEmailAndPassword(
-                          email: email,
-                          password: password,
-                        );
-
-                        // Get the user ID
-                        String userId = userCredential.user!.uid;
-
-                        // Send email verification
-                        await userCredential.user!.sendEmailVerification();
-
-                        // Save user data to Firestore
-                        await FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(userId)
-                            .set({
-                          'name': name,
-                          'surname': surname,
-                          'email': email,
-                          'role': widget.isLandlord,
-                          'university': university,
-                          'contactDetails': contact,
-                          'verificationCode': verificationCode,
-                          'userId': userId,
-                          'gender': gender,
-                          'ProofOfRegistration': _pdfDownloadPORURL,
-                          'IdDocument': _pdfDownloadIDURL,
-                          'studentNumber': studentNumber,
-                          'studentId': studentId,
-                          // Add more user data as needed
-                        });
-
-                        // Inform the user to check their email for verification
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(
-                              'Verification Email Sent',
-                              style: TextStyle(fontSize: 15),
-                            ),
-                            content: Text(
-                                'Hi $name, \nA verification email has been sent to $email. Please check your email and verify your account.'),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  // Optionally, you can navigate to the login screen or do other actions
-                                  if (!widget.isLandlord) {
-                                    Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => StudentPage(),
-                                        ));
-                                  }
-                                },
-                                child: Text('OK'),
-                              ),
-                            ],
+                      // Inform the user to check their email for verification
+                      showDialog(
+                        barrierDismissible: false,
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5),
                           ),
-                        );
-                      } catch (e) {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(
-                              'Unexpected Error',
-                              style: TextStyle(fontSize: 15),
-                            ),
-                            content: Text(e.toString()),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: Text('OK'),
-                              ),
-                            ],
+                          title: Text(
+                            'Verification Email Sent',
+                            style: TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.bold),
                           ),
-                        );
-                        print('Error during user registration: $e');
-                        // Handle registration error
-                      }
+                          content: Text(widget.gender == 'Male'
+                              ? 'Hello Mr ${widget.surname},\nA verification code have been sent to ${widget.email} provide the codes to proceed'
+                              : 'Hello Mrs ${widget.surname},\nA verification code have been sent to ${widget.email} provide the codes to proceed'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+
+                                _verifyEmail();
+                              },
+                              child: Text('OK'),
+                            ),
+                          ],
+                        ),
+                      );
                     },
                     style: ButtonStyle(
                         shape: MaterialStatePropertyAll(RoundedRectangleBorder(

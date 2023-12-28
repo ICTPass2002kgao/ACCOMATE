@@ -14,9 +14,20 @@ class NotificationPage extends StatefulWidget {
 
 class _NotificationPageState extends State<NotificationPage>
     with SingleTickerProviderStateMixin {
-  bool isLoading = true;
   List<Map<String, dynamic>> _studentApplications = [];
   late TabController _tabController;
+  List<Map<String, dynamic>> _studentMessages = [];
+
+  bool isLoading = true;
+  Future<void> loadData() async {
+    // Simulate loading data
+    await Future.delayed(Duration(seconds: 4));
+
+    // Set isLoading to false when data is loaded
+    setState(() {
+      isLoading = false;
+    });
+  }
 
   @override
   void initState() {
@@ -27,6 +38,7 @@ class _NotificationPageState extends State<NotificationPage>
 
     _user = FirebaseAuth.instance.currentUser!;
     _loadUserData();
+    loadData();
   }
 
   late User _user;
@@ -73,6 +85,33 @@ class _NotificationPageState extends State<NotificationPage>
     }
   }
 
+  Future<void> _loadStudentMessages() async {
+    try {
+      // Assuming there is a specific landlord ID (replace 'your_landlord_id' with the actual ID)
+      String studentUserId = _userData?['userId'] ?? '';
+
+      QuerySnapshot messageSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(studentUserId)
+          .collection('messages')
+          .get();
+
+      List<Map<String, dynamic>> studentMessages = [];
+
+      for (QueryDocumentSnapshot documentSnapshot in messageSnapshot.docs) {
+        Map<String, dynamic> messageData =
+            documentSnapshot.data() as Map<String, dynamic>;
+        studentMessages.add(messageData);
+      }
+
+      setState(() {
+        _studentMessages = studentMessages;
+      });
+    } catch (e) {
+      print('Error loading student applications: $e');
+    }
+  }
+
   bool isTileClicked = false;
   Set<int> clickedTiles = Set<int>();
   int getUnclickedApplicationsCount() {
@@ -83,200 +122,173 @@ class _NotificationPageState extends State<NotificationPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          children: [
-            TabBar(
-              labelColor: Colors.blue,
-              indicatorColor: Colors.blue,
-              controller: _tabController,
-              tabs: [
-                Tab(text: 'Accepted Notification'),
-                Tab(text: 'Rejected Notification'),
-              ],
-            ),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Center(
+              child: Column(
                 children: [
-                  SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 16, right: 16),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Accepted Applications',
-                                style: TextStyle(
-                                    fontSize: 15, fontWeight: FontWeight.bold)),
-                            SizedBox(
-                              height: 5,
-                            ),
-                            for (int index = 0;
-                                index < _studentApplications.length;
-                                index++)
-                              Column(
-                                children: [
-                                  Container(
-                                    child: Card(
-                                      color: Color.fromARGB(255, 243, 243, 243),
-                                      elevation: 4,
-                                      child: ListTile(
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  ViewApplicationResponses(
-                                                studentApplicationData:
-                                                    _studentApplications[index],
-                                              ),
-                                            ),
-                                          );
-                                          setState(() {
-                                            // Toggle the clicked state of the tile
-                                            if (clickedTiles.contains(index)) {
-                                              clickedTiles.remove(index);
-                                            } else {
-                                              clickedTiles.add(index);
-                                            }
-                                          });
-                                        },
-                                        title: Text(
-                                          '${_studentApplications[index]['accomodationName']}',
-                                          style: TextStyle(
-                                            fontWeight:
-                                                clickedTiles.contains(index)
-                                                    ? FontWeight.normal
-                                                    : FontWeight.bold,
-                                          ),
-                                        ),
-                                        subtitle: Text(
-                                          '${_studentApplications[index]['landlordMessage']} Your application was successfully accepted',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        trailing: Icon(
-                                            Icons.arrow_forward_ios_rounded),
-                                      ),
-                                    ),
-                                  )
-                                ],
-                              )
-                          ]),
-                    ),
+                  TabBar(
+                    labelColor: Colors.blue,
+                    indicatorColor: Colors.blue,
+                    controller: _tabController,
+                    tabs: [
+                      Tab(text: 'Accepted Notification'),
+                      Tab(text: 'Rejected Notification'),
+                    ],
                   ),
-                  SingleChildScrollView(
-                    child: Column(
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
                       children: [
-                        for (int index = 0;
-                            index < _studentApplications.length;
-                            index++)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Rejected Applications',
-                                  style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold)),
-                              SizedBox(
-                                height: 5,
-                              ),
-                              Container(
-                                child: Card(
-                                  color: Color.fromARGB(255, 243, 243, 243),
-                                  elevation: 4,
-                                  child: ListTile(
-                                    onTap: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (context) => Container(
-                                          height: 350,
-                                          width: 250,
-                                          child: AlertDialog(
-                                            title: Text(
-                                              'Rejected Reason',
-                                              style: TextStyle(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                            content: Text(
-                                              _studentApplications[index]
-                                                  ['landlordMessage'],
-                                              style: TextStyle(fontSize: 15),
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () async {
-                                                  Navigator.of(context).pop;
-
-                                                  Navigator
-                                                      .pushReplacementNamed(
-                                                          context,
-                                                          '/studentPage');
-                                                },
-                                                child: Text('Okay'),
-                                                style: ButtonStyle(
-                                                    shape: MaterialStatePropertyAll(
-                                                        RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        5))),
-                                                    foregroundColor:
-                                                        MaterialStatePropertyAll(
-                                                            Colors.white),
-                                                    backgroundColor:
-                                                        MaterialStatePropertyAll(
-                                                            Colors.blue),
-                                                    minimumSize:
-                                                        MaterialStatePropertyAll(
-                                                            Size(
-                                                                double.infinity,
-                                                                50))),
+                        SingleChildScrollView(
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 16, right: 16),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Accepted Applications',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold)),
+                                  SizedBox(
+                                    height: 5,
+                                  ),
+                                  for (int index = 0;
+                                      index < _studentApplications.length;
+                                      index++)
+                                    Column(
+                                      children: [
+                                        Container(
+                                          child: Card(
+                                            color: Color.fromARGB(
+                                                255, 243, 243, 243),
+                                            elevation: 4,
+                                            child: ListTile(
+                                              onTap: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        ViewApplicationResponses(
+                                                      studentApplicationData:
+                                                          _studentApplications[
+                                                              index],
+                                                    ),
+                                                  ),
+                                                );
+                                                setState(() {
+                                                  // Toggle the clicked state of the tile
+                                                  if (clickedTiles
+                                                      .contains(index)) {
+                                                    clickedTiles.remove(index);
+                                                  } else {
+                                                    clickedTiles.add(index);
+                                                  }
+                                                });
+                                              },
+                                              title: Text(
+                                                '${_studentApplications[index]['accomodationName']}',
+                                                style: TextStyle(
+                                                  fontWeight: clickedTiles
+                                                          .contains(index)
+                                                      ? FontWeight.normal
+                                                      : FontWeight.bold,
+                                                ),
                                               ),
-                                            ],
+                                              subtitle: Text(
+                                                '${_studentApplications[index]['landlordMessage']} Your application was successfully accepted',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              trailing: Icon(Icons
+                                                  .arrow_forward_ios_rounded),
+                                            ),
+                                          ),
+                                        )
+                                      ],
+                                    )
+                                ]),
+                          ),
+                        ),
+                        SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              for (int index = 0;
+                                  index < _studentApplications.length;
+                                  index++)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 16, right: 16),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Rejected Applications',
+                                          style: TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold)),
+                                      SizedBox(
+                                        height: 5,
+                                      ),
+                                      Container(
+                                        child: Card(
+                                          color: Color.fromARGB(
+                                              255, 243, 243, 243),
+                                          elevation: 4,
+                                          child: ListTile(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      ViewApplicationResponses(
+                                                    studentApplicationData:
+                                                        _studentApplications[
+                                                            index],
+                                                  ),
+                                                ),
+                                              );
+                                              setState(() {
+                                                // Toggle the clicked state of the tile
+                                                if (clickedTiles
+                                                    .contains(index)) {
+                                                  clickedTiles.remove(index);
+                                                } else {
+                                                  clickedTiles.add(index);
+                                                }
+                                              });
+                                            },
+                                            title: Text(
+                                              '${_studentApplications[index]['accomodationName']}',
+                                              style: TextStyle(
+                                                fontWeight:
+                                                    clickedTiles.contains(index)
+                                                        ? FontWeight.normal
+                                                        : FontWeight.bold,
+                                              ),
+                                            ),
+                                            subtitle: Text(
+                                              'Your Application have been rejected due to the following reasons ${_studentApplications[index]['landlordMessage']} ',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            trailing: Icon(Icons
+                                                .arrow_forward_ios_rounded),
                                           ),
                                         ),
-                                      );
-
-                                      setState(() {
-                                        // Toggle the clicked state of the tile
-                                        if (clickedTiles.contains(index)) {
-                                          clickedTiles.remove(index);
-                                        } else {
-                                          clickedTiles.add(index);
-                                        }
-                                      });
-                                    },
-                                    title: Text(
-                                      '${_studentApplications[index]['accomodationName']}',
-                                      style: TextStyle(
-                                        fontWeight: clickedTiles.contains(index)
-                                            ? FontWeight.normal
-                                            : FontWeight.bold,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      'Your Application have been rejected due to the following reasons ${_studentApplications[index]['landlordMessage']} ',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    trailing:
-                                        Icon(Icons.arrow_forward_ios_rounded),
+                                      )
+                                    ],
                                   ),
                                 ),
-                              )
                             ],
                           ),
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }

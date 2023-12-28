@@ -16,11 +16,23 @@ class _HomePageState extends State<HomePage>
   bool isLoading = true;
   List<Map<String, dynamic>> _landlordsData = [];
   late TabController _tabController;
+
+  Future<void> loadData() async {
+    // Simulate loading data
+    await Future.delayed(Duration(seconds: 5));
+
+    // Set isLoading to false when data is loaded
+    setState(() {
+      isLoading = false;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadLandlordData();
+    loadData();
   }
 
   Future<void> _loadLandlordData() async {
@@ -39,7 +51,6 @@ class _HomePageState extends State<HomePage>
 
     setState(() {
       _landlordsData = landlordsData;
-      isLoading = false;
     });
   }
 
@@ -49,7 +60,10 @@ class _HomePageState extends State<HomePage>
       body: Padding(
         padding: const EdgeInsets.only(left: 16.0, right: 16),
         child: isLoading
-            ? Center(child: CircularProgressIndicator())
+            ? Center(
+                child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+              ))
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -89,7 +103,7 @@ class _HomePageState extends State<HomePage>
                                                         'transport availability'] ==
                                                     true &&
                                                 landlord['accomodationType'] ==
-                                                    true))
+                                                    false))
                                               SingleChildScrollView(
                                                 child: Column(
                                                   crossAxisAlignment:
@@ -116,7 +130,7 @@ class _HomePageState extends State<HomePage>
                                                                     true &&
                                                                 landlordData[
                                                                         'accomodationType'] ==
-                                                                    true)
+                                                                    false)
                                                               GestureDetector(
                                                                 onTap: () {
                                                                   Navigator
@@ -135,6 +149,9 @@ class _HomePageState extends State<HomePage>
                                                                 child: buildLandlordCard(
                                                                     landlordData),
                                                               ),
+                                                          SizedBox(
+                                                            width: 10,
+                                                          )
                                                         ],
                                                       ),
                                                     ),
@@ -148,7 +165,7 @@ class _HomePageState extends State<HomePage>
                                                         'transport availability'] ==
                                                     false &&
                                                 landlord['accomodationType'] ==
-                                                    true))
+                                                    false))
                                               SingleChildScrollView(
                                                 child: Column(
                                                   crossAxisAlignment:
@@ -176,7 +193,7 @@ class _HomePageState extends State<HomePage>
                                                                     false &&
                                                                 landlordData[
                                                                         'accomodationType'] ==
-                                                                    true)
+                                                                    false)
                                                               GestureDetector(
                                                                 onTap: () {
                                                                   Navigator
@@ -195,6 +212,7 @@ class _HomePageState extends State<HomePage>
                                                                 child: buildLandlordCard(
                                                                     landlordData),
                                                               ),
+                                                          SizedBox(width: 10)
                                                         ],
                                                       ),
                                                     ),
@@ -213,7 +231,7 @@ class _HomePageState extends State<HomePage>
                               // Display Transport Accommodation
                               if (_landlordsData.any((landlord) =>
                                   landlord['transport availability'] == true &&
-                                  landlord['accomodationType'] == false))
+                                  landlord['accomodationType'] == true))
                                 SingleChildScrollView(
                                   child: Column(
                                     crossAxisAlignment:
@@ -238,7 +256,7 @@ class _HomePageState extends State<HomePage>
                                                       true &&
                                                   landlordData[
                                                           'accomodationType'] ==
-                                                      false)
+                                                      true)
                                                 GestureDetector(
                                                   onTap: () {
                                                     Navigator.push(
@@ -255,6 +273,9 @@ class _HomePageState extends State<HomePage>
                                                   child: buildLandlordCard(
                                                       landlordData),
                                                 ),
+                                            SizedBox(
+                                              width: 10,
+                                            )
                                           ],
                                         ),
                                       ),
@@ -265,7 +286,7 @@ class _HomePageState extends State<HomePage>
                               // Display Non-Transport Accommodation
                               if (_landlordsData.any((landlord) =>
                                   landlord['transport availability'] == false &&
-                                  landlord['accomodationType'] == false))
+                                  landlord['accomodationType'] == true))
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -280,7 +301,6 @@ class _HomePageState extends State<HomePage>
                                       scrollDirection: Axis.horizontal,
                                       child: Row(
                                         children: [
-                                          SizedBox(width: 10),
                                           for (Map<String, dynamic> landlordData
                                               in _landlordsData)
                                             if (landlordData[
@@ -288,7 +308,7 @@ class _HomePageState extends State<HomePage>
                                                     false &&
                                                 landlordData[
                                                         'accomodationType'] ==
-                                                    false)
+                                                    true)
                                               GestureDetector(
                                                 onTap: () {
                                                   Navigator.push(
@@ -305,6 +325,9 @@ class _HomePageState extends State<HomePage>
                                                 child: buildLandlordCard(
                                                     landlordData),
                                               ),
+                                          SizedBox(
+                                            width: 10,
+                                          )
                                         ],
                                       ),
                                     ),
@@ -321,106 +344,6 @@ class _HomePageState extends State<HomePage>
       ),
     );
   }
-
-  // Widget _buildAccommodationTab(bool isTransport, bool isAccomodation) {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Padding(
-  //         padding: const EdgeInsets.symmetric(vertical: 10.0),
-  //         child: Text(
-  //           isAccomodation
-  //               ? 'Transport Accommodation'
-  //               : 'Transport Accommodation',
-  //           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-  //         ),
-  //       ),
-  //       Expanded(
-  //         child: SingleChildScrollView(
-  //           scrollDirection: Axis.horizontal,
-  //           child: Row(
-  //             children: [
-  //               SizedBox(width: 10),
-  //               for (Map<String, dynamic> landlordData in _landlordsData)
-  //                 if (landlordData['accomodationType'] == isAccomodation &&
-  //                     landlordData['transport availability'] == isTransport)
-  //                   GestureDetector(
-  //                     onTap: () {
-  //                       Navigator.push(
-  //                         context,
-  //                         MaterialPageRoute(
-  //                           builder: (context) => AccomodationPage(
-  //                             landlordData: landlordData,
-  //                           ),
-  //                         ),
-  //                       );
-  //                     },
-  //                     child: buildLandlordCard(landlordData),
-  //                   ),
-  //             ],
-  //           ),
-  //         ),
-  //       ),
-  //       Padding(
-  //         padding: const EdgeInsets.symmetric(vertical: 10.0),
-  //         child: Text(
-  //           isAccomodation ? 'Non-Transport Houses' : 'Non_Transport Houses',
-  //           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-  //         ),
-  //       ),
-  //       Expanded(
-  //         child: SingleChildScrollView(
-  //           scrollDirection: Axis.horizontal,
-  //           child: Row(
-  //             children: [
-  //               SizedBox(width: 10),
-  //               for (Map<String, dynamic> landlordData in _landlordsData)
-  //                 if (landlordData['accomodationType'] == isAccomodation &&
-  //                     landlordData['transport availability'] == isTransport)
-  //                   GestureDetector(
-  //                     onTap: () {
-  //                       Navigator.push(
-  //                         context,
-  //                         MaterialPageRoute(
-  //                           builder: (context) => AccomodationPage(
-  //                             landlordData: landlordData,
-  //                           ),
-  //                         ),
-  //                       );
-  //                     },
-  //                     child: buildLandlordCard(landlordData),
-  //                   ),
-  //             ],
-  //           ),
-  //         ),
-  //       ),
-  //       Expanded(
-  //         child: SingleChildScrollView(
-  //           scrollDirection: Axis.horizontal,
-  //           child: Row(
-  //             children: [
-  //               SizedBox(width: 10),
-  //               for (Map<String, dynamic> landlordData in _landlordsData)
-  //                 if (landlordData['transport availability'] == isTransport)
-  //                   GestureDetector(
-  //                     onTap: () {
-  //                       Navigator.push(
-  //                         context,
-  //                         MaterialPageRoute(
-  //                           builder: (context) => AccomodationPage(
-  //                             landlordData: landlordData,
-  //                           ),
-  //                         ),
-  //                       );
-  //                     },
-  //                     child: buildLandlordCard(landlordData),
-  //                   ),
-  //             ],
-  //           ),
-  //         ),
-  //       ),
-  //     ],
-  //   );
 }
 
 Widget buildLandlordCard(Map<String, dynamic> landlordData) {
@@ -432,8 +355,8 @@ Widget buildLandlordCard(Map<String, dynamic> landlordData) {
     child: Padding(
       padding: const EdgeInsets.all(10.0),
       child: Container(
-        width: 250,
-        height: 250,
+        width: 300,
+        height: 300,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -441,8 +364,8 @@ Widget buildLandlordCard(Map<String, dynamic> landlordData) {
               borderRadius: BorderRadius.circular(10.0),
               child: Image.network(
                 landlordData['profilePicture'],
-                width: 250.0,
-                height: 250.0,
+                width: double.infinity,
+                height: 250,
                 fit: BoxFit.cover,
               ),
             ),

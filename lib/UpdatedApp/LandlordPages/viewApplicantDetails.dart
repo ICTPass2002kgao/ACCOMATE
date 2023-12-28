@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, deprecated_member_use
 
-import 'dart:html' as html;
+import 'package:http/http.dart' as http;
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,52 +18,8 @@ class ViewApplicantDetails extends StatefulWidget {
 
 class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
   TextEditingController messageController = TextEditingController();
-  // Future<void> _showAddOffersDialog() async {
-  //   return showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: Text(
-  //           'Appliation response',
-  //           style: TextStyle(fontSize: 15),
-  //         ),
-  //         content: TextField(
-  //           maxLines: 4,
-  //           controller: messageController,
-  //           decoration: InputDecoration(
-  //               border: OutlineInputBorder(),
-  //               labelText: "Any Other Information"),
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //             },
-  //             child: Text('Cancel'),
-  //           ),
-  //           Padding(
-  //             padding: const EdgeInsets.only(left: 30.0, right: 30),
-  //             child: ElevatedButton(
-  //               onPressed: () {
-  //                 _saveApplicationResponse();
-  //               },
-  //               style: ButtonStyle(
-  //                   shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-  //                       borderRadius: BorderRadius.circular(5))),
-  //                   foregroundColor: MaterialStatePropertyAll(Colors.white),
-  //                   backgroundColor: MaterialStatePropertyAll(Colors.green),
-  //                   minimumSize:
-  //                       MaterialStatePropertyAll(Size(double.infinity, 50))),
-  //               child: Text('Sent response'),
-  //             ),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
 
+  bool status = true;
   late User _user;
   String selectedRoomsType = '';
 
@@ -87,8 +45,7 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
   Future<void> _saveApplicationResponse() async {
     try {
       showDialog(
-        context: context,
-        barrierDismissible: false, // Prevent user from dismissing the dialog
+        context: context, // Prevent user from dismissing the dialog
         builder: (BuildContext context) {
           return Center(
             child: CircularProgressIndicator(
@@ -111,13 +68,10 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
         'accomodationName': _userData?['accomodationName'] ?? '',
         'path': _userData?['contractPath'] ?? '',
         'contract': _userData?['contract'] ?? '',
+        'status': status
 
         // Add more details as needed
       });
-      await confirmationEmail(
-          _userData?['email'] ?? '', // Student's email
-          'Application approved',
-          'Hi ${widget.studentApplicationData['name']}, \nYour application was approved from ${_userData?['accomodationName'] ?? ''}, sign the following contract and return it. and sent whats required details by the landlord go to your notification for all the information');
 
       print('email sent successfully');
 
@@ -152,11 +106,39 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
             actions: [
               TextButton(
                 onPressed: () async {
+                  showDialog(
+                    context: context, // Prevent user from dismissing the dialog
+                    builder: (BuildContext context) {
+                      return Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.blue,
+                        ),
+                      );
+                    },
+                  );
+
+                  if (status == true) {
+                    await sendEmail(
+                        _userData?['email'] ?? '', // Student's email
+                        'Response sent successfully',
+                        'Hi ${_userData?['accomodationName']} landlord, \nYour application was sent successfully to ${widget.studentApplicationData['name']}');
+                    await sendEmail(
+                        widget
+                            .studentApplicationData['email'], // Student's email
+                        'Approved Application',
+                        'Hi ${widget.studentApplicationData['name']} , \nYour application from ${_userData?['accomodationName']} have been approved and accepted');
+                  } else {
+                    await sendEmail(
+                        _userData?['email'] ?? '', // Student's email
+                        'Response sent successfully',
+                        'Hi ${_userData?['accomodationName']} landlord, \nYour application was sent successfully to ${widget.studentApplicationData['name']}');
+                    await sendEmail(
+                        widget
+                            .studentApplicationData['email'], // Student's email
+                        'Rejected Application',
+                        'Hi ${widget.studentApplicationData['name']} , \nYour application from ${_userData?['accomodationName']} have been rejected due to some reasons');
+                  }
                   Navigator.pushReplacementNamed(context, '/LandlordPage');
-                  await confirmationEmail(
-                      _userData?['email'] ?? '', // Student's email
-                      'Response sent successfully',
-                      'Hi ${_userData?['accomodationName']} landlord, \nYour application was sent successfully to ${widget.studentApplicationData['name']}');
 
                   print('email sent successfully');
                 },
@@ -210,9 +192,9 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
   }
 
   final HttpsCallable sendEmailCallable =
-      FirebaseFunctions.instance.httpsCallable('confirmationEmail');
+      FirebaseFunctions.instance.httpsCallable('sendEmail');
 
-  Future<void> confirmationEmail(String to, String subject, String body) async {
+  Future<void> sendEmail(String to, String subject, String body) async {
     try {
       final result = await sendEmailCallable.call({
         'to': to,
@@ -240,7 +222,7 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                 onPressed: () async {
                   Navigator.of(context).pop;
                 },
-                child: Text('Submit'),
+                child: Text('okay'),
                 style: ButtonStyle(
                     shape: MaterialStatePropertyAll(RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5))),
@@ -259,7 +241,7 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
   @override
   Widget build(BuildContext context) {
     double buttonWidth =
-        MediaQuery.of(context).size.width < 550 ? double.infinity : 400;
+        MediaQuery.of(context).size.width < 550 ? double.infinity : 600;
     return Scaffold(
         appBar: AppBar(
           title: Text(
@@ -273,6 +255,7 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Table(
                   border: TableBorder.all(),
@@ -440,83 +423,130 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                 SizedBox(
                   height: 20,
                 ),
+
                 Container(
                   width: buttonWidth,
-                  child: TextField(
-                    maxLines: 4,
-                    controller: messageController,
-                    decoration: InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText:
-                            "Accepted Additional Information or Rejected reason"),
+                  child: ExpansionTile(
+                    title: Text('Choose Status'),
+                    children: [
+                      Row(
+                        children: [
+                          Radio(
+                            activeColor: Colors.green,
+                            fillColor: MaterialStatePropertyAll(Colors.green),
+                            value: true,
+                            groupValue: status,
+                            onChanged: (value) {
+                              setState(() {
+                                status = value!;
+                              });
+                            },
+                          ),
+                          Text('Accept applicant'),
+                        ],
+                      ),
+                      SizedBox(width: 16),
+                      Row(
+                        children: [
+                          Radio(
+                            activeColor: Colors.red,
+                            fillColor: MaterialStatePropertyAll(Colors.red),
+                            value: false,
+                            groupValue: status,
+                            onChanged: (value) {
+                              setState(() {
+                                status = value!;
+                              });
+                            },
+                          ),
+                          Text('Reject applicant'),
+                        ],
+                      ),
+                    ],
                   ),
+                ),
+
+                SizedBox(
+                  height: 20,
+                ),
+
+                Container(
+                  width: buttonWidth,
+                  child: Tooltip(
+                    message:
+                        'Should you required additional information from student, let the student and know and let them get back via an accomodation email',
+                    child: TextField(
+                      maxLines: 4,
+                      controller: messageController,
+                      decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText:
+                              "Accepted Additional Information or Rejected reason"),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
                 ),
 
                 //Additional Message to student
 
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        _saveApplicationResponse();
-                      },
-                      icon: Icon(
-                        Icons.done,
-                        color: Colors.white,
-                      ),
-                      label: Text('Accept'),
-                      style: ButtonStyle(
-                          shape: MaterialStatePropertyAll(
-                              RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5))),
-                          foregroundColor:
-                              MaterialStatePropertyAll(Colors.white),
-                          backgroundColor:
-                              MaterialStatePropertyAll(Colors.green),
-                          minimumSize: MaterialStatePropertyAll(Size(55, 50))),
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        _saveApplicationResponse();
-                      },
-                      icon: Icon(
-                        Icons.dnd_forwardslash_outlined,
-                        color: Colors.white,
-                      ),
-                      label: Text('Reject'),
-                      style: ButtonStyle(
-                          shape: MaterialStatePropertyAll(
-                              RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5))),
-                          foregroundColor:
-                              MaterialStatePropertyAll(Colors.white),
-                          backgroundColor: MaterialStatePropertyAll(Colors.red),
-                          minimumSize: MaterialStatePropertyAll(Size(55, 50))),
-                    )
-                  ],
+                ElevatedButton.icon(
+                  onPressed: () {
+                    _saveApplicationResponse();
+                  },
+                  icon: Icon(
+                    status == true ? Icons.done : Icons.delete,
+                    color: Colors.white,
+                  ),
+                  label: Text('Send Response'),
+                  style: ButtonStyle(
+                      shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5))),
+                      foregroundColor: MaterialStatePropertyAll(Colors.white),
+                      backgroundColor: MaterialStatePropertyAll(
+                          status == true ? Colors.green : Colors.red[300]),
+                      minimumSize:
+                          MaterialStatePropertyAll(Size(buttonWidth, 50))),
+                ),
+                SizedBox(
+                  width: 10,
                 )
               ],
             ),
           ),
         ));
   }
-}
 
-void downloadFile(String url) async {
-  final html.AnchorElement anchor = html.AnchorElement(href: url)
-    ..target = 'blank'
-    ..download = 'file_name_to_be_saved_as.pdf';
+  Future<void> downloadFile(String url) async {
+    final String downloadUrl = url;
 
-  // Trigger a click on the anchor element
-  html.document.body!.append(anchor);
-  anchor.click();
+    try {
+      // Make an HTTP GET request to download the file
+      final http.Response response = await http.get(Uri.parse(downloadUrl));
 
-  // Wait for the file to be downloaded
-  await Future.delayed(Duration(seconds: 2));
+      // Check if the request was successful (status code 200)
+      if (response.statusCode == 200) {
+        // Convert the response body to a Uint8List
+        final Uint8List bytes = response.bodyBytes;
 
-  // Remove the anchor element from the DOM
-  anchor.remove();
+        // Get the local storage directory
+        final Directory appDocDir = Directory('Downloads');
+        final String appDocPath = appDocDir.path;
+
+        // Create a File instance with the local path and file name
+        final File file = File('$appDocPath/contract.pdf');
+
+        // Write the bytes to the file
+        await file.writeAsBytes(bytes);
+
+        print('File downloaded and saved locally: ${file.path}');
+      } else {
+        // Handle errors if the request was not successful
+        print('Failed to download file: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error downloading file: $error');
+    }
+  }
 }

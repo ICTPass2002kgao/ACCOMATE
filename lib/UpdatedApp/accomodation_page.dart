@@ -26,6 +26,16 @@ class _AccomodationPageState extends State<AccomodationPage> {
     'Sharing/double room',
     "Bachelor's room",
   ];
+
+  String yearOfStudy = '';
+
+  List<String> yearofStudey = [
+    'First year',
+    'Second year',
+    'Third year',
+    'Fourth year',
+    'Postgraduate',
+  ];
   late User _user;
   String selectedRoomsType = '';
 
@@ -36,6 +46,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
     super.initState();
     _user = FirebaseAuth.instance.currentUser!;
     _loadUserData();
+    yearOfStudy = 'Second year';
   }
 
   Future<void> _loadUserData() async {
@@ -82,45 +93,53 @@ class _AccomodationPageState extends State<AccomodationPage> {
         'studentId': _userData?['studentId'] ?? '',
         'studentNumber': _userData?['studentNumber'] ?? '',
         'roomType': selectedRoomsType,
+        'fieldOfStudy': yearOfStudy
         // Add more details as needed
       });
       showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (context) => Container(
           height: 350,
           child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
             title: Text(
               'Application Response',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
-            content: Column(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(40),
-                  child: Container(
-                    color: Colors.green,
-                    width: 80,
-                    height: 80,
-                    child: Icon(Icons.done, color: Colors.white, size: 20),
+            content: Container(
+              height: 350,
+              child: Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(40),
+                    child: Container(
+                      color: Colors.green,
+                      width: 80,
+                      height: 80,
+                      child: Icon(Icons.done, color: Colors.white, size: 20),
+                    ),
                   ),
-                ),
-                SizedBox(height: 20),
-                Text(
-                  'Your application was sent successfully. You will get further communication soon.',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ],
+                  SizedBox(height: 20),
+                  Text(
+                    'Your application was sent successfully. You will get further communication soon.',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () async {
                   Navigator.pushReplacementNamed(context, '/studentPage');
-                  // await confirmationEmail(
-                  //     _userData?['email'] ?? '', // Student's email
-                  //     'Application sent successfully',
-                  //     'Hi ${_userData?['name']} , \nYour application was sent successfully to ${widget.landlordData['accomodationName']}, You will get further communication soon.');
+                  await sendEmail(
+                      _userData?['email'] ?? '', // Student's email
+                      'Application sent successfully',
+                      'Hi ${_userData?['name']} , \nYour application was sent successfully to ${widget.landlordData['accomodationName']}, You will get further communication soon.');
 
-                  // print('email sent successfully');
+                  print('email sent successfully');
                 },
                 child: Text('Done'),
               ),
@@ -134,9 +153,9 @@ class _AccomodationPageState extends State<AccomodationPage> {
   }
 
   final HttpsCallable sendEmailCallable =
-      FirebaseFunctions.instance.httpsCallable('confirmationEmail');
+      FirebaseFunctions.instance.httpsCallable('sendEmail');
 
-  Future<void> confirmationEmail(String to, String subject, String body) async {
+  Future<void> sendEmail(String to, String subject, String body) async {
     try {
       final result = await sendEmailCallable.call({
         'to': to,
@@ -145,14 +164,14 @@ class _AccomodationPageState extends State<AccomodationPage> {
       });
       print(result.data);
     } catch (e) {
-      print('Error sending email: $e');
+      print('Error  $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     double buttonWidth =
-        MediaQuery.of(context).size.width < 450 ? double.infinity : 400;
+        MediaQuery.of(context).size.width < 550 ? double.infinity : 500;
     return Scaffold(
       appBar: AppBar(
         foregroundColor: Colors.white,
@@ -170,8 +189,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
             width: buttonWidth,
             child: Column(
               children: [
-                Container(
-                  width: 400,
+                Center(
                   child: Card(
                     elevation: 5,
                     child: Padding(
@@ -181,24 +199,61 @@ class _AccomodationPageState extends State<AccomodationPage> {
                         children: [
                           Center(
                             child: ClipRRect(
-                                borderRadius: BorderRadius.circular(10.0),
-                                child: Image.network(
-                                  widget.landlordData['profilePicture'],
-                                  width: double.infinity,
-                                  height: 300.0,
-                                  fit: BoxFit.cover,
-                                )),
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                height:
+                                    270, // Provide a fixed height or adjust based on your needs
+                                child: Expanded(
+                                  child: PageView.builder(
+                                    itemCount: widget
+                                                .landlordData['displayedImages']
+                                                .length ==
+                                            0
+                                        ? 1 // If the list is empty, show only the default image
+                                        : widget.landlordData['displayedImages']
+                                                .length +
+                                            1,
+                                    itemBuilder: (context, index) {
+                                      if (index == 0) {
+                                        // Display the desired default image for the first item
+                                        return Image.network(
+                                          widget.landlordData[
+                                                  'profilePicture'] ??
+                                              'Loading...', // Replace with your desired image URL
+                                          fit: BoxFit.cover,
+                                          width: 300,
+                                          height: 250,
+                                        );
+                                      } else {
+                                        // Display images from the list for subsequent items
+                                        return Image.network(
+                                          widget.landlordData['displayedImages']
+                                              [index - 1],
+                                          fit: BoxFit.cover,
+                                          width: 300,
+                                          height: 250,
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                           SizedBox(height: 5),
                           Row(
                             children: [
-                              Text('Location: ',
+                              Text('Address: ',
                                   style:
                                       TextStyle(fontWeight: FontWeight.bold)),
-                              Text(
-                                widget.landlordData['location'],
-                                maxLines: 1, // Set the maximum number of lines
-                                overflow: TextOverflow.clip,
+                              Expanded(
+                                child: Text(
+                                  widget.landlordData['location'] ??
+                                      'Loading...',
+                                  maxLines:
+                                      1, // Set the maximum number of lines
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
@@ -208,9 +263,8 @@ class _AccomodationPageState extends State<AccomodationPage> {
                               Text('Distance to campus: ',
                                   style:
                                       TextStyle(fontWeight: FontWeight.bold)),
-                              Text(
-                                widget.landlordData['distance'],
-                              ),
+                              Text(widget.landlordData['distance'] ??
+                                  'Loading...'),
                               Icon(
                                 Icons.location_on_outlined,
                                 size: 13,
@@ -218,6 +272,35 @@ class _AccomodationPageState extends State<AccomodationPage> {
                             ],
                           ),
                           SizedBox(height: 5),
+                          Text('For more information contact us via:'),
+                          SizedBox(
+                            height: 5,
+                          ),
+                          Row(
+                            children: [
+                              Text('Email: ',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              Text(
+                                widget.landlordData['email'] ?? '',
+                                maxLines: 1, // Set the maximum number of lines
+                                overflow: TextOverflow.clip,
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 5),
+                          Row(
+                            children: [
+                              Text('Contact: ',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              Text(
+                                widget.landlordData['contactDetails'] ?? '',
+                                maxLines: 1, // Set the maximum number of lines
+                                overflow: TextOverflow.clip,
+                              ),
+                            ],
+                          ),
                           Text('Accommodated institutions',
                               style: TextStyle(fontWeight: FontWeight.bold)),
                           SizedBox(height: 5),
@@ -286,8 +369,13 @@ class _AccomodationPageState extends State<AccomodationPage> {
                           height: 400,
                           width: 400,
                           child: AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5),
+                            ),
                             scrollable: true,
-                            title: Text('Confirm your details'),
+                            title: Text('Confirm your details',
+                                style: TextStyle(
+                                    fontSize: 15, fontWeight: FontWeight.bold)),
                             content: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -327,6 +415,22 @@ class _AccomodationPageState extends State<AccomodationPage> {
                                     );
                                   }).toList(),
                                 ),
+                                SizedBox(height: 10),
+                                ExpansionTile(
+                                  title: Text('Select year of study'),
+                                  children: yearofStudey.map((fiedOfStudy) {
+                                    return RadioListTile<String>(
+                                      title: Text(fiedOfStudy),
+                                      value: fiedOfStudy,
+                                      groupValue: yearOfStudy,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          yearOfStudy = value!;
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
                               ],
                             ),
                             actions: [
@@ -334,7 +438,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
                                 onPressed: () async {
                                   Navigator.of(context).pop();
                                   await _saveApplicationDetails();
-                                  await confirmationEmail(
+                                  sendEmail(
                                       widget.landlordData[
                                           'email'], // Student's email
                                       'Application Received',
@@ -354,7 +458,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
                     child: Text('Apply Accommodation'),
                     style: ButtonStyle(
                         shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10))),
+                            borderRadius: BorderRadius.circular(5))),
                         backgroundColor: MaterialStatePropertyAll(Colors.blue),
                         foregroundColor: MaterialStatePropertyAll(Colors.white),
                         minimumSize:
@@ -369,3 +473,17 @@ class _AccomodationPageState extends State<AccomodationPage> {
     );
   }
 }
+
+// Widget buildImagePageView(List<String> imageUrls) {
+//   return PageView.builder(
+//     itemCount: imageUrls.length,
+//     itemBuilder: (context, index) {
+//       return Center(
+//         child: Image.network(
+//           imageUrls[index],
+//           fit: BoxFit.cover,
+//         ),
+//       );
+//     },
+//   );
+// }

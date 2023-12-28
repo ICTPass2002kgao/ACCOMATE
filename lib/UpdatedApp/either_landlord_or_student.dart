@@ -4,9 +4,6 @@ import 'dart:math';
 
 import 'package:api_com/UpdatedApp/landlordFurntherRegistration.dart';
 import 'package:api_com/UpdatedApp/studentFurtherRegistrationPage.dart';
-import 'package:api_com/UpdatedApp/student_page.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class StudentOrLandlord extends StatefulWidget {
@@ -25,8 +22,95 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
   final TextEditingController contactDetails = TextEditingController();
   final TextEditingController accomodationName = TextEditingController();
   final TextEditingController distanceController = TextEditingController();
-  String selectedUniversity = '';
+  void showError() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(5),
+        ),
+        title: Text('Missing information',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+        content: Text('Please make sure you fill in all the required details'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Retry'),
+            style: ButtonStyle(
+                shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5))),
+                foregroundColor: MaterialStatePropertyAll(Colors.white),
+                backgroundColor: MaterialStatePropertyAll(Colors.red[300]),
+                minimumSize: MaterialStatePropertyAll(Size(300, 50))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void checkStudentValues() {
+    if (nameController.text == '') {
+      showError();
+    } else if (surnameController.text == '') {
+      showError();
+    } else if (emailController.text == '') {
+      showError();
+    } else if (passwordController.text == '') {
+      showError();
+    } else if (contactDetails.text == '') {
+      showError();
+    } else {
+      setState(() {
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => StudentFurtherRegister(
+                name: nameController.text,
+                surname: surnameController.text,
+                contactDetails: contactDetails.text,
+                university: selectedUniversity,
+                gender: selectedGender,
+                email: emailController.text,
+                password: passwordController.text,
+                isLandlord: widget.isLandlord,
+              ),
+            ));
+      });
+    }
+  }
+
+  void checkLandlordValues() {
+    if (emailController.text == '') {
+      showError();
+    } else if (passwordController.text == '') {
+      showError();
+    } else if (contactDetails.text == '') {
+      showError();
+    } else if (accomodationName.text == '') {
+      showError();
+    } else if (contactDetails.hashCode.isNaN) {
+      showError();
+    } else {
+      setState(() {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: ((context) => LandlordFurtherRegistration(
+                      password: passwordController.text,
+                      contactDetails: contactDetails.hashCode,
+                      isLandlord: widget.isLandlord,
+                      accomodationName: accomodationName.text,
+                      landlordEmail: emailController.text,
+                    ))));
+      });
+    }
+  }
+
   bool _obscureText = true;
+  String selectedUniversity = '';
+
   List<String> universities = [
     'Vaal University of Technology',
     'University of Johannesburg',
@@ -71,8 +155,8 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
         foregroundColor: Colors.white,
         title: Text(
             widget.isLandlord
-                ? 'Landlord Registration'
-                : 'Student Registration',
+                ? 'Landlord Registration(1/3)'
+                : 'Student Registration(1/2)',
             style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue,
         centerTitle: true,
@@ -82,180 +166,169 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
         child: !widget.isLandlord //This is for student
             ? SingleChildScrollView(
                 physics: AlwaysScrollableScrollPhysics(),
-                child: Container(
-                  width: buttonWidth,
-                  child: Column(children: [
-                    Icon(
-                      Icons.person_add,
-                      size: 150,
-                      color: Colors.blue,
-                    ),
-                    Container(
-                      width: buttonWidth,
-                      child: TextField(
-                        controller: nameController,
-                        decoration: InputDecoration(
-                            focusColor: Colors.blue,
-                            fillColor: Color.fromARGB(255, 230, 230, 230),
-                            filled: true,
-                            prefixIcon: Icon(
-                              Icons.person,
-                              color: Colors.blue,
-                            ),
-                            hintText: 'Name'),
+                child: Center(
+                  child: Container(
+                    width: buttonWidth,
+                    child: Column(children: [
+                      Icon(
+                        Icons.person_add,
+                        size: 150,
+                        color: Colors.blue,
                       ),
-                    ),
-                    SizedBox(height: 5),
-                    Container(
-                      width: buttonWidth,
-                      child: TextField(
-                        controller: surnameController,
-                        decoration: InputDecoration(
-                            focusColor: Colors.blue,
-                            fillColor: Color.fromARGB(255, 230, 230, 230),
-                            filled: true,
-                            prefixIcon: Icon(
-                              Icons.person,
-                              color: Colors.blue,
-                            ),
-                            hintText: 'Surname'),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Container(
-                      width: buttonWidth,
-                      child: TextField(
-                        controller: emailController,
-                        decoration: InputDecoration(
-                            focusColor: Colors.blue,
-                            fillColor: Color.fromARGB(255, 230, 230, 230),
-                            filled: true,
-                            prefixIcon: Icon(
-                              Icons.mail,
-                              color: Colors.blue,
-                            ),
-                            hintText: 'example.@gmail.com'),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Container(
-                      width: buttonWidth,
-                      child: TextField(
-                        controller: passwordController,
-                        decoration: InputDecoration(
-                            focusColor: Colors.blue,
-                            fillColor: Color.fromARGB(255, 230, 230, 230),
-                            filled: true,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureText
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
+                      Container(
+                        width: buttonWidth,
+                        child: TextField(
+                          controller: nameController,
+                          decoration: InputDecoration(
+                              focusColor: Colors.blue,
+                              fillColor: Color.fromARGB(255, 230, 230, 230),
+                              filled: true,
+                              prefixIcon: Icon(
+                                Icons.person,
                                 color: Colors.blue,
                               ),
-                              onPressed: () {
+                              hintText: 'Name'),
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Container(
+                        width: buttonWidth,
+                        child: TextField(
+                          controller: surnameController,
+                          decoration: InputDecoration(
+                              focusColor: Colors.blue,
+                              fillColor: Color.fromARGB(255, 230, 230, 230),
+                              filled: true,
+                              prefixIcon: Icon(
+                                Icons.person,
+                                color: Colors.blue,
+                              ),
+                              hintText: 'Surname'),
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Container(
+                        width: buttonWidth,
+                        child: TextField(
+                          controller: emailController,
+                          decoration: InputDecoration(
+                              focusColor: Colors.blue,
+                              fillColor: Color.fromARGB(255, 230, 230, 230),
+                              filled: true,
+                              prefixIcon: Icon(
+                                Icons.mail,
+                                color: Colors.blue,
+                              ),
+                              hintText: 'example.@gmail.com'),
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Container(
+                        width: buttonWidth,
+                        child: TextField(
+                          controller: passwordController,
+                          decoration: InputDecoration(
+                              focusColor: Colors.blue,
+                              fillColor: Color.fromARGB(255, 230, 230, 230),
+                              filled: true,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureText
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: Colors.blue,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureText = !_obscureText;
+                                  });
+                                },
+                              ),
+                              prefixIcon: Icon(
+                                Icons.lock,
+                                color: Colors.blue,
+                              ),
+                              hintText: 'Password'),
+                          obscureText: _obscureText,
+                          obscuringCharacter: '*',
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Container(
+                        width: buttonWidth,
+                        child: TextField(
+                          controller: contactDetails,
+                          decoration: InputDecoration(
+                              focusColor: Colors.blue,
+                              fillColor: Color.fromARGB(255, 230, 230, 230),
+                              filled: true,
+                              prefixIcon: Icon(
+                                Icons.phone,
+                                color: Colors.blue,
+                              ),
+                              hintText: 'Contact details'),
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Container(
+                        width: buttonWidth,
+                        child: ExpansionTile(
+                          title: Text('Select University Or College'),
+                          children: universities.map((university) {
+                            return RadioListTile<String>(
+                              title: Text(university),
+                              value: university,
+                              groupValue: selectedUniversity,
+                              onChanged: (value) {
                                 setState(() {
-                                  _obscureText = !_obscureText;
+                                  selectedUniversity = value!;
                                 });
                               },
-                            ),
-                            prefixIcon: Icon(
-                              Icons.lock,
-                              color: Colors.blue,
-                            ),
-                            hintText: 'Password'),
-                        obscureText: _obscureText,
-                        obscuringCharacter: '*',
+                            );
+                          }).toList(),
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 5),
-                    Container(
-                      width: buttonWidth,
-                      child: TextField(
-                        controller: contactDetails,
-                        decoration: InputDecoration(
-                            focusColor: Colors.blue,
-                            fillColor: Color.fromARGB(255, 230, 230, 230),
-                            filled: true,
-                            prefixIcon: Icon(
-                              Icons.phone,
-                              color: Colors.blue,
-                            ),
-                            hintText: 'Contact details'),
+                      SizedBox(height: 5),
+                      Container(
+                        width: buttonWidth,
+                        child: ExpansionTile(
+                          title: Text('Select Gender'),
+                          children: gender.map((paramgender) {
+                            return RadioListTile<String>(
+                              title: Text(paramgender),
+                              value: paramgender,
+                              groupValue: selectedGender,
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedGender = value!;
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 5),
-                    Container(
-                      width: buttonWidth,
-                      child: ExpansionTile(
-                        title: Text('Select University Or College'),
-                        children: universities.map((university) {
-                          return RadioListTile<String>(
-                            title: Text(university),
-                            value: university,
-                            groupValue: selectedUniversity,
-                            onChanged: (value) {
-                              setState(() {
-                                selectedUniversity = value!;
-                              });
-                            },
-                          );
-                        }).toList(),
+                      SizedBox(height: 20.0),
+                      TextButton(
+                        onPressed: () async {
+                          checkStudentValues();
+                        },
+                        child: Text(
+                          widget.isLandlord ? 'Create account' : 'Continue',
+                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        ),
+                        style: ButtonStyle(
+                            shape: MaterialStatePropertyAll(
+                                RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5))),
+                            foregroundColor:
+                                MaterialStatePropertyAll(Colors.blue),
+                            backgroundColor:
+                                MaterialStatePropertyAll(Colors.blue),
+                            minimumSize: MaterialStatePropertyAll(
+                                Size(buttonWidth, 50))),
                       ),
-                    ),
-                    SizedBox(height: 5),
-                    Container(
-                      width: buttonWidth,
-                      child: ExpansionTile(
-                        title: Text('Select Gender'),
-                        children: gender.map((paramgender) {
-                          return RadioListTile<String>(
-                            title: Text(paramgender),
-                            value: paramgender,
-                            groupValue: selectedGender,
-                            onChanged: (value) {
-                              setState(() {
-                                selectedGender = value!;
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    SizedBox(height: 20.0),
-                    TextButton(
-                      onPressed: () async {
-                        Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => StudentFurtherRegister(
-                                name: nameController.text,
-                                surname: surnameController.text,
-                                contactDetails: contactDetails.text,
-                                university: selectedUniversity,
-                                gender: selectedGender,
-                                email: emailController.text,
-                                password: passwordController.text,
-                                isLandlord: widget.isLandlord,
-                              ),
-                            ));
-                      },
-                      child: Text(
-                        widget.isLandlord ? 'Create account' : 'Continue',
-                        style: TextStyle(color: Colors.white, fontSize: 18),
-                      ),
-                      style: ButtonStyle(
-                          shape: MaterialStatePropertyAll(
-                              RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5))),
-                          foregroundColor:
-                              MaterialStatePropertyAll(Colors.blue),
-                          backgroundColor:
-                              MaterialStatePropertyAll(Colors.blue),
-                          minimumSize:
-                              MaterialStatePropertyAll(Size(buttonWidth, 50))),
-                    ),
-                  ]),
+                    ]),
+                  ),
                 ),
               )
 
@@ -346,23 +419,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                       SizedBox(height: 20.0),
                       ElevatedButton(
                         onPressed: () async {
-                          setState(() {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: ((context) =>
-                                        LandlordFurtherRegistration(
-                                          password: passwordController.text,
-                                          contactDetails: contactDetails.text,
-                                          isLandlord: widget.isLandlord,
-                                          accomodationName:
-                                              accomodationName.text,
-                                          landlordEmail: emailController.text,
-                                        ))));
-                            print(
-                              widget.isLandlord,
-                            );
-                          });
+                          checkLandlordValues();
                         },
                         child: Text(
                           widget.isLandlord ? 'Create account' : 'Continue',

@@ -54,7 +54,9 @@ class _RegistrationOptionState extends State<RegistrationOption> {
       ),
       body: isLoading
           ? Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                color: Colors.blue,
+              ),
             ) // Show a loading indicator
           : SingleChildScrollView(
               physics: AlwaysScrollableScrollPhysics(),

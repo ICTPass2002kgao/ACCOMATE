@@ -6,7 +6,6 @@ import 'package:api_com/UpdatedApp/LandlordPages/Notification.dart';
 import 'package:api_com/UpdatedApp/StudentPages/PeersonalPage.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/Home.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/Messages.dart';
-import 'package:api_com/userData.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -26,7 +25,8 @@ class _LandlordPageState extends State<LandlordPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          title: Text('Logout'),
+          title: Text('Logout',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
@@ -34,7 +34,7 @@ class _LandlordPageState extends State<LandlordPage> {
                   children: [
                     Icon(Icons.warning_outlined, color: Colors.red, size: 40),
                     SizedBox(width: 10),
-                    Text('Are you sure you want to logout?'),
+                    Expanded(child: Text('Are you sure you want to logout?')),
                   ],
                 )
               ],
@@ -81,7 +81,7 @@ class _LandlordPageState extends State<LandlordPage> {
         appBar: AppBar(
           automaticallyImplyLeading: false,
           foregroundColor: Colors.white,
-          title: Text('Accomate'),
+          title: Text('Welcome to Accomate'),
           centerTitle: false,
           backgroundColor: Colors.blue,
           elevation: 0,

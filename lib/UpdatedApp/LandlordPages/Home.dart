@@ -15,6 +15,8 @@ class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   bool isLoading = true;
   List<Map<String, dynamic>> _studentApplications = [];
+
+  List<Map<String, dynamic>> _studentRegistration = [];
   late TabController _tabController;
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _HomePageState extends State<HomePage>
     });
     // After loading landlord data, load student applications
     await _loadStudentApplications();
+    await _loadStudentRegistration();
   }
 
   Future<void> _loadStudentApplications() async {
@@ -65,6 +68,34 @@ class _HomePageState extends State<HomePage>
 
       setState(() {
         _studentApplications = studentApplications;
+      });
+    } catch (e) {
+      print('Error loading student applications: $e');
+    }
+  }
+
+  Future<void> _loadStudentRegistration() async {
+    try {
+      // Assuming there is a specific landlord ID (replace 'your_landlord_id' with the actual ID)
+      String landlordUserId = _userData?['userId'] ?? '';
+
+      QuerySnapshot registrationSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(landlordUserId)
+          .collection('registration')
+          .get();
+
+      List<Map<String, dynamic>> studentRegistration = [];
+
+      for (QueryDocumentSnapshot documentSnapshot
+          in registrationSnapshot.docs) {
+        Map<String, dynamic> registrationData =
+            documentSnapshot.data() as Map<String, dynamic>;
+        studentRegistration.add(registrationData);
+      }
+
+      setState(() {
+        _studentRegistration = studentRegistration;
       });
     } catch (e) {
       print('Error loading student applications: $e');
@@ -138,12 +169,6 @@ class _HomePageState extends State<HomePage>
                                         style: TextStyle(
                                             fontWeight: FontWeight.bold))),
                               ),
-                              TableCell(
-                                child: Center(
-                                    child: Text('University',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold))),
-                              ),
                             ],
                           ),
                           // Table rows for student applications
@@ -178,12 +203,6 @@ class _HomePageState extends State<HomePage>
                                   child: Center(
                                       child: Text(studentApplication['email'] ??
                                           'null')),
-                                ),
-                                TableCell(
-                                  child: Center(
-                                      child: Text(
-                                          studentApplication['university'] ??
-                                              'yyyy')),
                                 ),
                               ],
                             ),
@@ -238,17 +257,11 @@ class _HomePageState extends State<HomePage>
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold))),
                                 ),
-                                TableCell(
-                                  child: Center(
-                                      child: Text('University',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold))),
-                                ),
                               ],
                             ),
                             // Table rows for student applications
                             for (Map<String, dynamic> studentApplication
-                                in _studentApplications)
+                                in _studentRegistration)
                               TableRow(
                                 children: [
                                   TableCell(
@@ -281,12 +294,6 @@ class _HomePageState extends State<HomePage>
                                             studentApplication['email'] ??
                                                 'null')),
                                   ),
-                                  TableCell(
-                                    child: Center(
-                                        child: Text(
-                                            studentApplication['university'] ??
-                                                'yyyy')),
-                                  ),
                                 ],
                               ),
                           ],
@@ -301,28 +308,3 @@ class _HomePageState extends State<HomePage>
     ));
   }
 }
-//   Future<void> _loadLandlordData() async {
-//     try {
-//       QuerySnapshot landlordSnapshot = await FirebaseFirestore.instance
-//           .collection('users')
-//           .where('role', isEqualTo: true)
-//           .get();
-
-//       List<Map<String, dynamic>> landlordsData = [];
-
-//       for (QueryDocumentSnapshot documentSnapshot in landlordSnapshot.docs) {
-//         Map<String, dynamic> landlordData =
-//             documentSnapshot.data() as Map<String, dynamic>;
-//         landlordsData.add(landlordData);
-//       }
-
-//       setState(() {
-//         _landlordsData = landlordsData;
-//         isLoading = false;
-//       });
-
-    
-//     } catch (e) {
-//       print('Error loading landlord data: $e');
-//     }
-//   }

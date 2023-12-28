@@ -23,8 +23,12 @@ class _StudentPageState extends State<StudentPage> {
       barrierDismissible: false, // user must tap button for close
       builder: (BuildContext context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
           backgroundColor: Colors.white,
-          title: Text('Logout'),
+          title: Text('Logout',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
@@ -32,7 +36,7 @@ class _StudentPageState extends State<StudentPage> {
                   children: [
                     Icon(Icons.warning_outlined, color: Colors.red, size: 40),
                     SizedBox(width: 10),
-                    Text('Are you sure you want to logout?'),
+                    Expanded(child: Text('Are you sure you want to logout?')),
                   ],
                 )
               ],
@@ -43,6 +47,7 @@ class _StudentPageState extends State<StudentPage> {
               child: Text('No'),
               onPressed: () {
                 setState(() {});
+
                 Navigator.of(context).pop(); // Close the dialog
               },
             ),
@@ -62,17 +67,6 @@ class _StudentPageState extends State<StudentPage> {
 
   int _index = 0;
 
-  bool isLoading = true;
-
-  Future<void> loadData() async {
-    // Simulate loading data
-    await Future.delayed(Duration(seconds: 2));
-
-    // Set isLoading to false when data is loaded
-    setState(() {
-      isLoading = false;
-    });
-  }
 
   late User _user;
   Map<String, dynamic>? _userData; // Make _userData nullable
@@ -82,7 +76,6 @@ class _StudentPageState extends State<StudentPage> {
     super.initState();
     _user = FirebaseAuth.instance.currentUser!;
     _loadUserData();
-    loadData();
   }
 
   Future<void> _loadUserData() async {
@@ -100,7 +93,7 @@ class _StudentPageState extends State<StudentPage> {
     return Scaffold(
         appBar: AppBar(
           foregroundColor: Colors.white,
-          title: Text("Hi ${_userData?['name'] ?? 'Student'}!"),
+          title: Text("Welcome ${_userData?['name'] ?? 'Loading'}"),
           centerTitle: true,
           backgroundColor: Colors.blue,
         ),
@@ -116,24 +109,29 @@ class _StudentPageState extends State<StudentPage> {
             items: [
               BottomNavigationBarItem(
                 backgroundColor: Colors.blue,
-                icon: Icon(Icons.home_outlined, size: 30),
+                icon: Icon(
+                  Icons.home_outlined,
+                ),
                 label: 'Home',
               ),
               BottomNavigationBarItem(
                 backgroundColor: Colors.blue,
-                icon: Icon(Icons.notifications_active_outlined, size: 30),
+                icon: Icon(
+                  Icons.notifications_active_outlined,
+                ),
                 label: 'Notifications',
               ),
               BottomNavigationBarItem(
                 backgroundColor: Colors.blue,
-                icon: Icon(Icons.message_outlined, size: 30),
+                icon: Icon(
+                  Icons.message_outlined,
+                ),
                 label: 'Messages',
               ),
               BottomNavigationBarItem(
                 backgroundColor: Colors.blue,
                 icon: Icon(
                   Icons.person_outlined,
-                  size: 30,
                 ),
                 label: 'Personal account',
               )

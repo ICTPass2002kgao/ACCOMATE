@@ -2,10 +2,8 @@
 import 'package:api_com/UpdatedApp/LandlordPage.dart';
 import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:api_com/UpdatedApp/student_page.dart';
-import 'package:api_com/userData.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,14 +18,7 @@ void main() async {
     ),
   );
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => ResData()),
-        ChangeNotifierProvider(create: (context) => UserData()),
-        ChangeNotifierProvider(create: (context) => ButtonStateProvider())
-      ],
-      child: MyApp(),
-    ),
+    MyApp(),
   );
 }
 

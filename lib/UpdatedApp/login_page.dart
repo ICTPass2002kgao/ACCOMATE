@@ -27,6 +27,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   bool isLoading = true;
+
+  bool showError = false; // Initialize the boolean variable
   late FirebaseAuth _auth;
   @override
   void initState() {
@@ -48,10 +50,26 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _resetPassword() async {
     try {
+      showDialog(
+        context: context,
+        barrierDismissible: false, // Prevent user from dismissing the dialog
+        builder: (BuildContext context) {
+          return Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+            ),
+          );
+        },
+      );
       // Send a password reset email
+
       await _auth.sendPasswordResetEmail(email: txtEmail.text);
       AlertDialog(
-        title: Text('Password reset Successful'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(5),
+        ),
+        title: Text('Password reset Successful',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
         content: Text('Password reset email sent to ${txtEmail.text}'),
         actions: [
           ElevatedButton(
@@ -63,20 +81,34 @@ class _LoginPageState extends State<LoginPage> {
       );
       // Password reset email sent successfully
       print('Password reset email sent to $txtEmail');
-    } catch (e) {
-      // Handle password reset failure
-      AlertDialog(
-        title: Text('Password reset failed'),
-        content: Text(e.toString()),
-        actions: [
-          ElevatedButton(
+    } on FirebaseAuthException catch (e) {
+      // Handle login error
+      Navigator.pop(context);
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          title: Text('Reset password error',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          content: Text('Please provide your correct email'),
+          actions: [
+            TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('Ok'))
-        ],
+              child: Text('Retry'),
+              style: ButtonStyle(
+                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5))),
+                  foregroundColor: MaterialStatePropertyAll(Colors.white),
+                  backgroundColor: MaterialStatePropertyAll(Colors.red[300]),
+                  minimumSize: MaterialStatePropertyAll(Size(300, 50))),
+            ),
+          ],
+        ),
       );
-      print('Password reset failed ${e.toString()}');
     }
   }
 
@@ -229,24 +261,45 @@ class _LoginPageState extends State<LoginPage> {
                                             builder: (context) =>
                                                 LandlordPage()),
                                       );
-                                    } else {
-                                      // Handle other roles if needed
                                     }
-                                  } catch (e) {
-                                    print('Error during login: $e');
+                                    // Simulate some async operation (remove this in your final code)
+                                    await Future.delayed(Duration(seconds: 2));
+                                  } on FirebaseAuthException catch (e) {
                                     // Handle login error
+                                    Navigator.pop(context);
                                     showDialog(
                                       context: context,
                                       builder: (context) => AlertDialog(
-                                        title: Text('Login Error'),
-                                        content: Text(
-                                            'Failed to log in. Please check your email and password.'),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(5),
+                                        ),
+                                        title: Text('Login Error',
+                                            style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold)),
+                                        content: Text(e.message.toString()),
                                         actions: [
                                           TextButton(
                                             onPressed: () {
                                               Navigator.pop(context);
                                             },
-                                            child: Text('OK'),
+                                            child: Text('Retry'),
+                                            style: ButtonStyle(
+                                                shape: MaterialStatePropertyAll(
+                                                    RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(5))),
+                                                foregroundColor:
+                                                    MaterialStatePropertyAll(
+                                                        Colors.white),
+                                                backgroundColor:
+                                                    MaterialStatePropertyAll(
+                                                        Colors.red[300]),
+                                                minimumSize:
+                                                    MaterialStatePropertyAll(
+                                                        Size(buttonWidth, 50))),
                                           ),
                                         ],
                                       ),
