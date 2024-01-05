@@ -64,6 +64,8 @@ class _LoginPageState extends State<LoginPage> {
       // Send a password reset email
 
       await _auth.sendPasswordResetEmail(email: txtEmail.text);
+
+      Navigator.pop(context);
       AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(5),
@@ -193,15 +195,26 @@ class _LoginPageState extends State<LoginPage> {
                                     onTap: () async {
                                       // Request a password reset email
 
-                                      await _resetPassword();
+                                      isLoading
+                                          ? Center(
+                                              child: CircularProgressIndicator(
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                        Color>(Colors.blue),
+                                              ),
+                                            )
+                                          : await _resetPassword();
                                     },
                                     child: Text(
                                       'Forgot Password ?',
                                       style: TextStyle(
+                                          decorationColor: Colors.blue,
+                                          decoration: TextDecoration.underline,
                                           color: Colors.blue,
-                                          fontSize: 15,
+                                          decorationThickness: 2,
                                           decorationStyle:
-                                              TextDecorationStyle.double),
+                                              TextDecorationStyle.solid,
+                                          fontSize: 16),
                                     ),
                                   ),
                                 ],
@@ -209,11 +222,8 @@ class _LoginPageState extends State<LoginPage> {
                               SizedBox(
                                 height: 20,
                               ),
-                              TextButton(
+                              OutlinedButton(
                                 onPressed: () async {
-                                  String email = txtEmail.text;
-                                  String password = txtPassword.text;
-
                                   try {
                                     showDialog(
                                       context: context,
@@ -232,8 +242,8 @@ class _LoginPageState extends State<LoginPage> {
                                     // Sign in with email and password
                                     await FirebaseAuth.instance
                                         .signInWithEmailAndPassword(
-                                      email: email,
-                                      password: password,
+                                      email: txtEmail.text,
+                                      password: txtPassword.text,
                                     );
 
                                     // Fetch additional user information, including the role, from Firestore
@@ -359,9 +369,15 @@ class _LoginPageState extends State<LoginPage> {
                                   registerPage();
                                 },
                                 child: Text(
-                                  "Create new Account here",
+                                  "Create Account here",
                                   style: TextStyle(
-                                      color: Colors.blue, fontSize: 18),
+                                      decorationColor: Colors.blue,
+                                      decoration: TextDecoration.underline,
+                                      color: Colors.blue,
+                                      decorationThickness: 2,
+                                      decorationStyle:
+                                          TextDecorationStyle.solid,
+                                      fontSize: 18),
                                 ),
                               )
                             ],
@@ -374,25 +390,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-/*Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton.icon(
-                style: ButtonStyle(
-                    foregroundColor: MaterialStatePropertyAll(Colors.blue),
-                    backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                ),   
-                onPressed: (){}, 
-                icon: Icon(Icons.favorite_border,
-                color: Colors.white,), 
-                label: Text('Add to Favorites',
-                style: TextStyle(
-                color: Colors.white,
-                fontSize: 18),
-                
-                ), ),
-                
-
-              
-                ],
-              ) */

@@ -100,7 +100,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
         context: context,
         barrierDismissible: false,
         builder: (context) => Container(
-          height: 350,
+          height: 250,
           child: AlertDialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(5),
@@ -110,7 +110,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             content: Container(
-              height: 350,
+              height: 200,
               child: Column(
                 children: [
                   ClipRRect(
@@ -119,7 +119,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
                       color: Colors.green,
                       width: 80,
                       height: 80,
-                      child: Icon(Icons.done, color: Colors.white, size: 20),
+                      child: Icon(Icons.done, color: Colors.white, size: 35),
                     ),
                   ),
                   SizedBox(height: 20),
@@ -137,7 +137,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
                   await sendEmail(
                       _userData?['email'] ?? '', // Student's email
                       'Application sent successfully',
-                      'Hi ${_userData?['name']} , \nYour application was sent successfully to ${widget.landlordData['accomodationName']}, You will get further communication soon.');
+                      'Hi ${_userData?['name']} , \nYour application was sent successfully to ${widget.landlordData['accomodationName']}, You will get further communication soon.\n\n\n\n\nBest regards\nYours Accomate');
 
                   print('email sent successfully');
                 },
@@ -357,7 +357,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
                   ),
                 ),
                 SizedBox(
-                  height: 20,
+                  height: 5,
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 16, right: 16),
@@ -365,92 +365,103 @@ class _AccomodationPageState extends State<AccomodationPage> {
                     onPressed: () async {
                       showDialog(
                         context: context,
-                        builder: (context) => Container(
-                          height: 400,
-                          width: 400,
-                          child: AlertDialog(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            scrollable: true,
-                            title: Text('Confirm your details',
-                                style: TextStyle(
-                                    fontSize: 15, fontWeight: FontWeight.bold)),
-                            content: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                    'Hi ${_userData?['name']}, we are informing you that you are about to apply for ${widget.landlordData['accomodationName']} with the following details'),
-                                SizedBox(height: 16.0),
-                                Text(
-                                    "Name: ${_userData?['name'] ?? 'Loading...'}"),
-                                SizedBox(height: 10),
-                                Text(
-                                    "Surname: ${_userData?['surname'] ?? 'Loading...'}"),
-                                SizedBox(height: 10),
-                                Text(
-                                    "Enrolled Institution: ${_userData?['university']}"),
-                                SizedBox(height: 10),
-                                Text(
-                                    "Email: ${_userData?['email'] ?? 'Loading...'}"),
-                                SizedBox(height: 10),
-                                Text(
-                                    "Gender: ${_userData?['gender'] ?? 'Loading...'}"),
-                                SizedBox(height: 10),
-                                Text(
-                                    "Contact Details: ${_userData?['contactDetails'] ?? 'Loading...'}"),
-                                SizedBox(height: 10),
-                                ExpansionTile(
-                                  title: Text('Select type of a room'),
-                                  children: roomType.map((roomTypeNeeded) {
-                                    return RadioListTile<String>(
-                                      title: Text(roomTypeNeeded),
-                                      value: roomTypeNeeded,
-                                      groupValue: selectedRoomsType,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          selectedRoomsType = value!;
-                                        });
-                                      },
+                        builder: (context) => StatefulBuilder(
+                          builder:
+                              (BuildContext context, StateSetter setState) {
+                            return AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              scrollable: true,
+                              title: Text('Confirm your details',
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold)),
+                              content: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // ... (your existing code)
+                                  Text(
+                                      'Hi ${_userData?['name']}, we are informing you that you are about to apply for ${widget.landlordData['accomodationName']} with the following details'),
+                                  SizedBox(height: 16.0),
+                                  Text(
+                                      "Name: ${_userData?['name'] ?? 'Loading...'}"),
+                                  SizedBox(height: 10),
+                                  Text(
+                                      "Surname: ${_userData?['surname'] ?? 'Loading...'}"),
+                                  SizedBox(height: 10),
+                                  Text(
+                                      "Enrolled Institution: ${_userData?['university']}"),
+                                  SizedBox(height: 10),
+                                  Text(
+                                      "Email: ${_userData?['email'] ?? 'Loading...'}"),
+                                  SizedBox(height: 10),
+                                  Text(
+                                      "Gender: ${_userData?['gender'] ?? 'Loading...'}"),
+                                  SizedBox(height: 10),
+                                  Text(
+                                      "Contact Details: ${_userData?['contactDetails'] ?? 'Loading...'}"),
+                                  SizedBox(height: 10),
+
+                                  ExpansionTile(
+                                    title: Text(
+                                      'Select type of a room',
+                                    ),
+                                    children: roomType.map((roomTypeNeeded) {
+                                      return RadioListTile<String>(
+                                        title: Text(roomTypeNeeded),
+                                        value: roomTypeNeeded,
+                                        groupValue: selectedRoomsType,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            selectedRoomsType = value!;
+                                          });
+                                        },
+                                      );
+                                    }).toList(),
+                                  ),
+                                  SizedBox(height: 10),
+                                  ExpansionTile(
+                                    title: Text('Select year of study',
+                                        style: TextStyle(
+                                            color: yearofStudey.isEmpty
+                                                ? Colors.red
+                                                : Colors.black)),
+                                    children: yearofStudey.map((fiedOfStudy) {
+                                      return RadioListTile<String>(
+                                        title: Text(fiedOfStudy),
+                                        value: fiedOfStudy,
+                                        groupValue: yearOfStudy,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            yearOfStudy = value!;
+                                          });
+                                        },
+                                      );
+                                    }).toList(),
+                                  ),
+                                ],
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () async {
+                                    Navigator.of(context).pop();
+                                    await _saveApplicationDetails();
+                                    sendEmail(
+                                      widget.landlordData['email'],
+                                      'Application Received',
+                                      'Hi ${widget.landlordData['accomodationName'] ?? ''} landlord, \nYou have a new application from a student at ${_userData?['university']}.\n\n\n\n\nBest regards\nYours Accomate',
                                     );
-                                  }).toList(),
-                                ),
-                                SizedBox(height: 10),
-                                ExpansionTile(
-                                  title: Text('Select year of study'),
-                                  children: yearofStudey.map((fiedOfStudy) {
-                                    return RadioListTile<String>(
-                                      title: Text(fiedOfStudy),
-                                      value: fiedOfStudy,
-                                      groupValue: yearOfStudy,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          yearOfStudy = value!;
-                                        });
-                                      },
-                                    );
-                                  }).toList(),
+                                    // Optionally, you can navigate to the login screen or perform other actions
+                                  },
+                                  child: Text('Confirm'),
                                 ),
                               ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () async {
-                                  Navigator.of(context).pop();
-                                  await _saveApplicationDetails();
-                                  sendEmail(
-                                      widget.landlordData[
-                                          'email'], // Student's email
-                                      'Application Received',
-                                      'Hi ${widget.landlordData['accomodationName'] ?? ''} landlord, \nYou have new application from student from ${_userData?['university']}.');
-                                  // Optionally, you can navigate to the login screen or do other actions
-                                },
-                                child: Text('Confirm'),
-                              ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
                       );
+
                       // Implement the action when the user applies for accommodation
 
                       print('Apply for accommodation');
@@ -465,6 +476,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
                             MaterialStatePropertyAll(Size(buttonWidth, 50))),
                   ),
                 ),
+                SizedBox(height: 50),
               ],
             ),
           ),

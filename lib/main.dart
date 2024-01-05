@@ -8,15 +8,14 @@ import 'package:flutter/material.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-    options: FirebaseOptions(
-      apiKey: 'AIzaSyBMr012JjG5bXxnGKpRqt8H0beX7GLIdB4',
-      authDomain: 'accomodationapp-9d851.firebaseapp.com',
-      projectId: 'accomodationapp-9d851',
-      storageBucket: 'accomodationapp-9d851.appspot.com',
-      messagingSenderId: '1088298291155',
-      appId: '1:1088298291155:android:61a70167a445cb5f61a926',
-    ),
-  );
+      options: FirebaseOptions(
+    apiKey: 'AIzaSyBMr012JjG5bXxnGKpRqt8H0beX7GLIdB4',
+    authDomain: 'accomodationapp-9d851.firebaseapp.com',
+    projectId: 'accomodationapp-9d851',
+    storageBucket: 'accomodationapp-9d851.appspot.com',
+    messagingSenderId: '1088298291155',
+    appId: '1:1088298291155:android:61a70167a445cb5f61a926',
+  ));
   runApp(
     MyApp(),
   );

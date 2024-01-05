@@ -113,79 +113,83 @@ class _MessagesPageState extends State<MessagesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                      width: 300,
-                      color: Color.fromARGB(255, 230, 230, 230),
-                      child: Text(messagesController.text,
-                          style: TextStyle(color: Colors.black)))
-                ],
-              ),
-              SizedBox(height: 20),
-              for (int index = 0; index < _landlordMessages.length; index++)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                        width: 300,
-                        color: Color.fromARGB(255, 33, 147, 240),
-                        child: Text(
-                          _landlordMessages[index]['landlordMessages'] ??
-                              'no message',
-                          style: TextStyle(color: Colors.white),
-                        ))
-                  ],
-                ),
-              SizedBox(height: 20),
-            ],
-          ),
-          Column(
-            children: [
-              for (int index = 0; index < _landlordMessages.length; index++)
-                Container(
-                  height: 50,
-                  color: Color.fromARGB(255, 230, 230, 230),
-                  child: TextField(
-                    controller: messagesController,
-                    decoration: InputDecoration(
-                        focusColor: Colors.blue,
-                        fillColor: Color.fromARGB(255, 230, 230, 230),
-                        filled: true,
-                        suffixIcon: IconButton(
-                            onPressed: () {
-                              // String messages = messagesController.text;
-
-                              // messages.isNotEmpty
-                              //     ? sendMessage(
-                              //         _landlordMessages[index]['userId'] ?? '')
-                              //     : '';
-                              // setState(() {
-                              //   messagesController.clear();
-                              // });
-                            },
-                            icon: Icon(
-                              Icons.send,
-                              color: Colors.blue,
-                            )),
-                        prefixIcon: Icon(
-                          Icons.add,
-                          color: Colors.blue,
-                        ),
-                        hintText: 'Sent a message'),
+      body: Padding(
+        padding: const EdgeInsets.only(left: 5, right: 5),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Container(
+                color: Colors.blue,
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Text(
+                    'Landlord Text',
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
-            ],
-          ),
-        ],
+              ),
+              SizedBox(height: 20),
+              Container(
+                color: Colors.grey,
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Text(
+                    'My Text',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                ),
+              ),
+            ]),
+            Container(
+              alignment: Alignment.bottomCenter,
+              height: 50,
+              color: Color.fromARGB(255, 230, 230, 230),
+              child: TextField(
+                controller: messagesController,
+                decoration: InputDecoration(
+                    focusColor: Colors.blue,
+                    fillColor: Color.fromARGB(255, 230, 230, 230),
+                    filled: true,
+                    suffixIcon: IconButton(
+                        onPressed: () {
+                          // String messages = messagesController.text;
+
+                          // messages.isNotEmpty
+                          //     ? sendMessage(
+                          //         _landlordMessages[index]['userId'] ?? '')
+                          //     : '';
+                          // setState(() {
+                          //   messagesController.clear();
+                          // });
+                        },
+                        icon: Icon(
+                          Icons.send,
+                          color: Colors.blue,
+                        )),
+                    prefixIcon: IconButton(
+                      onPressed: () {
+                        // String messages = messagesController.text;
+
+                        // messages.isNotEmpty
+                        //     ? sendMessage(
+                        //         _landlordMessages[index]['userId'] ?? '')
+                        //     : '';
+                        // setState(() {
+                        //   messagesController.clear();
+                        // });
+                      },
+                      icon: Icon(
+                        Icons.add,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    hintText: 'Sent a message'),
+              ),
+            ),
+          ],
+        ),
       ),
-    ));
+    );
   }
 }

@@ -22,7 +22,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
   final TextEditingController contactDetails = TextEditingController();
   final TextEditingController accomodationName = TextEditingController();
   final TextEditingController distanceController = TextEditingController();
-  void showError() {
+  void showError(String val) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -31,7 +31,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
         ),
         title: Text('Missing information',
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-        content: Text('Please make sure you fill in all the required details'),
+        content: Text(val),
         actions: [
           TextButton(
             onPressed: () {
@@ -51,18 +51,39 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
   }
 
   void checkStudentValues() {
+    String email = emailController.text;
+    String contacts = contactDetails.text;
+    String password = passwordController.text;
     if (nameController.text == '') {
-      showError();
+      showError('Please make sure you fill in all the required details');
     } else if (surnameController.text == '') {
-      showError();
+      showError('Please make sure you fill in all the required details');
     } else if (emailController.text == '') {
-      showError();
+      showError('Please make sure you fill in all the required details');
     } else if (passwordController.text == '') {
-      showError();
-    } else if (contactDetails.text == '') {
-      showError();
+      showError('Please make sure you fill in all the required details');
+    } else if (password.length < 8) {
+      showError('Please make sure the length of your password is 8 or more');
+    }
+    if (email.contains('@gmail.com')) {
+      print('everything is well');
+    } else {
+      showError(
+          'Invalid email, Please make sure the email is in a correct format');
+    }
+    if (email.contains('@edu.vut.ac.za')) {
+      print('everything is well');
+    } else {
+      showError(
+          'Invalid email, Please make sure the email is in a correct format');
+    }
+    if (contactDetails.text == '') {
+      showError('Please make sure you fill in all the required details');
+    } else if (contacts.length != 10) {
+      showError('Please make sure the contacts are correct');
     } else {
       setState(() {
+        Navigator.of(context).pop();
         Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -82,24 +103,42 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
   }
 
   void checkLandlordValues() {
+    String email = emailController.text;
+    String contacts = contactDetails.text;
+    String password = passwordController.text;
     if (emailController.text == '') {
-      showError();
+      showError('Please make sure you fill in all the required details');
     } else if (passwordController.text == '') {
-      showError();
-    } else if (contactDetails.text == '') {
-      showError();
-    } else if (accomodationName.text == '') {
-      showError();
-    } else if (contactDetails.hashCode.isNaN) {
-      showError();
+      showError('Please make sure you fill in all the required details');
+    } else if (password.length < 8) {
+      showError('Please make sure the length of your password is 8 or more');
+    } else if (email.contains('@gmail.com')) {
+      print('everything is well');
+    } else {
+      showError(
+          'Invalid email, Please make sure the email is in a correct format');
+    }
+    if (email.contains('@edu.vut.ac.za')) {
+      print('everything is well');
+    } else {
+      showError(
+          'Invalid email, Please make sure the email is in a correct format');
+    }
+    if (contactDetails.text == '') {
+      showError('Please make sure you fill in all the required details');
+    } else if (contacts.length != 10) {
+      showError('Please make sure the contacts are correct');
+    } else if (contacts.length != 10) {
+      showError('Please make sure the contacts are correct');
     } else {
       setState(() {
+        Navigator.of(context).pop();
         Navigator.push(
             context,
             MaterialPageRoute(
                 builder: ((context) => LandlordFurtherRegistration(
                       password: passwordController.text,
-                      contactDetails: contactDetails.hashCode,
+                      contactDetails: contactDetails.text,
                       isLandlord: widget.isLandlord,
                       accomodationName: accomodationName.text,
                       landlordEmail: emailController.text,
@@ -113,19 +152,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
 
   List<String> universities = [
     'Vaal University of Technology',
-    'University of Johannesburg',
-    'University of pretoria',
-    'University of the Witwatersrand',
-    'Cape Peninsula University of technology',
-    'University of Cape Town',
     'North West University(vaal campus)',
-    'University of Freestate',
-    'University of Western Cape',
-    'University of Kwa-zulu Natal',
-    'Tshwane University of Technology',
-    'Stellenbosch University',
-    'Durban University of Technology',
-    'North West University'
   ];
   String selectedGender = '';
   List<String> gender = [
@@ -257,6 +284,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                       Container(
                         width: buttonWidth,
                         child: TextField(
+                          keyboardType: TextInputType.number,
                           controller: contactDetails,
                           decoration: InputDecoration(
                               focusColor: Colors.blue,
@@ -292,7 +320,11 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                       Container(
                         width: buttonWidth,
                         child: ExpansionTile(
-                          title: Text('Select Gender'),
+                          title: Text('Select Gender',
+                              style: TextStyle(
+                                  color: selectedGender.isEmpty
+                                      ? Colors.red
+                                      : Colors.black)),
                           children: gender.map((paramgender) {
                             return RadioListTile<String>(
                               title: Text(paramgender),
@@ -405,6 +437,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                       ),
                       SizedBox(height: 5),
                       TextField(
+                        keyboardType: TextInputType.number,
                         controller: contactDetails,
                         decoration: InputDecoration(
                             focusColor: Colors.blue,

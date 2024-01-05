@@ -25,7 +25,7 @@ exports.sendEmail = functions.https.onCall(async (data) => {
   try {
     // Send email
     await transporter.sendMail({  // Fixed: Use sendMail instead of confirmationEmail
-      from: 'accomate33@gmail.com', // Replace with your email
+      from: 'Accomate', // Replace with your email
       to,
       subject,
       text: body,

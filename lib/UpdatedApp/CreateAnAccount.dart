@@ -30,12 +30,12 @@ class _RegistrationOptionState extends State<RegistrationOption> {
     });
   }
 
-  void _disabledButton() {
+  void _continue() {
+    Navigator.pop(context);
     Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => StudentOrLandlord(isLandlord: isLandlord)),
-    );
+        context,
+        MaterialPageRoute(
+            builder: (context) => StudentOrLandlord(isLandlord: isLandlord)));
   }
 
   @override
@@ -116,24 +116,138 @@ class _RegistrationOptionState extends State<RegistrationOption> {
                         SizedBox(
                           height: 20,
                         ),
-                        CheckboxListTile(
-                          activeColor: Colors.blue,
-                          value: isCheckboxChecked,
-                          onChanged: (value) {
-                            setState(() {
-                              isCheckboxChecked = value!;
-                            });
-                          },
-                          title: Text('Agree with terms & conditions'),
-                          tileColor: Colors.white,
-                        ),
                         SizedBox(
                           height: 20,
                         ),
                         TextButton(
-                          onPressed: !isCheckboxChecked
-                              ? null
-                              : () => _disabledButton(),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => StatefulBuilder(
+                                builder: (BuildContext context,
+                                    StateSetter setState) {
+                                  return AlertDialog(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                    scrollable: true,
+                                    title: Text(
+                                        'Agree with terms and conditions',
+                                        style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold)),
+                                    content: SingleChildScrollView(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                          Text(
+                                              'Terms and conditions of the app '),
+                                        ],
+                                      ),
+                                    ),
+                                    actions: [
+                                      Row(
+                                        children: [
+                                          Checkbox(
+                                            activeColor: Colors.blue,
+                                            value: isCheckboxChecked,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                isCheckboxChecked = value!;
+                                              });
+                                            },
+                                          ),
+                                          Text(
+                                            ' Agree with terms and conditions',
+                                            style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold),
+                                          )
+                                        ],
+                                      ),
+                                      OutlinedButton(
+                                        onPressed: !isCheckboxChecked
+                                            ? null
+                                            : () => _continue(),
+                                        child: Text('Agree'),
+                                        style: ButtonStyle(
+                                          shape: MaterialStatePropertyAll(
+                                              RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          5))),
+                                          foregroundColor:
+                                              MaterialStatePropertyAll(
+                                                  Colors.white),
+                                          backgroundColor: !isCheckboxChecked
+                                              ? MaterialStatePropertyAll(
+                                                  Color.fromARGB(
+                                                      255, 211, 211, 211))
+                                              : MaterialStatePropertyAll(
+                                                  Colors.blue),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            );
+                          },
                           child: Text(
                             'Get Started',
                             style: TextStyle(color: Colors.white, fontSize: 18),
@@ -143,11 +257,9 @@ class _RegistrationOptionState extends State<RegistrationOption> {
                                 RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(5))),
                             foregroundColor:
+                                MaterialStatePropertyAll(Colors.white),
+                            backgroundColor:
                                 MaterialStatePropertyAll(Colors.blue),
-                            backgroundColor: !isCheckboxChecked
-                                ? MaterialStatePropertyAll(
-                                    Color.fromARGB(255, 211, 211, 211))
-                                : MaterialStatePropertyAll(Colors.blue),
                             minimumSize: MaterialStatePropertyAll(
                                 Size(double.infinity, 50)),
                           ),

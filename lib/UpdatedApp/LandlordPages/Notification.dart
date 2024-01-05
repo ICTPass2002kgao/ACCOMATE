@@ -54,19 +54,19 @@ class _NotificationsState extends State<Notifications>
       // Assuming there is a specific landlord ID (replace 'your_landlord_id' with the actual ID)
       String landlordUserId = _userData?['userId'] ?? '';
 
-      QuerySnapshot applicationsSnapshot = await FirebaseFirestore.instance
+      QuerySnapshot registrationSnapshot = await FirebaseFirestore.instance
           .collection('users')
           .doc(landlordUserId)
-          .collection('registration')
+          .collection('registeredStudents')
           .get();
 
       List<Map<String, dynamic>> studentRegistrations = [];
 
       for (QueryDocumentSnapshot documentSnapshot
-          in applicationsSnapshot.docs) {
-        Map<String, dynamic> reistrationData =
+          in registrationSnapshot.docs) {
+        Map<String, dynamic> registrationData =
             documentSnapshot.data() as Map<String, dynamic>;
-        studentRegistrations.add(reistrationData);
+        studentRegistrations.add(registrationData);
       }
 
       setState(() {
@@ -148,11 +148,12 @@ class _NotificationsState extends State<Notifications>
                           children: [
                             // for (Map<String, dynamic> studentApplication
                             //     in _studentApplications)
-                            for (int index = 0;
-                                index < _studentApplications.length;
-                                index++)
-                              Column(
-                                children: [
+
+                            Column(
+                              children: [
+                                for (int index = 0;
+                                    index < _studentApplications.length;
+                                    index++)
                                   Container(
                                     child: Card(
                                       color: Color.fromARGB(255, 243, 243, 243),
@@ -192,8 +193,8 @@ class _NotificationsState extends State<Notifications>
                                       ),
                                     ),
                                   )
-                                ],
-                              )
+                              ],
+                            )
                           ],
                         ),
                       ),
@@ -235,8 +236,11 @@ class _NotificationsState extends State<Notifications>
                                             }
                                           });
                                         },
-                                        title: Text(
-                                          'You have a new registration from ${_studentRegistration[index]['name']}',
+                                        title: Text(_studentRegistration[index]
+                                                ['name'] ??
+                                            ''),
+                                        subtitle: Text(
+                                          'You have a new registered student...',
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(

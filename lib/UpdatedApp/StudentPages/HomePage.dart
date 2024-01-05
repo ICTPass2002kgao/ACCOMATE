@@ -19,7 +19,7 @@ class _HomePageState extends State<HomePage>
 
   Future<void> loadData() async {
     // Simulate loading data
-    await Future.delayed(Duration(seconds: 5));
+    await Future.delayed(Duration(seconds: 2));
 
     // Set isLoading to false when data is loaded
     setState(() {
@@ -355,7 +355,7 @@ Widget buildLandlordCard(Map<String, dynamic> landlordData) {
     child: Padding(
       padding: const EdgeInsets.all(10.0),
       child: Container(
-        width: 300,
+        width: 290,
         height: 300,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -82,7 +82,7 @@ class _HomePageState extends State<HomePage>
       QuerySnapshot registrationSnapshot = await FirebaseFirestore.instance
           .collection('users')
           .doc(landlordUserId)
-          .collection('registration')
+          .collection('registeredStudents')
           .get();
 
       List<Map<String, dynamic>> studentRegistration = [];

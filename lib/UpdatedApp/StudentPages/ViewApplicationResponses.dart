@@ -1,4 +1,7 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, deprecated_member_use
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, deprecated_member_use, curly_braces_in_flow_control_structures
+import 'package:dio/dio.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'dart:typed_data';
@@ -8,6 +11,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ViewApplicationResponses extends StatefulWidget {
   final Map<String, dynamic> studentApplicationData;
@@ -21,12 +27,13 @@ class ViewApplicationResponses extends StatefulWidget {
 
 class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
   TextEditingController messageController = TextEditingController();
+  List<Map<String, dynamic>> _studentApplications = [];
 
   String _pdfDownloadSignedContractURL = '';
   String _pdfSignedContractPath = '';
   bool isFileChosen = false;
-
-  Future<void> _pickSignedContract() async {
+  File? pdfSignedContractFile;
+  Future<void> _pickSignedContract(BuildContext context) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -34,19 +41,11 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
       );
 
       if (result != null) {
-        File pdfFile = File(result.files.single.path!);
+        pdfSignedContractFile = File(result.files.single.path!);
         setState(() {
-          _pdfSignedContractPath = pdfFile.path;
+          _pdfSignedContractPath = pdfSignedContractFile!.path;
           isFileChosen = true; // Set the flag to true when a file is chosen
         });
-
-        String? downloadURL = await _uploadSignedContact(pdfFile);
-
-        if (downloadURL != null) {
-          setState(() {
-            _pdfDownloadSignedContractURL = downloadURL;
-          });
-        }
       } else {
         // No file chosen
         setState(() {
@@ -54,11 +53,12 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
         });
       }
     } catch (e) {
-      _showErrorDialog(e.toString());
+      _showErrorDialog(e.toString(), context);
     }
   }
 
-  Future<String?> _uploadSignedContact(File pdfFile) async {
+  Future<String?> _uploadSignedContact(
+      File pdfFile, BuildContext context) async {
     try {
       String fileName = DateTime.now().millisecondsSinceEpoch.toString();
       firebase_storage.Reference reference = firebase_storage
@@ -70,18 +70,22 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
 
       return await reference.getDownloadURL();
     } catch (e) {
-      _showErrorDialog(e.toString());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+        ),
+      );
       return null;
     }
   }
 
-  void _showErrorDialog(String errorMessage) {
+  void _showErrorDialog(String errorMessage, BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(5),
+        ),
         title: Text(
           'Error Occurred',
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
@@ -111,7 +115,6 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
   }
 
   late User _user;
-  String selectedRoomsType = '';
 
   Map<String, dynamic>? _userData;
   // Make _userData nullable
@@ -121,6 +124,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
     _user = FirebaseAuth.instance.currentUser!;
     _loadUserData();
     loadData();
+    _loadStudentApplications();
   }
 
   Future<void> _loadUserData() async {
@@ -133,43 +137,41 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
     });
   }
 
-  Future<void> downloadFile(String url) async {
-    final String downloadUrl = url;
-
+  Future<void> _loadStudentApplications() async {
     try {
-      // Make an HTTP GET request to download the file
-      final http.Response response = await http.get(Uri.parse(downloadUrl));
+      // Assuming there is a specific landlord ID (replace 'your_landlord_id' with the actual ID)
+      String landlordUserId = _userData?['userId'] ?? '';
 
-      // Check if the request was successful (status code 200)
-      if (response.statusCode == 200) {
-        // Convert the response body to a Uint8List
-        final Uint8List bytes = response.bodyBytes;
+      QuerySnapshot applicationsSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(landlordUserId)
+          .collection('applications')
+          .get();
 
-        // Get the local storage directory
-        final Directory appDocDir = Directory('Downloads');
-        final String appDocPath = appDocDir.path;
+      List<Map<String, dynamic>> studentApplications = [];
 
-        // Create a File instance with the local path and file name
-        final File file = File('$appDocPath/contract.pdf');
-
-        // Write the bytes to the file
-        await file.writeAsBytes(bytes);
-
-        print('File downloaded and saved locally: ${file.path}');
-      } else {
-        // Handle errors if the request was not successful
-        print('Failed to download file: ${response.statusCode}');
+      for (QueryDocumentSnapshot documentSnapshot
+          in applicationsSnapshot.docs) {
+        Map<String, dynamic> applicationData =
+            documentSnapshot.data() as Map<String, dynamic>;
+        studentApplications.add(applicationData);
       }
-    } catch (error) {
-      print('Error downloading file: $error');
+
+      setState(() {
+        _studentApplications = studentApplications;
+      });
+    } catch (e) {
+      print('Error loading student applications: $e');
     }
   }
 
-  Future<void> _sentSignedContract() async {
+  Future<void> _sentSignedContract(
+      BuildContext context, String roomType, String fieldOfStudy) async {
     try {
+      // Show a loading dialog
       showDialog(
         context: context,
-        barrierDismissible: false, // Prevent user from dismissing the dialog
+        barrierDismissible: false,
         builder: (BuildContext context) {
           return Center(
             child: CircularProgressIndicator(),
@@ -177,15 +179,18 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
         },
       );
 
+      // Extract necessary data
       String landlordUserId = widget.studentApplicationData['userId'] ?? '';
       String studentUserId = _userData?['userId'] ?? '';
+      String? downloadURL =
+          await _uploadSignedContact(pdfSignedContractFile!, context);
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(landlordUserId)
-          .collection('registration')
-          .doc(studentUserId)
-          .set({
+      if (downloadURL != null) {
+        setState(() {
+          _pdfDownloadSignedContractURL = downloadURL;
+        });
+      }
+      Map<String, dynamic> userDataMap = {
         'signedContract': _pdfDownloadSignedContractURL,
         'name': _userData?['name'] ?? '',
         'surname': _userData?['surname'] ?? '',
@@ -198,27 +203,40 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
         'IdDocument': _userData?['IdDocument'] ?? '',
         'studentId': _userData?['studentId'] ?? '',
         'studentNumber': _userData?['studentNumber'] ?? '',
-        'roomType': _userData?['roomType'] ?? '',
-        'fieldOfStudy': _userData?['fieldOfStudy'] ?? '',
-
+        'roomType': roomType,
+        'fieldOfStudy': fieldOfStudy,
         // Add more details as needed
-      });
+      };
+
+      // Create a document reference for the landlord's collectio
+      DocumentReference landlordRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(landlordUserId)
+          .collection('registeredStudents')
+          .doc(studentUserId);
+      await landlordRef.set(userDataMap);
+
+      // Create a map with user details and set it in the document
+
+      // Send an email to the student
       await sendEmail(
-          _userData?['email'] ?? '', // Student's email
-          'Contract signed',
-          'Hi ${widget.studentApplicationData['accomodationName']},landlord \nyou have a new signed contract from  ${_userData?['name'] ?? ''}');
+        _userData?['email'] ?? '', // Student's email
+        'Contract signed',
+        'Hi ${widget.studentApplicationData['accomodationName'] ?? ''}, landlord \nyou have a new signed contract from  ${_userData?['name'] ?? ''}\n\n\n\nBest Regards\nYours Accomate',
+      );
 
-      print('email sent successfully');
+      print('Email sent successfully');
 
+      // Show a success dialog
       showDialog(
         context: context,
         builder: (context) => Container(
           height: 200,
           width: 250,
           child: AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
             title: Text(
               'Successful Response',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
@@ -238,7 +256,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                   ),
                   SizedBox(height: 30),
                   Text(
-                    'Your contract have been sent successfully to ${widget.studentApplicationData['accomodationName']} landlord',
+                    'Your contract has been sent successfully to ${widget.studentApplicationData['accomodationName'] ?? ''} landlord',
                     style: TextStyle(fontSize: 16),
                   ),
                 ],
@@ -249,19 +267,22 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                 onPressed: () async {
                   Navigator.pushReplacementNamed(context, '/studentPage');
                   await sendEmail(
-                      _userData?['email'] ?? '', // Student's email
-                      'Response sent successfully',
-                      'Hi ${_userData?['name']} , \nYour contract was sent successfully to ${widget.studentApplicationData['accomodationName']}');
+                    _userData?['email'] ?? '', // Student's email
+                    'Response sent successfully',
+                    'Hi ${_userData?['name'] ?? ''} , \nYour contract was sent successfully to ${widget.studentApplicationData['accomodationName']}\n\n\n\nBest Regards\nYours Accomate',
+                  );
 
-                  print('email sent successfully');
+                  print('Email sent successfully');
                 },
                 style: ButtonStyle(
-                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5))),
-                    foregroundColor: MaterialStatePropertyAll(Colors.white),
-                    backgroundColor: MaterialStatePropertyAll(Colors.green),
-                    minimumSize:
-                        MaterialStatePropertyAll(Size(double.infinity, 50))),
+                  shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  )),
+                  foregroundColor: MaterialStateProperty.all(Colors.white),
+                  backgroundColor: MaterialStateProperty.all(Colors.green),
+                  minimumSize:
+                      MaterialStateProperty.all(Size(double.infinity, 50)),
+                ),
                 child: Text('Submit'),
               ),
             ],
@@ -269,39 +290,16 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
         ),
       );
     } catch (e) {
-      showDialog(
-        context: context,
-        builder: (context) => Container(
-          height: 350,
-          width: 250,
-          child: AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
+      // Handle errors
+      print(e.toString());
+      Navigator.of(context).pop(); // Close the loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString(),
+            style: TextStyle(color: Colors.black),
           ),
-            title: Text(
-              'Successful Response',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-            content: Text(
-              e.toString(),
-              style: TextStyle(fontSize: 16),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop;
-                },
-                child: Text('Submit'),
-                style: ButtonStyle(
-                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5))),
-                    foregroundColor: MaterialStatePropertyAll(Colors.white),
-                    backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                    minimumSize:
-                        MaterialStatePropertyAll(Size(double.infinity, 50))),
-              ),
-            ],
-          ),
+          backgroundColor: Colors.white,
         ),
       );
     }
@@ -318,49 +316,13 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
         'body': body,
       });
       print(result.data);
-    } catch (e) {
-      showDialog(
-        context: context,
-        builder: (context) => Container(
-          height: 350,
-          width: 250,
-          child: AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
-            title: Text(
-              'Successful Response',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-            content: Text(
-              e.toString(),
-              style: TextStyle(fontSize: 16),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop;
-                },
-                child: Text('Submit'),
-                style: ButtonStyle(
-                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5))),
-                    foregroundColor: MaterialStatePropertyAll(Colors.white),
-                    backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                    minimumSize:
-                        MaterialStatePropertyAll(Size(double.infinity, 50))),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+    } catch (e) {}
   }
 
   bool isLoading = true;
   Future<void> loadData() async {
     // Simulate loading data
-    await Future.delayed(Duration(seconds: 4));
+    await Future.delayed(Duration(seconds: 2));
 
     // Set isLoading to false when data is loaded
     setState(() {
@@ -420,25 +382,33 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                           children: [
                             TableCell(
                               child: Center(
-                                  child: Text(widget.studentApplicationData[
-                                          'accomodationName'] ??
-                                      'Kgaogelo')),
+                                  child: Padding(
+                                padding: const EdgeInsets.all(5.0),
+                                child: Text(widget.studentApplicationData[
+                                        'accomodationName'] ??
+                                    'N/A'),
+                              )),
                             ),
                             if (widget.studentApplicationData['status'] == true)
                               TableCell(
                                 child: Center(
-                                    child: ElevatedButton.icon(
-                                        onPressed: () {
-                                          final String downloadUrl =
-                                              widget.studentApplicationData[
-                                                      'contract'] ??
-                                                  '';
-
-                                          downloadFile(downloadUrl);
-                                        },
-                                        icon: Icon(Icons.download,
-                                            color: Colors.blue),
-                                        label: Text(''))),
+                                    child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () {
+                                        final String downloadUrl =
+                                            widget.studentApplicationData[
+                                                    'contract'] ??
+                                                '';
+                                        downloadFile(context, downloadUrl);
+                                      },
+                                      child: Icon(Icons.download,
+                                          color: Colors.blue, size: 40),
+                                    ),
+                                    Text('Download contract')
+                                  ],
+                                )),
                               ),
                             TableCell(
                               child: Center(
@@ -447,12 +417,18 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                       widget.studentApplicationData['status'] ==
                                               true
                                           ? 'Accepted'
-                                          : 'Rejected')),
+                                          : 'Rejected',
+                                      style: TextStyle(
+                                          color: widget.studentApplicationData[
+                                                      'status'] ==
+                                                  true
+                                              ? Colors.green
+                                              : Colors.red))),
                             ),
                           ],
                         )
                       ]),
-                      widget.studentApplicationData['status'] == true
+                      widget.studentApplicationData['status'] == false
                           ? Column(
                               children: [
                                 Container(
@@ -460,7 +436,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                     child: Column(
                                       children: [
                                         Text(
-                                          'Hi, ${_userData?['name'] ?? ''} Your Application have been rejected due to the following reasons ${widget.studentApplicationData['landlordMessage']}',
+                                          'Hi, ${_userData?['name'] ?? 'N/A'} Your Application have been rejected due to the following reasons ${widget.studentApplicationData['landlordMessage']}',
                                         )
                                       ],
                                     )),
@@ -497,15 +473,22 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                     width: buttonWidth,
                                     child: Column(
                                       children: [
-                                        Text(
-                                          'Hi, ${_userData?['name'] ?? ''} Your application have been accepted you can now register. \n${widget.studentApplicationData['landlordMessage']}',
-                                          maxLines: 100,
-                                        )
+                                        SizedBox(
+                                          height: 10,
+                                        ),
+                                        widget.studentApplicationData[
+                                                    'registrationPreference'] ??
+                                                '' == 'Contact Registration'
+                                            ? Text(
+                                                "Hi, ${_userData?['name'] ?? ''} Your application have been accepted for registration purposes,you have 2days to register please note that ${widget.studentApplicationData['accomodationName']} prefers contact registrations.Should you fail to arrive in 2days your room will be placed to another applicant",
+                                                maxLines: 100,
+                                              )
+                                            : Text(
+                                                'Hi, ${_userData?['name'] ?? ''} Your application have been accepted you can now register by downloading the contract on the table above and sign all the required field. \nRegistration Instructions: ${widget.studentApplicationData['landlordMessage']}',
+                                                maxLines: 100,
+                                              ),
                                       ],
                                     )),
-                                SizedBox(
-                                  height: 20,
-                                ),
                                 SizedBox(
                                   height: 20,
                                 ),
@@ -517,7 +500,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                     children: [
                                       ElevatedButton(
                                         onPressed: () {
-                                          _pickSignedContract();
+                                          _pickSignedContract(context);
                                         },
                                         style: ButtonStyle(
                                             shape: MaterialStatePropertyAll(
@@ -544,7 +527,8 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                           readOnly:
                                               true, // Prevent manual editing
                                           controller: TextEditingController(
-                                              text: _pdfSignedContractPath),
+                                              text: basename(
+                                                  _pdfSignedContractPath)),
                                           decoration: InputDecoration(
                                             disabledBorder:
                                                 OutlineInputBorder(),
@@ -565,8 +549,17 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                   height: 20,
                                 ),
                                 ElevatedButton.icon(
-                                  onPressed: () {
-                                    _sentSignedContract();
+                                  onPressed: () async {
+                                    for (int i = 0;
+                                        i < _studentApplications.length;
+                                        i++)
+                                      await _sentSignedContract(
+                                          context,
+                                          _studentApplications[i]['roomType'] ??
+                                              '',
+                                          _studentApplications[i]
+                                                  ['fieldOfStudy'] ??
+                                              '');
                                   },
                                   icon: Icon(
                                     Icons.done,
@@ -583,7 +576,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                       backgroundColor:
                                           MaterialStatePropertyAll(Colors.blue),
                                       minimumSize: MaterialStatePropertyAll(
-                                          Size(55, 50))),
+                                          Size(double.infinity, 50))),
                                 )
                               ],
                             )
@@ -591,5 +584,49 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                   ),
                 ),
               ));
+  }
+
+  Future<void> downloadFile(BuildContext context, String downloadUrl) async {
+    try {
+      // Check for storage permission
+      var status = await Permission.storage.status;
+      if (!status.isGranted) {
+        await Permission.storage.request();
+      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Colors.blue,
+        content: Text('Downloading...', style: TextStyle(color: Colors.white)),
+        duration: Duration(seconds: 2),
+      ));
+      // Get the application documents directory
+      // Get the Downloads directory
+      Directory? downloadsDirectory = await getDownloadsDirectory();
+
+      if (downloadsDirectory != null) {
+        String savePath =
+            "${downloadsDirectory.path}/${widget.studentApplicationData['accomodationName']}'s Contract.pdf";
+
+        // Create a reference to the Firebase Storage file
+        Reference storageReference =
+            FirebaseStorage.instance.ref().child(downloadUrl);
+
+        // Download the file to the device
+        await Dio().download(storageReference.fullPath, savePath);
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.green,
+          content: Text('File downloaded successfully!',
+              style: TextStyle(color: Colors.white)),
+        ),
+      );
+    } catch (e) {
+      print('Error downloading file: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error downloading file'),
+        ),
+      );
+    }
   }
 }

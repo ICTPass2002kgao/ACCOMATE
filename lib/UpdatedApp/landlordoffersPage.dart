@@ -3,13 +3,11 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:api_com/UpdatedApp/LandlordPage.dart';
-import 'package:api_com/UpdatedApp/login_page.dart';
-import 'package:api_com/UpdatedApp/student_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -18,12 +16,12 @@ class OffersPage extends StatefulWidget {
   final String landlordEmail;
   final String password;
   final String distance;
-  final int contactDetails;
+  final String contactDetails;
   final bool isLandlord;
   final String location;
   final XFile? imageFile;
   final Map<String, bool> selectedPaymentsMethods;
-  final String contract;
+  final File? contract;
   final String contractPath;
 
   const OffersPage(
@@ -45,6 +43,23 @@ class OffersPage extends StatefulWidget {
 }
 
 class _OffersPageState extends State<OffersPage> {
+  String _pdfDownloadContractURL = '';
+  Future<String?> _uploadSignedContact(File pdfFile, context) async {
+    try {
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      firebase_storage.Reference reference = firebase_storage
+          .FirebaseStorage.instance
+          .ref("Accomodations Contracts/")
+          .child("${widget.accomodationName}'s contract(${fileName}).pdf'");
+
+      await reference.putFile(pdfFile);
+
+      return await reference.getDownloadURL();
+    } catch (e) {
+      return null;
+    }
+  }
+
   final String verificationCode = _generateRandomCode();
 
   static String _generateRandomCode() {
@@ -75,19 +90,7 @@ class _OffersPageState extends State<OffersPage> {
 
   Map<String, bool> selectedUniversity = {
     'Vaal University of Technology': false,
-    'University of Johannesburg': false,
-    'University of pretoria': false,
-    'University of the Witwatersrand': false,
-    'Cape Peninsula University of technology': false,
-    'University of Cape Town': false,
     'North West University(vaal campus)': false,
-    'University of Freestate': false,
-    'University of Western Cape': false,
-    'University of Kwa-zulu Natal': false,
-    'Tshwane University of Technology': false,
-    'Stellenbosch University': false,
-    'Durban University of Technology': false,
-    'North West University': false
   };
 
   bool usesTransport = true;
@@ -181,11 +184,15 @@ class _OffersPageState extends State<OffersPage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
           title: Text(
             'Account Verification',
             style: TextStyle(fontSize: 15),
           ),
           content: TextField(
+            keyboardType: TextInputType.number,
             controller: verifyEmailController,
             decoration: InputDecoration(labelText: 'Enter Verification Codes'),
           ),
@@ -251,6 +258,7 @@ class _OffersPageState extends State<OffersPage> {
     }
   }
 
+  bool isLandlord = true;
   void _registerUserToFirebase() async {
     List<String> images = pickedImages.map((file) => file.path).toList();
     try {
@@ -263,35 +271,45 @@ class _OffersPageState extends State<OffersPage> {
           );
         },
       );
-      // Step 2: Upload the image to Firebase Storage
-      Reference storageReference = FirebaseStorage.instance
-          .ref()
-          .child('profile_images/${DateTime.now().toString()}');
-      UploadTask uploadTask =
-          storageReference.putFile(File(widget.imageFile!.path));
-      TaskSnapshot storageTaskSnapshot =
-          await uploadTask.whenComplete(() => null);
-      String downloadUrl = await storageTaskSnapshot.ref.getDownloadURL();
-      List<String> downloadUrls = await uploadImagesToFirebaseStorage(images);
-
-      // Step 3: Create user account using Firebase Authentication
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: widget.landlordEmail,
         password: widget.password, // Set your desired password
       );
+      // Step 2: Upload the image to Firebase Storage
+      Reference storageReference = FirebaseStorage.instance.ref().child(
+          'Accomodation Images/${widget.accomodationName}(${DateTime.now().toString()})');
+      UploadTask uploadTask =
+          storageReference.putFile(File(widget.imageFile!.path));
+      TaskSnapshot storageTaskSnapshot =
+          await uploadTask.whenComplete(() => null);
+      String downloadUrl = await storageTaskSnapshot.ref.getDownloadURL();
+
+      List<String> downloadUrls = await uploadImagesToFirebaseStorage(images);
+      //uploading the Contract to storage
+      String? downloadURL =
+          await _uploadSignedContact(widget.contract!, context);
+
+      if (downloadURL != null) {
+        setState(() {
+          _pdfDownloadContractURL = downloadURL;
+        });
+      }
+
+      // Step 3: Create user account using Firebase Authentication
+
       // Step 4: Send verification email
 
       String userId = userCredential.user!.uid;
       // Step 5: Store additional user data in Firestore
       await FirebaseFirestore.instance
           .collection('users')
-          .doc(userCredential.user!.uid)
+          .doc("${widget.accomodationName}'s Unique ID($userId)")
           .set({
         'accomodationName': widget.accomodationName,
         'location': widget.location,
         'email': widget.landlordEmail,
-        'role': widget.isLandlord,
+        'role': isLandlord,
         'selectedOffers': selectedOffers,
         'selectedUniversity': selectedUniversity,
         'distance': widget.distance,
@@ -303,7 +321,7 @@ class _OffersPageState extends State<OffersPage> {
         'profilePicture': downloadUrl,
         'userId': userId,
         'roomType': selectedRoomTypes,
-        'contract': widget.contract,
+        'contract': _pdfDownloadContractURL,
         'displayedImages': downloadUrls
       });
 
@@ -315,7 +333,43 @@ class _OffersPageState extends State<OffersPage> {
       //     builder: (context) => LoginPage(),
       //   ),
       // );
-      Navigator.pushReplacementNamed(context, '/login');
+      sendEmail(
+          widget.landlordEmail, // Student's email
+          'Successful Account',
+          'Goodday ${widget.accomodationName} landlord, \nYour account have been registered successfully proceed to login.\n\n\n\nBest Regards\nYours Accomate');
+
+      showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => AlertDialog(
+                title: Text(
+                  'Successful Registration',
+                  style: TextStyle(fontSize: 15),
+                ),
+                content: Text(
+                    'The account was registered successfully.You can now proceed to login'),
+                actions: <Widget>[
+                  TextButton(
+                      onPressed: () async {
+                        // Close the dialog
+
+                        Navigator.of(context).pop();
+
+                        Navigator.pushReplacementNamed(context, '/login');
+                      },
+                      child: Text('Proceed'),
+                      style: ButtonStyle(
+                          shape: MaterialStatePropertyAll(
+                              RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5))),
+                          foregroundColor:
+                              MaterialStatePropertyAll(Colors.white),
+                          backgroundColor:
+                              MaterialStatePropertyAll(Colors.green),
+                          minimumSize: MaterialStatePropertyAll(
+                              Size(double.infinity, 50)))),
+                ],
+              ));
 
       print(
           'Registration successful. Please check your email for verification.');
@@ -375,15 +429,15 @@ class _OffersPageState extends State<OffersPage> {
 
   Future<List<String>> uploadImagesToFirebaseStorage(
       List<String> imagePaths) async {
+    String accomodationName = widget.accomodationName;
     List<String> downloadUrls = [];
 
     for (var imagePath in imagePaths) {
       File file = File(imagePath);
 
       // Step 1: Upload image to Firebase Storage
-      Reference storageReference = FirebaseStorage.instance
-          .ref()
-          .child('profile_images/${DateTime.now().toString()}');
+      Reference storageReference = FirebaseStorage.instance.ref().child(
+          '$accomodationName profile_images/${accomodationName} image(${DateTime.now().toString()})');
       UploadTask uploadTask = storageReference.putFile(file);
       TaskSnapshot storageTaskSnapshot =
           await uploadTask.whenComplete(() => null);
@@ -427,7 +481,9 @@ class _OffersPageState extends State<OffersPage> {
                   //usesTransport
 
                   ExpansionTile(
-                    title: Text('Available Transport'),
+                    title: Text(
+                      'Available Transport',
+                    ),
                     children: [
                       Row(
                         children: [
@@ -508,7 +564,11 @@ class _OffersPageState extends State<OffersPage> {
                   ),
 
                   ExpansionTile(
-                    title: Text('Select Room types'),
+                    title: Text('Select Room types',
+                        style: TextStyle(
+                            color: selectedRoomTypes.isEmpty
+                                ? Colors.red
+                                : Colors.black)),
                     children: selectedRoomTypes.keys.map((roomTypes) {
                       return CheckboxListTile(
                         title: Text(roomTypes),
@@ -527,7 +587,11 @@ class _OffersPageState extends State<OffersPage> {
                   ),
 
                   ExpansionTile(
-                    title: Text('Select accomodation offers'),
+                    title: Text('Select accomodation offers',
+                        style: TextStyle(
+                            color: selectedOffers.isEmpty
+                                ? Colors.red
+                                : Colors.black)),
                     children: selectedOffers.keys.map((offers) {
                       return CheckboxListTile(
                         title: Text(offers),
@@ -553,7 +617,11 @@ class _OffersPageState extends State<OffersPage> {
                     height: 5,
                   ),
                   ExpansionTile(
-                    title: Text('Select accomodated University/College'),
+                    title: Text('Select accomodated University/College',
+                        style: TextStyle(
+                            color: selectedUniversity.isEmpty
+                                ? Colors.red
+                                : Colors.black)),
                     children: selectedUniversity.keys.map((university) {
                       return CheckboxListTile(
                         title: Text(university),
@@ -580,7 +648,7 @@ class _OffersPageState extends State<OffersPage> {
                   ),
 
                   Container(
-                    height: 50,
+                    height: 55,
                     width: containerWidth,
                     child: Row(
                       children: [
@@ -610,18 +678,27 @@ class _OffersPageState extends State<OffersPage> {
                             index++)
                           SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
-                            child: Container(
-                              child: Expanded(
-                                child: Row(
-                                  children: [
-                                    SizedBox(width: 5),
-                                    Image.file(File(pickedImages[index].path),
-                                        height: 45,
-                                        width: 50,
-                                        fit: BoxFit.cover),
-                                  ],
+                            child: Row(
+                              children: [
+                                Container(
+                                  color: Color.fromARGB(255, 233, 231, 231),
+                                  child: Row(
+                                    children: [
+                                      SizedBox(width: 5),
+                                      SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: Container(
+                                          child: Image.file(
+                                              File(pickedImages[index].path),
+                                              height: 45,
+                                              width: 50,
+                                              fit: BoxFit.cover),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                       ],
@@ -640,8 +717,9 @@ class _OffersPageState extends State<OffersPage> {
                       sendEmail(
                           widget.landlordEmail, // Student's email
                           'Verification Code',
-                          'Hi ${widget.accomodationName} landlord, \n this is your verification codes: $verificationCode please comfirm by entering it.');
+                          'Hi ${widget.accomodationName} landlord, \nThis is your verification codes: $verificationCode please comfirm by entering it.\n\n\n\n\nBest Regards\nYours Accomate');
                       showDialog(
+                        barrierDismissible: false,
                         context: context,
                         builder: (context) => AlertDialog(
                           title: Text(
@@ -661,14 +739,14 @@ class _OffersPageState extends State<OffersPage> {
                                     width: 80,
                                     height: 80,
                                     child: Icon(Icons.done,
-                                        color: Colors.white, size: 30),
+                                        color: Colors.white, size: 35),
                                   ),
                                 ),
                                 SizedBox(
                                   height: 20,
                                 ),
                                 Text(
-                                  'Hi, ${widget.accomodationName} landlord\n A verification email has been sent to ${widget.landlordEmail}. please verify by providing the verification codes',
+                                  'Hi, ${widget.accomodationName} landlord\n A verification email has been sent to ${widget.landlordEmail}.Please verify by providing the verification codes',
                                 ),
                               ],
                             ),

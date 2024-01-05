@@ -1,5 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, deprecated_member_use
 
+import 'package:dio/dio.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'dart:typed_data';
@@ -7,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 
 class ViewApplicantDetails extends StatefulWidget {
   final Map<String, dynamic> studentApplicationData;
@@ -68,7 +71,9 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
         'accomodationName': _userData?['accomodationName'] ?? '',
         'path': _userData?['contractPath'] ?? '',
         'contract': _userData?['contract'] ?? '',
-        'status': status
+        'status': status,
+        'userId': _userData?['userId'] ?? '',
+        'registrationPreference': selectedregistrationPreference,
 
         // Add more details as needed
       });
@@ -76,6 +81,7 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
       print('email sent successfully');
 
       showDialog(
+        barrierDismissible: false,
         context: context,
         builder: (context) => Container(
           height: 200,
@@ -85,23 +91,27 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
               'Successful Response',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
-            content: Column(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(40),
-                  child: Container(
-                    color: Colors.green,
-                    width: 80,
-                    height: 80,
-                    child: Icon(Icons.done, color: Colors.white, size: 20),
+            content: Container(
+              height: 200,
+              width: 250,
+              child: Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(40),
+                    child: Container(
+                      color: Colors.green,
+                      width: 80,
+                      height: 80,
+                      child: Icon(Icons.done, color: Colors.white, size: 20),
+                    ),
                   ),
-                ),
-                SizedBox(height: 20),
-                Text(
-                  'Your response have been sent successfully to ${widget.studentApplicationData['name']}.',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ],
+                  SizedBox(height: 20),
+                  Text(
+                    'Your response have been sent successfully to ${widget.studentApplicationData['name']}.',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
             ),
             actions: [
               TextButton(
@@ -238,6 +248,11 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
     }
   }
 
+  String selectedregistrationPreference = '';
+  List<String> registrationPreference = [
+    'Contact Registration',
+    'Online Registration',
+  ];
   @override
   Widget build(BuildContext context) {
     double buttonWidth =
@@ -328,6 +343,12 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                                   style:
                                       TextStyle(fontWeight: FontWeight.bold))),
                         ),
+                        TableCell(
+                          child: Center(
+                              child: Text('Year of study',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold))),
+                        ),
                       ],
                     ),
                     TableRow(
@@ -377,7 +398,8 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                                                 'ProofOfRegistration'] ??
                                             '';
 
-                                    downloadFile(downloadUrl);
+                                    downloadFile(context, downloadUrl,
+                                        "${widget.studentApplicationData['name'] ?? ''}'s Proof of registration");
                                   },
                                   icon:
                                       Icon(Icons.download, color: Colors.blue),
@@ -392,7 +414,8 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                                                 'IdDocument'] ??
                                             '';
 
-                                    downloadFile(downloadUrl);
+                                    downloadFile(context, downloadUrl,
+                                        "${widget.studentApplicationData['name'] ?? ''}'s Id document");
                                   },
                                   icon:
                                       Icon(Icons.download, color: Colors.blue),
@@ -415,6 +438,12 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                               child: Text(
                                   widget.studentApplicationData['roomType'] ??
                                       'yyyy')),
+                        ),
+                        TableCell(
+                          child: Center(
+                              child: Text(widget
+                                      .studentApplicationData['fieldOfStudy'] ??
+                                  'yyyy')),
                         ),
                       ],
                     ),
@@ -465,26 +494,77 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                     ],
                   ),
                 ),
-
+                SizedBox(
+                  height: 5,
+                ),
+                Container(
+                  width: buttonWidth,
+                  child: ExpansionTile(
+                    title: Text('Select registration preference',
+                        style: TextStyle(
+                            color: selectedregistrationPreference.isEmpty
+                                ? Colors.red
+                                : Colors.black)),
+                    children: registrationPreference
+                        .map((paramRegistrationPreference) {
+                      return RadioListTile<String>(
+                        title: Text(paramRegistrationPreference),
+                        value: paramRegistrationPreference,
+                        groupValue: selectedregistrationPreference,
+                        onChanged: (value) {
+                          setState(() {
+                            selectedregistrationPreference = value!;
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
                 SizedBox(
                   height: 20,
                 ),
 
-                Container(
-                  width: buttonWidth,
-                  child: Tooltip(
-                    message:
-                        'Should you required additional information from student, let the student and know and let them get back via an accomodation email',
-                    child: TextField(
-                      maxLines: 4,
-                      controller: messageController,
-                      decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText:
-                              "Accepted Additional Information or Rejected reason"),
-                    ),
-                  ),
-                ),
+                status == true
+                    ? Column(
+                        children: [
+                          selectedregistrationPreference ==
+                                  'Online Registration'
+                              ? Text(
+                                  'Alert student on how to register and all the field they should sign from the contract.')
+                              : Text(
+                                  'Please note that student have 2days to come for contact registration, \n\nThank you!!'),
+                          selectedregistrationPreference ==
+                                  'Online Registration'
+                              ? Container(
+                                  width: buttonWidth,
+                                  child: TextField(
+                                    maxLines: 4,
+                                    controller: messageController,
+                                    decoration: InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        labelText: "Registration Instructions"),
+                                  ),
+                                )
+                              : Container(),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Text(
+                              'Please provide the reason a student is rejected & let the student know that they can reApply if their prefered room is not available'),
+                          Container(
+                            width: buttonWidth,
+                            child: TextField(
+                              maxLines: 4,
+                              controller: messageController,
+                              decoration: InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  labelText: "Rejected reason"),
+                            ),
+                          ),
+                        ],
+                      ),
+
                 SizedBox(
                   height: 10,
                 ),
@@ -518,35 +598,47 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
         ));
   }
 
-  Future<void> downloadFile(String url) async {
-    final String downloadUrl = url;
-
+  Future<void> downloadFile(
+      BuildContext context, String downloadUrl, String fileName) async {
     try {
-      // Make an HTTP GET request to download the file
-      final http.Response response = await http.get(Uri.parse(downloadUrl));
+      // Check for storage permission
+      // var status = await Permission.storage.status;
+      // if (!status.isGranted) {
+      //   await Permission.storage.request();
+      // }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Colors.blue,
+        content: Text('Downloading...', style: TextStyle(color: Colors.white)),
+        duration: Duration(seconds: 2),
+      ));
+      // Get the application documents directory
+      // Get the Downloads directory
+      Directory? downloadsDirectory = await getDownloadsDirectory();
 
-      // Check if the request was successful (status code 200)
-      if (response.statusCode == 200) {
-        // Convert the response body to a Uint8List
-        final Uint8List bytes = response.bodyBytes;
+      if (downloadsDirectory != null) {
+        String savePath = '${downloadsDirectory.path}/${fileName}.pdf';
 
-        // Get the local storage directory
-        final Directory appDocDir = Directory('Downloads');
-        final String appDocPath = appDocDir.path;
+        // Create a reference to the Firebase Storage file
+        Reference storageReference =
+            FirebaseStorage.instance.ref().child(downloadUrl);
 
-        // Create a File instance with the local path and file name
-        final File file = File('$appDocPath/contract.pdf');
-
-        // Write the bytes to the file
-        await file.writeAsBytes(bytes);
-
-        print('File downloaded and saved locally: ${file.path}');
-      } else {
-        // Handle errors if the request was not successful
-        print('Failed to download file: ${response.statusCode}');
+        // Download the file to the device
+        await Dio().download(storageReference.fullPath, savePath);
       }
-    } catch (error) {
-      print('Error downloading file: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.green,
+          content: Text('File downloaded successfully!',
+              style: TextStyle(color: Colors.white)),
+        ),
+      );
+    } catch (e) {
+      print('Error downloading file: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error downloading file'),
+        ),
+      );
     }
   }
 }

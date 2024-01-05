@@ -19,7 +19,7 @@ class LandlordFurtherRegistration extends StatefulWidget {
   final String landlordEmail;
   final String password;
 
-  final int contactDetails;
+  final String contactDetails;
   final bool isLandlord;
   const LandlordFurtherRegistration(
       {super.key,
@@ -81,6 +81,8 @@ class _LandlordFurtherRegistrationState
       showError(context);
     } else if (distanceController.text == '') {
       showError(context);
+    } else if (selectedPaymentsMethods.isEmpty) {
+      showError(context);
     } else {
       setState(() {
         Navigator.push(
@@ -88,7 +90,7 @@ class _LandlordFurtherRegistrationState
             MaterialPageRoute(
                 builder: ((context) => OffersPage(
                       contractPath: _pdfContractPath,
-                      contract: _pdfDownloadContractURL,
+                      contract: pdfContractFile,
                       selectedPaymentsMethods: selectedPaymentsMethods,
                       imageFile: _imageFile,
                       location: txtLiveLocation.text,
@@ -118,11 +120,10 @@ class _LandlordFurtherRegistrationState
     requestLocationPermission();
   }
 
-  String _pdfDownloadContractURL = '';
   String _pdfContractPath = '';
 
   bool isFileChosen = false;
-
+  File? pdfContractFile;
   Future<void> _pickSignedContract(context) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -131,19 +132,11 @@ class _LandlordFurtherRegistrationState
       );
 
       if (result != null) {
-        File pdfFile = File(result.files.single.path!);
+        pdfContractFile = File(result.files.single.path!);
         setState(() {
-          _pdfContractPath = pdfFile.path;
+          _pdfContractPath = pdfContractFile.toString();
           isFileChosen = true; // Set the flag to true when a file is chosen
         });
-
-        String? downloadURL = await _uploadSignedContact(pdfFile, context);
-
-        if (downloadURL != null) {
-          setState(() {
-            _pdfDownloadContractURL = downloadURL;
-          });
-        }
       } else {
         // No file chosen
         setState(() {
@@ -152,23 +145,6 @@ class _LandlordFurtherRegistrationState
       }
     } catch (e) {
       _showErrorDialog(e.toString(), context);
-    }
-  }
-
-  Future<String?> _uploadSignedContact(File pdfFile, context) async {
-    try {
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      firebase_storage.Reference reference = firebase_storage
-          .FirebaseStorage.instance
-          .ref('contract')
-          .child('$fileName.pdf');
-
-      await reference.putFile(pdfFile);
-
-      return await reference.getDownloadURL();
-    } catch (e) {
-      _showErrorDialog(e.toString(), context);
-      return null;
     }
   }
 
@@ -320,7 +296,7 @@ class _LandlordFurtherRegistrationState
                             Icons.location_on_outlined,
                             color: Colors.blue,
                           ),
-                          hintText: 'Address e.g Province,town,street'),
+                          hintText: 'Address e.g Province,Address'),
                     ),
                   ),
                   SizedBox(height: 5),
@@ -328,7 +304,13 @@ class _LandlordFurtherRegistrationState
                     message:
                         'This determines how ent should pay the accomodation',
                     child: ExpansionTile(
-                      title: Text('Students Payment Methods'),
+                      title: Text(
+                        'Students Payment Methods',
+                        style: TextStyle(
+                            color: selectedPaymentsMethods.isEmpty
+                                ? Colors.red
+                                : Colors.black),
+                      ),
                       children:
                           selectedPaymentsMethods.keys.map((paymentMethod) {
                         return CheckboxListTile(
@@ -348,6 +330,16 @@ class _LandlordFurtherRegistrationState
                   SizedBox(height: 5),
                   TextButton.icon(
                     onPressed: () {
+                      showDialog(
+                        context: context,
+                        barrierDismissible:
+                            false, // Prevent user from dismissing the dialog
+                        builder: (BuildContext context) {
+                          return Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        },
+                      );
                       showLocationDialog(context);
                     },
                     icon: Icon(Icons.location_on_outlined, color: Colors.white),
@@ -446,7 +438,7 @@ class _LandlordFurtherRegistrationState
                               focusColor: Color.fromARGB(255, 230, 230, 230),
                               fillColor: Color.fromARGB(255, 230, 230, 230),
                               filled: true,
-                              hintText: 'Your contract',
+                              hintText: 'Upload contract',
                             ),
                           ),
                         )
@@ -496,15 +488,18 @@ class _LandlordFurtherRegistrationState
 
     // Get address from coordinates
     try {
+      // ignore: use_build_context_synchronously
+
       List<Placemark> placemarks =
           await placemarkFromCoordinates(position.latitude, position.longitude);
 
       // Display the address in a text field
+      Navigator.of(context).pop();
       if (placemarks.isNotEmpty) {
         String street = placemarks.first.street ?? 'Unknown';
-        String address = placemarks.first.locality ?? 'Unknown';
         String country = placemarks.first.administrativeArea ?? 'Unknown';
-        txtLiveLocation.text = ' $country,${address},${street}';
+
+        txtLiveLocation.text = ' $country,${street}';
       }
     } catch (e) {
       print('Error fetching address: $e');
