@@ -183,7 +183,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
         title: Text(
             widget.isLandlord
                 ? 'Landlord Registration(1/3)'
-                : 'Student Registration(1/2)',
+                : 'Student Registration(1/3)',
             style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue,
         centerTitle: true,
@@ -197,16 +197,21 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                   child: Container(
                     width: buttonWidth,
                     child: Column(children: [
-                      Icon(
-                        Icons.person_add,
-                        size: 150,
-                        color: Colors.blue,
-                      ),
+                      Image.asset('assets/icon.jpg',
+                          height: 150, width: double.infinity),
                       Container(
                         width: buttonWidth,
                         child: TextField(
                           controller: nameController,
                           decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                               focusColor: Colors.blue,
                               fillColor: Color.fromARGB(255, 230, 230, 230),
                               filled: true,
@@ -223,6 +228,14 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                         child: TextField(
                           controller: surnameController,
                           decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                               focusColor: Colors.blue,
                               fillColor: Color.fromARGB(255, 230, 230, 230),
                               filled: true,
@@ -237,8 +250,17 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                       Container(
                         width: buttonWidth,
                         child: TextField(
+                          keyboardType: TextInputType.emailAddress,
                           controller: emailController,
                           decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                               focusColor: Colors.blue,
                               fillColor: Color.fromARGB(255, 230, 230, 230),
                               filled: true,
@@ -246,7 +268,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                 Icons.mail,
                                 color: Colors.blue,
                               ),
-                              hintText: 'example.@gmail.com'),
+                              hintText: 'Email account'),
                         ),
                       ),
                       SizedBox(height: 5),
@@ -255,6 +277,14 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                         child: TextField(
                           controller: passwordController,
                           decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                               focusColor: Colors.blue,
                               fillColor: Color.fromARGB(255, 230, 230, 230),
                               filled: true,
@@ -277,7 +307,6 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                               ),
                               hintText: 'Password'),
                           obscureText: _obscureText,
-                          obscuringCharacter: '*',
                         ),
                       ),
                       SizedBox(height: 5),
@@ -287,6 +316,14 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                           keyboardType: TextInputType.number,
                           controller: contactDetails,
                           decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                               focusColor: Colors.blue,
                               fillColor: Color.fromARGB(255, 230, 230, 230),
                               filled: true,
@@ -345,7 +382,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                           checkStudentValues();
                         },
                         child: Text(
-                          widget.isLandlord ? 'Create account' : 'Continue',
+                          'Continue',
                           style: TextStyle(color: Colors.white, fontSize: 18),
                         ),
                         style: ButtonStyle(
@@ -371,16 +408,22 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                   child: Container(
                     width: buttonWidth,
                     child: Column(children: [
-                      Icon(
-                        Icons.maps_home_work_outlined,
-                        size: 150,
-                        color: Colors.blue,
-                      ),
+                      Image.asset('assets/icon.jpg',
+                          height: 150, width: double.infinity),
                       Container(
                         width: buttonWidth,
                         child: TextField(
+                          keyboardType: TextInputType.emailAddress,
                           controller: emailController,
                           decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                               focusColor: Colors.blue,
                               fillColor: Color.fromARGB(255, 230, 230, 230),
                               filled: true,
@@ -397,6 +440,14 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                         child: TextField(
                           controller: passwordController,
                           decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                               focusColor: Colors.blue,
                               fillColor: Color.fromARGB(255, 230, 230, 230),
                               filled: true,
@@ -419,13 +470,20 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                               ),
                               hintText: 'Password'),
                           obscureText: _obscureText,
-                          obscuringCharacter: '*',
                         ),
                       ),
                       SizedBox(height: 5),
                       TextField(
                         controller: accomodationName,
                         decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blue),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blue),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             focusColor: Colors.blue,
                             fillColor: Color.fromARGB(255, 230, 230, 230),
                             filled: true,
@@ -440,6 +498,14 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                         keyboardType: TextInputType.number,
                         controller: contactDetails,
                         decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blue),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blue),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             focusColor: Colors.blue,
                             fillColor: Color.fromARGB(255, 230, 230, 230),
                             filled: true,
