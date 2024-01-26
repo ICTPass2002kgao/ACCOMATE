@@ -1,11 +1,8 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors, sort_child_properties_last,
 import 'package:path/path.dart';
-import 'dart:io' as Platform;
 import 'dart:io';
 import 'package:api_com/UpdatedApp/landlordoffersPage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -263,16 +260,21 @@ class _LandlordFurtherRegistrationState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
-                    child: Icon(
-                      Icons.maps_home_work_outlined,
-                      size: 150,
-                      color: Colors.blue,
-                    ),
+                    child: Image.asset('assets/icon.jpg',
+                        height: 150, width: double.infinity),
                   ),
                   SizedBox(height: 10),
                   TextField(
                     controller: distanceController,
                     decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         focusColor: Colors.blue,
                         fillColor: Color.fromARGB(255, 230, 230, 230),
                         filled: true,
@@ -289,6 +291,14 @@ class _LandlordFurtherRegistrationState
                     child: TextField(
                       controller: txtLiveLocation,
                       decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.blue),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.blue),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           focusColor: Colors.blue,
                           fillColor: Color.fromARGB(255, 230, 230, 230),
                           filled: true,
@@ -434,6 +444,14 @@ class _LandlordFurtherRegistrationState
                             controller: TextEditingController(
                                 text: basename(_pdfContractPath)),
                             decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.blue),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                               disabledBorder: OutlineInputBorder(),
                               focusColor: Color.fromARGB(255, 230, 230, 230),
                               fillColor: Color.fromARGB(255, 230, 230, 230),

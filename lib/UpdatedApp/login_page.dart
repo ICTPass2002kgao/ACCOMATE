@@ -94,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
           title: Text('Reset password error',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-          content: Text('Please provide your correct email'),
+          content: Text('Please provide your correct email\n ${e.message}'),
           actions: [
             TextButton(
               onPressed: () {
@@ -142,13 +142,24 @@ class _LoginPageState extends State<LoginPage> {
                                 padding: EdgeInsets.all(0.0),
                                 child: TextField(
                                   controller: txtEmail,
+                                  keyboardType: TextInputType.emailAddress,
                                   decoration: InputDecoration(
+                                      border: OutlineInputBorder(
+                                        borderSide:
+                                            BorderSide(color: Colors.blue),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide:
+                                            BorderSide(color: Colors.blue),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
                                       focusColor: Colors.blue,
                                       fillColor:
                                           Color.fromARGB(255, 230, 230, 230),
                                       filled: true,
                                       prefixIcon: Icon(
-                                        Icons.mail_outline,
+                                        Icons.mail,
                                         color: Colors.blue,
                                       ),
                                       hintText: 'Enter your email'),
@@ -159,6 +170,16 @@ class _LoginPageState extends State<LoginPage> {
                                 child: TextField(
                                   controller: txtPassword,
                                   decoration: InputDecoration(
+                                      border: OutlineInputBorder(
+                                        borderSide:
+                                            BorderSide(color: Colors.blue),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide:
+                                            BorderSide(color: Colors.blue),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
                                       focusColor: Colors.blue,
                                       fillColor:
                                           Color.fromARGB(255, 230, 230, 230),
@@ -182,7 +203,6 @@ class _LoginPageState extends State<LoginPage> {
                                       ),
                                       hintText: 'Password'),
                                   obscureText: _obscureText,
-                                  obscuringCharacter: '*',
                                 ),
                               ),
                               SizedBox(
@@ -245,7 +265,17 @@ class _LoginPageState extends State<LoginPage> {
                                       email: txtEmail.text,
                                       password: txtPassword.text,
                                     );
-
+                                    if (txtEmail.text ==
+                                            'accomate33@gmail.com' &&
+                                        txtPassword.text == 'password') {
+                                      Navigator.pushReplacementNamed(
+                                          context, '/adminPage');
+                                    } else if (txtEmail.text ==
+                                            'accomatehelpcenter@gmail.com' &&
+                                        txtPassword.text == 'ICTPass2023@') {
+                                      Navigator.pushReplacementNamed(
+                                          context, '/helpCenter');
+                                    }
                                     // Fetch additional user information, including the role, from Firestore
                                     DocumentSnapshot userDoc =
                                         await FirebaseFirestore.instance
@@ -258,62 +288,22 @@ class _LoginPageState extends State<LoginPage> {
 
                                     // Navigate based on the user's role
                                     if (userRole == false) {
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                StudentPage()),
-                                      );
+                                      Navigator.pushReplacementNamed(
+                                          context, '/studentPage');
                                     } else if (userRole == true) {
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                LandlordPage()),
-                                      );
+                                      Navigator.pushReplacementNamed(
+                                          context, '/LandlordPage');
                                     }
                                     // Simulate some async operation (remove this in your final code)
                                     await Future.delayed(Duration(seconds: 2));
                                   } on FirebaseAuthException catch (e) {
                                     // Handle login error
                                     Navigator.pop(context);
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(5),
-                                        ),
-                                        title: Text('Login Error',
-                                            style: TextStyle(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.bold)),
-                                        content: Text(e.message.toString()),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                            },
-                                            child: Text('Retry'),
-                                            style: ButtonStyle(
-                                                shape: MaterialStatePropertyAll(
-                                                    RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(5))),
-                                                foregroundColor:
-                                                    MaterialStatePropertyAll(
-                                                        Colors.white),
-                                                backgroundColor:
-                                                    MaterialStatePropertyAll(
-                                                        Colors.red[300]),
-                                                minimumSize:
-                                                    MaterialStatePropertyAll(
-                                                        Size(buttonWidth, 50))),
-                                          ),
-                                        ],
-                                      ),
-                                    );
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                            content:
+                                                Text(e.message.toString())));
                                   }
                                 },
                                 child: Text(

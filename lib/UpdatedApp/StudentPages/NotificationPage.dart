@@ -160,54 +160,45 @@ class _NotificationPageState extends State<NotificationPage>
                                         true)
                                       Column(
                                         children: [
-                                          Container(
-                                            child: Card(
-                                              color: Color.fromARGB(
-                                                  255, 243, 243, 243),
-                                              elevation: 4,
-                                              child: ListTile(
-                                                onTap: () {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          ViewApplicationResponses(
-                                                        studentApplicationData:
-                                                            _studentApplications[
-                                                                index],
-                                                      ),
-                                                    ),
-                                                  );
-                                                  setState(() {
-                                                    // Toggle the clicked state of the tile
-                                                    if (clickedTiles
-                                                        .contains(index)) {
-                                                      clickedTiles
-                                                          .remove(index);
-                                                    } else {
-                                                      clickedTiles.add(index);
-                                                    }
-                                                  });
-                                                },
-                                                title: Text(
-                                                  '${_studentApplications[index]['accomodationName']}',
-                                                  style: TextStyle(
-                                                    fontWeight: clickedTiles
-                                                            .contains(index)
-                                                        ? FontWeight.normal
-                                                        : FontWeight.bold,
+                                          ListTile(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      ViewApplicationResponses(
+                                                    studentApplicationData:
+                                                        _studentApplications[
+                                                            index],
                                                   ),
                                                 ),
-                                                subtitle: Text(
-                                                  '${_studentApplications[index]['landlordMessage']} Your application was successfully accepted',
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                                trailing: Icon(Icons
-                                                    .arrow_forward_ios_rounded),
+                                              );
+                                              setState(() {
+                                                // Toggle the clicked state of the tile
+                                                if (clickedTiles
+                                                    .contains(index)) {
+                                                  clickedTiles.remove(index);
+                                                } else {
+                                                  clickedTiles.add(index);
+                                                }
+                                              });
+                                            },
+                                            title: Text(
+                                              '${_studentApplications[index]['accomodationName']}',
+                                              style: TextStyle(
+                                                fontWeight:
+                                                    clickedTiles.contains(index)
+                                                        ? FontWeight.normal
+                                                        : FontWeight.bold,
                                               ),
                                             ),
+                                            subtitle: Text(
+                                              '${_studentApplications[index]['landlordMessage']} Your application was successfully accepted',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            trailing: Icon(Icons
+                                                .arrow_forward_ios_rounded),
                                           )
                                         ],
                                       )
@@ -236,52 +227,45 @@ class _NotificationPageState extends State<NotificationPage>
                                         SizedBox(
                                           height: 5,
                                         ),
-                                        Container(
-                                          child: Card(
-                                            color: Color.fromARGB(
-                                                255, 243, 243, 243),
-                                            elevation: 4,
-                                            child: ListTile(
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        ViewApplicationResponses(
-                                                      studentApplicationData:
-                                                          _studentApplications[
-                                                              index],
-                                                    ),
-                                                  ),
-                                                );
-                                                setState(() {
-                                                  // Toggle the clicked state of the tile
-                                                  if (clickedTiles
-                                                      .contains(index)) {
-                                                    clickedTiles.remove(index);
-                                                  } else {
-                                                    clickedTiles.add(index);
-                                                  }
-                                                });
-                                              },
-                                              title: Text(
-                                                '${_studentApplications[index]['accomodationName']}',
-                                                style: TextStyle(
-                                                  fontWeight: clickedTiles
-                                                          .contains(index)
-                                                      ? FontWeight.normal
-                                                      : FontWeight.bold,
+                                        ListTile(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ViewApplicationResponses(
+                                                  studentApplicationData:
+                                                      _studentApplications[
+                                                          index],
                                                 ),
                                               ),
-                                              subtitle: Text(
-                                                'Your Application have been rejected due to the following reasons ${_studentApplications[index]['landlordMessage']} ',
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              trailing: Icon(Icons
-                                                  .arrow_forward_ios_rounded),
+                                            );
+                                            setState(() {
+                                              // Toggle the clicked state of the tile
+                                              if (clickedTiles
+                                                  .contains(index)) {
+                                                clickedTiles.remove(index);
+                                              } else {
+                                                clickedTiles.add(index);
+                                              }
+                                            });
+                                          },
+                                          title: Text(
+                                            '${_studentApplications[index]['accomodationName']}',
+                                            style: TextStyle(
+                                              fontWeight:
+                                                  clickedTiles.contains(index)
+                                                      ? FontWeight.normal
+                                                      : FontWeight.bold,
                                             ),
                                           ),
+                                          subtitle: Text(
+                                            'Your Application have been rejected due to the following reasons ${_studentApplications[index]['landlordMessage']} ',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          trailing: Icon(
+                                              Icons.arrow_forward_ios_rounded),
                                         )
                                       ],
                                     ),

@@ -1,10 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, deprecated_member_use, curly_braces_in_flow_control_structures
 import 'package:dio/dio.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:file_picker/file_picker.dart';
@@ -165,8 +162,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
     }
   }
 
-  Future<void> _sentSignedContract(
-      BuildContext context, String roomType, String fieldOfStudy) async {
+  Future<void> _sentSignedContract(BuildContext context) async {
     try {
       // Show a loading dialog
       showDialog(
@@ -203,8 +199,8 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
         'IdDocument': _userData?['IdDocument'] ?? '',
         'studentId': _userData?['studentId'] ?? '',
         'studentNumber': _userData?['studentNumber'] ?? '',
-        'roomType': roomType,
-        'fieldOfStudy': fieldOfStudy,
+        'roomType': _userData?['roomType'] ?? '',
+        'fieldOfStudy': _userData?['fieldOfStudy'] ?? '',
         // Add more details as needed
       };
 
@@ -336,7 +332,8 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
         MediaQuery.of(context).size.width < 550 ? double.infinity : 400;
     return Scaffold(
         appBar: AppBar(
-          title: Text('${widget.studentApplicationData['accomodationName']}'),
+          title: Text(
+              '${widget.studentApplicationData['accomodationName'] ?? 'n/a'}'),
           centerTitle: true,
           foregroundColor: Colors.white,
           backgroundColor: Colors.blue,
@@ -363,13 +360,6 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold))),
                             ),
-                            if (widget.studentApplicationData['status'] == true)
-                              TableCell(
-                                child: Center(
-                                    child: Text('Contract',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold))),
-                              ),
                             TableCell(
                               child: Center(
                                   child: Text('Status',
@@ -389,27 +379,6 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                     'N/A'),
                               )),
                             ),
-                            if (widget.studentApplicationData['status'] == true)
-                              TableCell(
-                                child: Center(
-                                    child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () {
-                                        final String downloadUrl =
-                                            widget.studentApplicationData[
-                                                    'contract'] ??
-                                                '';
-                                        downloadFile(context, downloadUrl);
-                                      },
-                                      child: Icon(Icons.download,
-                                          color: Colors.blue, size: 40),
-                                    ),
-                                    Text('Download contract')
-                                  ],
-                                )),
-                              ),
                             TableCell(
                               child: Center(
                                   child: Text(
@@ -476,32 +445,85 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                         SizedBox(
                                           height: 10,
                                         ),
-                                        widget.studentApplicationData[
-                                                    'registrationPreference'] ??
-                                                '' == 'Contact Registration'
-                                            ? Text(
-                                                "Hi, ${_userData?['name'] ?? ''} Your application have been accepted for registration purposes,you have 2days to register please note that ${widget.studentApplicationData['accomodationName']} prefers contact registrations.Should you fail to arrive in 2days your room will be placed to another applicant",
-                                                maxLines: 100,
-                                              )
-                                            : Text(
-                                                'Hi, ${_userData?['name'] ?? ''} Your application have been accepted you can now register by downloading the contract on the table above and sign all the required field. \nRegistration Instructions: ${widget.studentApplicationData['landlordMessage']}',
-                                                maxLines: 100,
-                                              ),
+                                        Text(
+                                          'Hi, ${_userData?['name'] ?? ''} Your application have been accepted you can now register by downloading the contract on the received email and sign all the required field. \n\n\n\nRegistration Instructions: ${widget.studentApplicationData['landlordMessage']}',
+                                          maxLines: 100,
+                                        ),
                                       ],
                                     )),
                                 SizedBox(
                                   height: 20,
                                 ),
-                                Container(
-                                  width: buttonWidth,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
+                                if (_userData?['registered'] == false)
+                                  Column(
                                     children: [
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          _pickSignedContract(context);
+                                      Container(
+                                        width: buttonWidth,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                _pickSignedContract(context);
+                                              },
+                                              style: ButtonStyle(
+                                                  shape:
+                                                      MaterialStatePropertyAll(
+                                                          RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          5))),
+                                                  foregroundColor:
+                                                      MaterialStatePropertyAll(
+                                                          Colors.white),
+                                                  backgroundColor:
+                                                      MaterialStatePropertyAll(
+                                                          Colors.blue),
+                                                  minimumSize:
+                                                      MaterialStatePropertyAll(
+                                                          Size(60, 50))),
+                                              child: Text('Choose file'),
+                                            ),
+                                            SizedBox(
+                                              width: 5,
+                                            ),
+                                            Expanded(
+                                              child: TextField(
+                                                readOnly:
+                                                    true, // Prevent manual editing
+                                                controller: TextEditingController(
+                                                    text: basename(
+                                                        _pdfSignedContractPath)),
+                                                decoration: InputDecoration(
+                                                  disabledBorder:
+                                                      OutlineInputBorder(),
+                                                  focusColor: Color.fromARGB(
+                                                      255, 230, 230, 230),
+                                                  fillColor: Color.fromARGB(
+                                                      255, 230, 230, 230),
+                                                  filled: true,
+                                                  hintText:
+                                                      'Upload your signed contract',
+                                                ),
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: 20,
+                                      ),
+                                      ElevatedButton.icon(
+                                        onPressed: () async {
+                                          await _sentSignedContract(context);
                                         },
+                                        icon: Icon(
+                                          Icons.done,
+                                          color: Colors.white,
+                                        ),
+                                        label: Text('Register'),
                                         style: ButtonStyle(
                                             shape: MaterialStatePropertyAll(
                                                 RoundedRectangleBorder(
@@ -516,68 +538,10 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                                     Colors.blue),
                                             minimumSize:
                                                 MaterialStatePropertyAll(
-                                                    Size(60, 50))),
-                                        child: Text('Choose file'),
-                                      ),
-                                      SizedBox(
-                                        width: 5,
-                                      ),
-                                      Expanded(
-                                        child: TextField(
-                                          readOnly:
-                                              true, // Prevent manual editing
-                                          controller: TextEditingController(
-                                              text: basename(
-                                                  _pdfSignedContractPath)),
-                                          decoration: InputDecoration(
-                                            disabledBorder:
-                                                OutlineInputBorder(),
-                                            focusColor: Color.fromARGB(
-                                                255, 230, 230, 230),
-                                            fillColor: Color.fromARGB(
-                                                255, 230, 230, 230),
-                                            filled: true,
-                                            hintText:
-                                                'Upload your signed contract',
-                                          ),
-                                        ),
+                                                    Size(double.infinity, 50))),
                                       )
                                     ],
                                   ),
-                                ),
-                                SizedBox(
-                                  height: 20,
-                                ),
-                                ElevatedButton.icon(
-                                  onPressed: () async {
-                                    for (int i = 0;
-                                        i < _studentApplications.length;
-                                        i++)
-                                      await _sentSignedContract(
-                                          context,
-                                          _studentApplications[i]['roomType'] ??
-                                              '',
-                                          _studentApplications[i]
-                                                  ['fieldOfStudy'] ??
-                                              '');
-                                  },
-                                  icon: Icon(
-                                    Icons.done,
-                                    color: Colors.white,
-                                  ),
-                                  label: Text('Register'),
-                                  style: ButtonStyle(
-                                      shape: MaterialStatePropertyAll(
-                                          RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(5))),
-                                      foregroundColor: MaterialStatePropertyAll(
-                                          Colors.white),
-                                      backgroundColor:
-                                          MaterialStatePropertyAll(Colors.blue),
-                                      minimumSize: MaterialStatePropertyAll(
-                                          Size(double.infinity, 50))),
-                                )
                               ],
                             )
                     ],
@@ -624,7 +588,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
       print('Error downloading file: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error downloading file'),
+          content: Text(e.toString()),
         ),
       );
     }

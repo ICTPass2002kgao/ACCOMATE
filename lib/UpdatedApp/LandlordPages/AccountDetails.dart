@@ -111,6 +111,25 @@ class _AccountDetailsState extends State<AccountDetails> {
                                   ),
                                 ),
                                 SizedBox(height: 5),
+                                _userData!['accomodationStatus'] == true
+                                    ? Row(
+                                        children: [
+                                          Text('Status:'),
+                                          Text('Approved',
+                                              style: TextStyle(
+                                                  color: Colors.green))
+                                        ],
+                                      )
+                                    : Row(
+                                        children: [
+                                          Text('Status:'),
+                                          Text(
+                                            'Pending..',
+                                            style:
+                                                TextStyle(color: Colors.grey),
+                                          )
+                                        ],
+                                      ),
                                 Row(
                                   children: [
                                     Text('Address: ',

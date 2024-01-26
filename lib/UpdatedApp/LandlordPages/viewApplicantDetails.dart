@@ -1,14 +1,17 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, deprecated_member_use
 
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:http/http.dart' as http;
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server/gmail.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ViewApplicantDetails extends StatefulWidget {
@@ -24,7 +27,6 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
 
   bool status = true;
   late User _user;
-  String selectedRoomsType = '';
 
   Map<String, dynamic>? _userData;
   // Make _userData nullable
@@ -77,6 +79,10 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
 
         // Add more details as needed
       });
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(studentUserId)
+          .update({'applicationReviewed': true});
 
       print('email sent successfully');
 
@@ -102,7 +108,7 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                       color: Colors.green,
                       width: 80,
                       height: 80,
-                      child: Icon(Icons.done, color: Colors.white, size: 20),
+                      child: Icon(Icons.done, color: Colors.white, size: 35),
                     ),
                   ),
                   SizedBox(height: 20),
@@ -132,11 +138,12 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                         _userData?['email'] ?? '', // Student's email
                         'Response sent successfully',
                         'Hi ${_userData?['accomodationName']} landlord, \nYour application was sent successfully to ${widget.studentApplicationData['name']}');
-                    await sendEmail(
+                    await sendEmailWithInlinePdf(
                         widget
                             .studentApplicationData['email'], // Student's email
                         'Approved Application',
-                        'Hi ${widget.studentApplicationData['name']} , \nYour application from ${_userData?['accomodationName']} have been approved and accepted');
+                        'Hi ${widget.studentApplicationData['name']} , \nYour application from ${_userData?['accomodationName']} have been approved and accepted, please download the following contract and sign it\nContract: ',
+                        _userData?['contract']);
                   } else {
                     await sendEmail(
                         _userData?['email'] ?? '', // Student's email
@@ -203,6 +210,24 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
 
   final HttpsCallable sendEmailCallable =
       FirebaseFunctions.instance.httpsCallable('sendEmail');
+
+  Future<void> sendEmailWithInlinePdf(String recipientEmail, String subject,
+      String body, Uint8List fileBytes) async {
+    final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
+    final message = Message()
+      ..from = Address('accomate33@gmail.com', 'Accomate')
+      ..recipients.add(recipientEmail)
+      ..subject = subject
+      ..html = body +
+          '<br><br><b>Attachment: </b><br><img src="data:application/pdf;base64,${base64Encode(fileBytes)}">';
+
+    try {
+      await send(message, smtpServer);
+      print('Email sent successfully');
+    } catch (e) {
+      print('Error sending email: $e');
+    }
+  }
 
   Future<void> sendEmail(String to, String subject, String body) async {
     try {
@@ -495,57 +520,31 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                   ),
                 ),
                 SizedBox(
-                  height: 5,
-                ),
-                Container(
-                  width: buttonWidth,
-                  child: ExpansionTile(
-                    title: Text('Select registration preference',
-                        style: TextStyle(
-                            color: selectedregistrationPreference.isEmpty
-                                ? Colors.red
-                                : Colors.black)),
-                    children: registrationPreference
-                        .map((paramRegistrationPreference) {
-                      return RadioListTile<String>(
-                        title: Text(paramRegistrationPreference),
-                        value: paramRegistrationPreference,
-                        groupValue: selectedregistrationPreference,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedregistrationPreference = value!;
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ),
-                SizedBox(
                   height: 20,
                 ),
 
                 status == true
                     ? Column(
                         children: [
-                          selectedregistrationPreference ==
-                                  'Online Registration'
-                              ? Text(
-                                  'Alert student on how to register and all the field they should sign from the contract.')
-                              : Text(
-                                  'Please note that student have 2days to come for contact registration, \n\nThank you!!'),
-                          selectedregistrationPreference ==
-                                  'Online Registration'
-                              ? Container(
-                                  width: buttonWidth,
-                                  child: TextField(
-                                    maxLines: 4,
-                                    controller: messageController,
-                                    decoration: InputDecoration(
-                                        border: OutlineInputBorder(),
-                                        labelText: "Registration Instructions"),
-                                  ),
-                                )
-                              : Container(),
+                          Text(
+                            'Alert student on how to register and all the field they should sign from the contract.',
+                            style: TextStyle(
+                              color: Colors.grey,
+                            ),
+                          ),
+                          SizedBox(
+                            height: 25,
+                          ),
+                          Container(
+                            width: buttonWidth,
+                            child: TextField(
+                              maxLines: 4,
+                              controller: messageController,
+                              decoration: InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  labelText: "Registration Instructions"),
+                            ),
+                          )
                         ],
                       )
                     : Column(

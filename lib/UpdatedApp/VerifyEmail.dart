@@ -2,7 +2,6 @@
 
 import 'dart:io';
 
-import 'package:api_com/advanced_details.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -155,15 +154,12 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
           _pdfIdDocument = downloadIDURL;
         });
       }
-
+      String? user = FirebaseAuth.instance.currentUser!.email;
       // Save user data to Firestore
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc("${widget.name}'s Unique ID(${userId})")
-          .set({
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
         'name': widget.name,
         'surname': widget.surname,
-        'email': widget.email,
+        'email': user,
         'role': isLandlord,
         'university': widget.university,
         'contactDetails': widget.contactDetails,
@@ -174,6 +170,12 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
         'IdDocument': _pdfIdDocument,
         'studentNumber': widget.studentNumber,
         'studentId': widget.studentId,
+        'roomType': '',
+        'fieldOfStudy': '',
+        'registered': false,
+        'registeredAccomodation': '',
+        'registrationReviewed': false,
+        'applicationReviewed': false,
         // Add more user data as needed
       });
       sendEmail(
@@ -216,8 +218,11 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
               ));
       // Show success dialog
     } on FirebaseException catch (e) {
-      // Handle registration error
-      Navigator.pop(context); // Dismiss loading indicator
+      FirebaseException(plugin: "").message!.contains('email badly format')
+          ? SnackBar(content: Text('data'))
+          :
+          // Handle registration error
+          Navigator.pop(context); // Dismiss loading indicator
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -267,122 +272,127 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
   @override
   Widget build(BuildContext context) {
     double buttonWidth =
-        MediaQuery.of(context).size.width < 550 ? double.infinity : 400;
+        MediaQuery.of(context).size.width < 550 ? double.infinity : 450;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Registration Page(3/3)'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-                child:
-                    Icon(Icons.verified_user, color: Colors.blue, size: 130)),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(
-                6,
-                (index) => SizedBox(
-                  width: 50,
-                  child: TextField(
-                    controller: otpControllers[index],
-                    textAlign: TextAlign.center,
-                    keyboardType: TextInputType.number,
-                    // Hide the entered digits
-                    maxLength: 1,
-                    onChanged: (value) {
-                      // Handle OTP input
-                      if (index < 5 && value.isNotEmpty) {
-                        FocusScope.of(context)
-                            .nextFocus(); // Move focus to the next TextField
-                      }
-                    },
-                    decoration: InputDecoration(
-                      counterText: '', // Hide the default character counter
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.blue),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.blue),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    sendEmail(
-                        widget.email, // Student's email
-                        'Verification Code',
-                        widget.gender == 'Male'
-                            ? 'Hello Mr ${widget.surname},\nWe are aware that you are trying to register your account on accomate App\nHere  is your verification code: ${widget.verificationCode}'
-                            : 'Hello Mrs ${widget.surname},\nWe are aware that you are trying to register your account on accomate App\nHere  is your verification code: ${widget.verificationCode}');
-                  },
-                  child: Text(
-                    'Resend code',
-                    style: TextStyle(
-                        fontSize: 15,
-                        decoration: TextDecoration.underline,
-                        decorationColor: Colors.blue,
-                        color: Colors.blue[900]),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                String enteredOTP = otpControllers
-                    .map((controller) => controller.text)
-                    .join('');
-
-                if (enteredOTP == widget.verificationCode) {
-                  checkStudentValues();
-                } else {
-                  // Show an error message or handle incorrect OTP
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text('Error'),
-                      content:
-                          Text('Incorrect Verification. Please try again.'),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: Text('OK'),
+      body: Container(
+        width: buttonWidth,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                  child:
+                      Icon(Icons.verified_user, color: Colors.blue, size: 130)),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(
+                  6,
+                  (index) => SizedBox(
+                    width: 50,
+                    child: TextField(
+                      controller: otpControllers[index],
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      // Hide the entered digits
+                      maxLength: 1,
+                      onChanged: (value) {
+                        // Handle OTP input
+                        if (index < 5 && value.isNotEmpty) {
+                          FocusScope.of(context)
+                              .nextFocus(); // Move focus to the next TextField
+                        }
+                      },
+                      decoration: InputDecoration(
+                        counterText: '', // Hide the default character counter
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      ],
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
                     ),
-                  );
-                }
-              },
-              style: ButtonStyle(
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5))),
-                  foregroundColor: MaterialStatePropertyAll(Colors.blue),
-                  backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                  minimumSize: MaterialStatePropertyAll(Size(buttonWidth, 50))),
-              child: Text(
-                'Confirm Account',
-                style: TextStyle(color: Colors.white),
+                  ),
+                ),
               ),
-            ),
-          ],
+              SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      sendEmail(
+                          widget.email, // Student's email
+                          'Verification Code',
+                          widget.gender == 'Male'
+                              ? 'Hello Mr ${widget.surname},\nWe are aware that you are trying to register your account on accomate App\nHere  is your verification code: ${widget.verificationCode}'
+                              : 'Hello Mrs ${widget.surname},\nWe are aware that you are trying to register your account on accomate App\nHere  is your verification code: ${widget.verificationCode}');
+                    },
+                    child: Text(
+                      'Resend code',
+                      style: TextStyle(
+                          fontSize: 15,
+                          decoration: TextDecoration.underline,
+                          decorationColor: Colors.blue,
+                          color: Colors.blue[900]),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  String enteredOTP = otpControllers
+                      .map((controller) => controller.text)
+                      .join('');
+
+                  if (enteredOTP == widget.verificationCode) {
+                    checkStudentValues();
+                  } else {
+                    // Show an error message or handle incorrect OTP
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text('Error'),
+                        content:
+                            Text('Incorrect Verification. Please try again.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: Text('OK'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                },
+                style: ButtonStyle(
+                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5))),
+                    foregroundColor: MaterialStatePropertyAll(Colors.white),
+                    backgroundColor: MaterialStatePropertyAll(Colors.blue),
+                    minimumSize:
+                        MaterialStatePropertyAll(Size(buttonWidth, 50))),
+                child: Text(
+                  'Confirm Account',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,5 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 import 'package:api_com/UpdatedApp/LandlordPage.dart';
+import 'package:api_com/UpdatedApp/admin-page.dart';
+import 'package:api_com/UpdatedApp/help-page.dart';
 import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:api_com/UpdatedApp/student_page.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -28,16 +30,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      themeMode: ThemeMode.dark,
+      themeMode: ThemeMode.light,
       debugShowCheckedModeBanner: false,
       home: LoginPage(),
       routes: {
         '/login': (context) => LoginPage(),
         '/LandlordPage': (context) => LandlordPage(),
         '/studentPage': (context) => StudentPage(),
-        // '/studentRegistration': (context) => StudentRegistrationPage(),
-        // '/contactInfo': (context) => ContactInfoPage(),
+        '/adminPage': (context) => AdminPage(),
+        '/helpCenter': (context) => HelpPage()
       },
     );
   }
 }
+//n

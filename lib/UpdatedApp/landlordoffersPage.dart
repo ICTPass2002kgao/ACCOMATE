@@ -226,7 +226,7 @@ class _OffersPageState extends State<OffersPage> {
                                     sendEmail(
                                         widget.landlordEmail, // Student's email
                                         'Verification Code',
-                                        'Goodday ${widget.landlordEmail} landlord, \nThis is your verification codes: ${verificationCode} please verify it on the app.');
+                                        'Goodday ${widget.accomodationName} landlord, \nThis is your verification codes: ${verificationCode} please verify it on the app.');
                                     _verifyEmail();
                                   },
                                   child: Text('Resend'),
@@ -259,6 +259,7 @@ class _OffersPageState extends State<OffersPage> {
   }
 
   bool isLandlord = true;
+  bool status = false;
   void _registerUserToFirebase() async {
     List<String> images = pickedImages.map((file) => file.path).toList();
     try {
@@ -300,15 +301,15 @@ class _OffersPageState extends State<OffersPage> {
 
       // Step 4: Send verification email
 
+      String? user = FirebaseAuth.instance.currentUser!.email;
+
       String userId = userCredential.user!.uid;
       // Step 5: Store additional user data in Firestore
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc("${widget.accomodationName}'s Unique ID($userId)")
-          .set({
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'accomodationStatus': false,
         'accomodationName': widget.accomodationName,
         'location': widget.location,
-        'email': widget.landlordEmail,
+        'email': user,
         'role': isLandlord,
         'selectedOffers': selectedOffers,
         'selectedUniversity': selectedUniversity,
@@ -334,9 +335,14 @@ class _OffersPageState extends State<OffersPage> {
       //   ),
       // );
       sendEmail(
+          'accomate33@gmail.com', // Student's email
+          'Review Accomodation',
+          'Goodday Accomate Review officer, \nYou have a new review request from ${widget.accomodationName}.\n\n\n\n\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
+
+      sendEmail(
           widget.landlordEmail, // Student's email
           'Successful Account',
-          'Goodday ${widget.accomodationName} landlord, \nYour account have been registered successfully proceed to login.\n\n\n\nBest Regards\nYours Accomate');
+          'Goodday ${widget.accomodationName} landlord, \nYour account have been registered successfully,Please note that your accomodation will go under review for verification you will get further communication soon.\n\n\n\n\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
 
       showDialog(
           context: context,
@@ -420,11 +426,9 @@ class _OffersPageState extends State<OffersPage> {
   Future<void> pickImages() async {
     List<XFile>? pickedFiles = await _imagePicker.pickMultiImage();
 
-    if (pickedFiles != null) {
-      setState(() {
-        pickedImages = pickedFiles;
-      });
-    }
+    setState(() {
+      pickedImages = pickedFiles;
+    });
   }
 
   Future<List<String>> uploadImagesToFirebaseStorage(
@@ -472,11 +476,8 @@ class _OffersPageState extends State<OffersPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
-                    child: Icon(
-                      Icons.home_work_rounded,
-                      size: 150,
-                      color: Colors.blue,
-                    ),
+                    child: Image.asset('assets/icon.jpg',
+                        height: 150, width: double.infinity),
                   ),
                   //usesTransport
 

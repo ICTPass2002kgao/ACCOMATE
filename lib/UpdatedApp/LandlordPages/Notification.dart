@@ -17,6 +17,7 @@ class _NotificationsState extends State<Notifications>
     with SingleTickerProviderStateMixin {
   bool isLoading = true;
   List<Map<String, dynamic>> _studentRegistration = [];
+  List<Map<String, dynamic>> _LandlordMessages = [];
   List<Map<String, dynamic>> _studentApplications = [];
   late TabController _tabController;
   bool isTileClicked = false; // State to track if a ListTile is clicked
@@ -142,23 +143,24 @@ class _NotificationsState extends State<Notifications>
                     controller: _tabController,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(left: 16, right: 16),
+                        padding: const EdgeInsets.only(left: 1, right: 1),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // for (Map<String, dynamic> studentApplication
-                            //     in _studentApplications)
-
-                            Column(
-                              children: [
-                                for (int index = 0;
-                                    index < _studentApplications.length;
-                                    index++)
-                                  Container(
-                                    child: Card(
-                                      color: Color.fromARGB(255, 243, 243, 243),
-                                      elevation: 4,
+                            //     in _studentAppcations)
+                            for (int index = 0;
+                                index < _studentApplications.length;
+                                index++)
+                              if (_studentApplications[index]
+                                      ['applicationReviewed'] ==
+                                  false)
+                                Column(
+                                  children: [
+                                    Container(
                                       child: ListTile(
+                                        tileColor:
+                                            Color.fromARGB(179, 211, 211, 211),
                                         onTap: () {
                                           Navigator.push(
                                             context,
@@ -191,10 +193,9 @@ class _NotificationsState extends State<Notifications>
                                         trailing: Icon(
                                             Icons.arrow_forward_ios_rounded),
                                       ),
-                                    ),
-                                  )
-                              ],
-                            )
+                                    )
+                                  ],
+                                )
                           ],
                         ),
                       ),

@@ -4,12 +4,8 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:api_com/UpdatedApp/VerifyEmail.dart';
-import 'package:api_com/UpdatedApp/login_page.dart';
-import 'package:api_com/UpdatedApp/student_page.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -97,8 +93,8 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
           widget.email, // Student's email
           'Verification Code',
           widget.gender == 'Male'
-              ? 'Hello Mr ${widget.surname},\nWe are aware that you are trying to register your account with accomate\nHere  is your verification code: $verificationCode'
-              : 'Hello Mrs ${widget.surname},\nWe are aware that you are trying to register your account with accomate\nHere  is your verification code: $verificationCode');
+              ? 'Hello Mr ${widget.surname},\nWe are aware that you are trying to register your account with accomate\nHere  is your verification code: $verificationCode\n\n\n\n\n\n\n\nBest Regards\nYours Accomate'
+              : 'Hello Mrs ${widget.surname},\nWe are aware that you are trying to register your account with accomate\nHere  is your verification code: $verificationCode\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
       showDialog(
         barrierDismissible: false,
         context: context,
@@ -278,11 +274,8 @@ class _StudentFurtherRegisterState extends State<StudentFurtherRegister> {
               child: Column(
                 children: [
                   Center(
-                    child: Icon(
-                      Icons.person_add_alt_rounded,
-                      size: 150,
-                      color: Colors.blue,
-                    ),
+                    child: Image.asset('assets/icon.jpg',
+                        height: 150, width: double.infinity),
                   ),
                   SizedBox(
                     height: 20,
