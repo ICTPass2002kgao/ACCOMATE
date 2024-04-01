@@ -26,10 +26,8 @@ class _AdminPageState extends State<AdminPage>
   }
 
   Future<void> _loadLandlordData() async {
-    QuerySnapshot landlordSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .where('role', isEqualTo: true)
-        .get();
+    QuerySnapshot landlordSnapshot =
+        await FirebaseFirestore.instance.collection('Landlords').get();
 
     List<Map<String, dynamic>> landlordsData = [];
 
@@ -393,65 +391,69 @@ class _AdminPageState extends State<AdminPage>
         ),
         backgroundColor: Colors.blue,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TabBar(
-            labelColor: Colors.blue,
-            indicatorColor: Colors.blue,
-            controller: _tabController,
-            tabs: [
-              Tab(text: 'Accommodations'),
-              Tab(text: 'Houses'),
-            ],
-          ),
-          Expanded(
-            child: TabBarView(
-              physics: NeverScrollableScrollPhysics(),
+      body: Container(
+        height: double.infinity,
+        color: Colors.blue[100],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TabBar(
+              labelColor: Colors.blue,
+              indicatorColor: Colors.blue,
               controller: _tabController,
-              children: [
-                SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_landlordsData.any(
-                        (landlord) => landlord['accomodationType'] == false,
-                      ))
-                        SingleChildScrollView(
-                            child: Column(
-                          children: [
-                            for (Map<String, dynamic> landlordData
-                                in _landlordsData)
-                              if (landlordData['accomodationType'] == false &&
-                                  landlordData['accomodationStatus'] == false)
-                                buildLandlordCard(landlordData),
-                          ],
-                        )),
-                    ],
-                  ),
-                ),
-                SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_landlordsData.any(
-                          (landlord) => landlord['accomodationType'] == true))
-                        Column(
-                          children: [
-                            for (Map<String, dynamic> landlordData
-                                in _landlordsData)
-                              if (landlordData['accomodationType'] == true &&
-                                  landlordData['accomodationStatus'] == false)
-                                buildLandlordCard(landlordData),
-                          ],
-                        )
-                    ],
-                  ),
-                )
+              tabs: [
+                Tab(text: 'Accommodations'),
+                Tab(text: 'Houses'),
               ],
             ),
-          ),
-        ],
+            Expanded(
+              child: TabBarView(
+                physics: NeverScrollableScrollPhysics(),
+                controller: _tabController,
+                children: [
+                  SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_landlordsData.any(
+                          (landlord) => landlord['accomodationType'] == false,
+                        ))
+                          SingleChildScrollView(
+                              child: Column(
+                            children: [
+                              for (Map<String, dynamic> landlordData
+                                  in _landlordsData)
+                                if (landlordData['accomodationType'] == false &&
+                                    landlordData['accomodationStatus'] == false)
+                                  buildLandlordCard(landlordData),
+                            ],
+                          )),
+                      ],
+                    ),
+                  ),
+                  SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_landlordsData.any(
+                            (landlord) => landlord['accomodationType'] == true))
+                          Column(
+                            children: [
+                              for (Map<String, dynamic> landlordData
+                                  in _landlordsData)
+                                if (landlordData['accomodationType'] == true &&
+                                    landlordData['accomodationStatus'] == false)
+                                  buildLandlordCard(landlordData),
+                            ],
+                          )
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

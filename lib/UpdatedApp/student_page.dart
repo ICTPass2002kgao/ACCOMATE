@@ -1,10 +1,8 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors, prefer_final_fields, sort_child_properties_last, use_function_type_syntax_for_parameters, use_build_context_synchronously, deprecated_member_use, avoid_print
 
 import 'package:api_com/UpdatedApp/StudentPages/HomePage.dart';
-import 'package:api_com/UpdatedApp/StudentPages/MessagesPage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/NotificationPage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/PeersonalPage.dart';
-import 'package:api_com/UpdatedApp/accomodation_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -80,7 +78,7 @@ class _StudentPageState extends State<StudentPage> {
   Map<String, dynamic>? _userData;
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
-        .collection('users')
+        .collection('Students')
         .doc(_user.uid)
         .get();
     setState(() {
@@ -150,21 +148,21 @@ class _StudentPageState extends State<StudentPage> {
       String studentUserId = _user.uid;
       String helpCenterId = '3MdElZpzxgbOFJMqgkt32NnQ4UQ2';
       await FirebaseFirestore.instance
-          .collection('users')
+          .collection('StudentAccounts')
           .doc(helpCenterId)
           .collection('studentHelpMessage')
           .doc(studentUserId)
           .set({
         'message': messageController.text,
         'userId': studentUserId,
-        'email': _userData?['email'],
-        'name': _userData?['name'],
-        'surname': _userData?['surname'],
+        'email': _userData?['email'] ?? '',
+        'name': _userData?['name'] ?? '',
+        'surname': _userData?['surname'] ?? '',
       });
       sendEmail(
-          'accomatehelpcenter@gmail.com', // Student's email
+          'accomatehelpcenter@gmail.com', // help center's email
           'Reported Issue',
-          'Goodday Accomate help center officer,\nYou have a there is an issue reported by ${_userData?['surname']} ${_userData?['name']}.Please try by all means to assist our user.\n\n\n\n\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
+          'Goodday Accomate help center officer,\nYou have a there is an issue reported by ${_userData?['surname'] ?? ''} ${_userData?['name'] ?? ''}.Please try by all means to assist our user.\n\n\n\n\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
 
       showDialog(
           context: context,
@@ -209,19 +207,23 @@ class _StudentPageState extends State<StudentPage> {
     return Scaffold(
         appBar: AppBar(
           foregroundColor: Colors.white,
-          title: Text('Hi ${_userData?['name'] ?? 'Loading'}'),
+          title: Text('Hello ${_userData?['name'] ?? 'Student'}'),
           centerTitle: true,
           backgroundColor: Colors.blue,
         ),
         bottomNavigationBar: BottomNavigationBar(
-            currentIndex: _index,
-            unselectedItemColor: Colors.white54,
-            selectedItemColor: Colors.white,
-            onTap: (value) {
-              setState(() {
-                _index = value;
-              });
-            },
+            type: BottomNavigationBarType.fixed,
+                onTap: (index) {
+                  setState(() {
+                     _index = index;
+                  });
+                },
+                currentIndex: _index,
+                backgroundColor: Colors.blue,
+                useLegacyColorScheme: false,
+                fixedColor: Colors.white,
+                unselectedItemColor: Colors.white70,
+           
             items: [
               BottomNavigationBarItem(
                 backgroundColor: Colors.blue,
@@ -236,13 +238,6 @@ class _StudentPageState extends State<StudentPage> {
                   Icons.notifications_active_outlined,
                 ),
                 label: 'Notifications',
-              ),
-              BottomNavigationBarItem(
-                backgroundColor: Colors.blue,
-                icon: Icon(
-                  Icons.message_outlined,
-                ),
-                label: 'Messages',
               ),
               BottomNavigationBarItem(
                 backgroundColor: Colors.blue,
@@ -609,6 +604,7 @@ class _StudentPageState extends State<StudentPage> {
                   leading: Icon(Icons.logout_outlined, color: Colors.white),
                   title: Text('Logout'),
                   onTap: () {
+                    Navigator.of(context).pop();
                     _showLogoutConfirmationDialog(context);
                   },
                   textColor: Colors.white,
@@ -628,86 +624,9 @@ class _StudentPageState extends State<StudentPage> {
       case 1:
         return NotificationPage();
       case 2:
-        return MessagesPage();
-      case 3:
         return PersonalPage();
       default:
         return Container(); // Handle other cases if needed
     }
-  }
-}
-
-class _DataSearch extends SearchDelegate<String> {
-  final List<Map<String, dynamic>> landlordsData;
-
-  _DataSearch(this.landlordsData);
-
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    return IconButton(
-      icon: AnimatedIcon(
-        color: Colors.black,
-        icon: AnimatedIcons.menu_arrow,
-        progress: transitionAnimation,
-      ),
-      onPressed: () {
-        close(context, '');
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    return _buildSearchResults();
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    return _buildSearchResults();
-  }
-
-  Widget _buildSearchResults() {
-    final filteredLandlords = landlordsData.where((landlord) {
-      final accommodationName =
-          landlord['accommodationName']?.toLowerCase() ?? '';
-      return accommodationName.contains(query.toLowerCase());
-    }).toList();
-
-    return ListView.builder(
-      itemCount: filteredLandlords.length,
-      itemBuilder: (context, index) {
-        final landlordData = filteredLandlords[index];
-        return ListTile(
-          title: Text(
-            landlordData['accommodationName'] ?? '',
-            style: TextStyle(color: Colors.black),
-          ),
-          onTap: () {
-            // Handle the selected search result
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AccomodationPage(
-                  landlordData: landlordData,
-                ),
-              ),
-            );
-            close(context, landlordData['accommodationName'] ?? '');
-          },
-        );
-      },
-    );
   }
 }

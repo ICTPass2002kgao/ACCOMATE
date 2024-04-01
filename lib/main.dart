@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
       home: LoginPage(),
       routes: {
         '/login': (context) => LoginPage(),
-        '/LandlordPage': (context) => LandlordPage(),
+        '/landlordPage': (context) => LandlordPage(),
         '/studentPage': (context) => StudentPage(),
         '/adminPage': (context) => AdminPage(),
         '/helpCenter': (context) => HelpPage()

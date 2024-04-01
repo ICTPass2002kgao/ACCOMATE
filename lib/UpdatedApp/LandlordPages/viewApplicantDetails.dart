@@ -1,18 +1,11 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, deprecated_member_use
 
-import 'dart:convert';
-import 'dart:typed_data';
-
-import 'package:dio/dio.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
-import 'package:path_provider/path_provider.dart';
 
 class ViewApplicantDetails extends StatefulWidget {
   final Map<String, dynamic> studentApplicationData;
@@ -35,11 +28,16 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
     super.initState();
     _user = FirebaseAuth.instance.currentUser!;
     _loadUserData();
+
+    FirebaseFirestore.instance
+        .collection('Students')
+        .doc(widget.studentApplicationData['userId'] ?? '')
+        .update({'applicationReviewed': true});
   }
 
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
-        .collection('users')
+        .collection('Landlords')
         .doc(_user.uid)
         .get();
     setState(() {
@@ -64,25 +62,19 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
       String landlordUserId = _userData?['userId'] ?? '';
 
       await FirebaseFirestore.instance
-          .collection('users')
+          .collection('Students')
           .doc(studentUserId)
           .collection('applicationsResponse')
           .doc(landlordUserId)
           .set({
         'landlordMessage': messageController.text,
         'accomodationName': _userData?['accomodationName'] ?? '',
-        'path': _userData?['contractPath'] ?? '',
-        'contract': _userData?['contract'] ?? '',
+
         'status': status,
         'userId': _userData?['userId'] ?? '',
-        'registrationPreference': selectedregistrationPreference,
 
         // Add more details as needed
       });
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(studentUserId)
-          .update({'applicationReviewed': true});
 
       print('email sent successfully');
 
@@ -93,6 +85,7 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
           height: 200,
           width: 250,
           child: AlertDialog(
+            backgroundColor: Colors.blue[100],
             title: Text(
               'Successful Response',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
@@ -120,7 +113,7 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
               ),
             ),
             actions: [
-              TextButton(
+              OutlinedButton(
                 onPressed: () async {
                   showDialog(
                     context: context, // Prevent user from dismissing the dialog
@@ -138,12 +131,6 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                         _userData?['email'] ?? '', // Student's email
                         'Response sent successfully',
                         'Hi ${_userData?['accomodationName']} landlord, \nYour application was sent successfully to ${widget.studentApplicationData['name']}');
-                    await sendEmailWithInlinePdf(
-                        widget
-                            .studentApplicationData['email'], // Student's email
-                        'Approved Application',
-                        'Hi ${widget.studentApplicationData['name']} , \nYour application from ${_userData?['accomodationName']} have been approved and accepted, please download the following contract and sign it\nContract: ',
-                        _userData?['contract']);
                   } else {
                     await sendEmail(
                         _userData?['email'] ?? '', // Student's email
@@ -155,18 +142,17 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                         'Rejected Application',
                         'Hi ${widget.studentApplicationData['name']} , \nYour application from ${_userData?['accomodationName']} have been rejected due to some reasons');
                   }
-                  Navigator.pushReplacementNamed(context, '/LandlordPage');
+                  Navigator.pushReplacementNamed(context, '/landlordPage');
 
                   print('email sent successfully');
                 },
-                child: Text('Submit'),
+                child: Text('Continue'),
                 style: ButtonStyle(
-                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5))),
-                    foregroundColor: MaterialStatePropertyAll(Colors.white),
-                    backgroundColor: MaterialStatePropertyAll(Colors.green),
-                    minimumSize:
-                        MaterialStatePropertyAll(Size(double.infinity, 50))),
+                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5))),
+                  foregroundColor: MaterialStatePropertyAll(Colors.white),
+                  backgroundColor: MaterialStatePropertyAll(Colors.blue),
+                ),
               ),
             ],
           ),
@@ -208,18 +194,20 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
     }
   }
 
-  final HttpsCallable sendEmailCallable =
-      FirebaseFunctions.instance.httpsCallable('sendEmail');
+  // final HttpsCallable sendEmailCallable =
+  //     FirebaseFunctions.instance.httpsCallable('sendEmail');
 
-  Future<void> sendEmailWithInlinePdf(String recipientEmail, String subject,
-      String body, Uint8List fileBytes) async {
+  Future<void> sendEmail(
+    String recipientEmail,
+    String subject,
+    String body,
+  ) async {
     final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
     final message = Message()
       ..from = Address('accomate33@gmail.com', 'Accomate')
       ..recipients.add(recipientEmail)
       ..subject = subject
-      ..html = body +
-          '<br><br><b>Attachment: </b><br><img src="data:application/pdf;base64,${base64Encode(fileBytes)}">';
+      ..html = body;
 
     try {
       await send(message, smtpServer);
@@ -229,55 +217,6 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
     }
   }
 
-  Future<void> sendEmail(String to, String subject, String body) async {
-    try {
-      final result = await sendEmailCallable.call({
-        'to': to,
-        'subject': subject,
-        'body': body,
-      });
-      print(result.data);
-    } catch (e) {
-      showDialog(
-        context: context,
-        builder: (context) => Container(
-          height: 350,
-          width: 250,
-          child: AlertDialog(
-            title: Text(
-              'Successful Response',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-            content: Text(
-              e.toString(),
-              style: TextStyle(fontSize: 16),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop;
-                },
-                child: Text('okay'),
-                style: ButtonStyle(
-                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5))),
-                    foregroundColor: MaterialStatePropertyAll(Colors.white),
-                    backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                    minimumSize:
-                        MaterialStatePropertyAll(Size(double.infinity, 50))),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-  }
-
-  String selectedregistrationPreference = '';
-  List<String> registrationPreference = [
-    'Contact Registration',
-    'Online Registration',
-  ];
   @override
   Widget build(BuildContext context) {
     double buttonWidth =
@@ -290,354 +229,251 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
           foregroundColor: Colors.white,
           backgroundColor: Colors.blue,
         ),
-        body: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Table(
-                  border: TableBorder.all(),
-                  children: [
-                    TableRow(
-                      children: [
-                        TableCell(
-                          child: Center(
-                              child: Text('Name',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text('Surname',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text('Gender',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text('Cell No',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text('Email Address',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text('University',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text('Proof Of Registration',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text('Id Document',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text('Identification Number',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text('Student Number',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text('Room Type',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text('Year of study',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                        ),
-                      ],
-                    ),
-                    TableRow(
-                      children: [
-                        TableCell(
-                          child: Center(
-                              child: Text(
-                                  widget.studentApplicationData['name'] ??
-                                      'Kgaogelo')),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text(
-                                  widget.studentApplicationData['surname'] ??
-                                      'Mthimkhulu')),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text(
-                                  widget.studentApplicationData['gender'] ??
-                                      'male')),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text(widget.studentApplicationData[
-                                      'contactDetails'] ??
-                                  'null')),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text(
-                                  widget.studentApplicationData['email'] ??
-                                      'null')),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text(
-                                  widget.studentApplicationData['university'] ??
-                                      'yyyy')),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: ElevatedButton.icon(
-                                  onPressed: () async {
-                                    final String downloadUrl =
-                                        widget.studentApplicationData[
-                                                'ProofOfRegistration'] ??
-                                            '';
-
-                                    downloadFile(context, downloadUrl,
-                                        "${widget.studentApplicationData['name'] ?? ''}'s Proof of registration");
-                                  },
-                                  icon:
-                                      Icon(Icons.download, color: Colors.blue),
-                                  label: Text(''))),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: ElevatedButton.icon(
-                                  onPressed: () async {
-                                    final String downloadUrl =
-                                        widget.studentApplicationData[
-                                                'IdDocument'] ??
-                                            '';
-
-                                    downloadFile(context, downloadUrl,
-                                        "${widget.studentApplicationData['name'] ?? ''}'s Id document");
-                                  },
-                                  icon:
-                                      Icon(Icons.download, color: Colors.blue),
-                                  label: Text(''))),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text(
-                                  widget.studentApplicationData['studentId'] ??
-                                      'yyyy')),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text(widget.studentApplicationData[
-                                      'studentNumber'] ??
-                                  'yyyy')),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text(
-                                  widget.studentApplicationData['roomType'] ??
-                                      'yyyy')),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text(widget
-                                      .studentApplicationData['fieldOfStudy'] ??
-                                  'yyyy')),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-
-                Container(
-                  width: buttonWidth,
-                  child: ExpansionTile(
-                    title: Text('Choose Status'),
+        body: Container(
+          color: Colors.blue[100],
+          height: double.infinity,
+          child: SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Table(
+                    border: TableBorder.all(),
                     children: [
-                      Row(
+                      TableRow(
                         children: [
-                          Radio(
-                            activeColor: Colors.green,
-                            fillColor: MaterialStatePropertyAll(Colors.green),
-                            value: true,
-                            groupValue: status,
-                            onChanged: (value) {
-                              setState(() {
-                                status = value!;
-                              });
-                            },
+                          TableCell(
+                            child: Center(
+                                child: Text('Name',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold))),
                           ),
-                          Text('Accept applicant'),
+                          TableCell(
+                            child: Center(
+                                child: Text(
+                                    widget.studentApplicationData['name'] ??
+                                        '')),
+                          ),
                         ],
                       ),
-                      SizedBox(width: 16),
-                      Row(
+                      TableRow(
                         children: [
-                          Radio(
-                            activeColor: Colors.red,
-                            fillColor: MaterialStatePropertyAll(Colors.red),
-                            value: false,
-                            groupValue: status,
-                            onChanged: (value) {
-                              setState(() {
-                                status = value!;
-                              });
-                            },
+                          TableCell(
+                            child: Center(
+                                child: Text('Surname',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold))),
                           ),
-                          Text('Reject applicant'),
+                          TableCell(
+                            child: Center(
+                                child: Text(
+                                    widget.studentApplicationData['surname'] ??
+                                        'Mthimkhulu')),
+                          ),
                         ],
                       ),
                     ],
                   ),
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-
-                status == true
-                    ? Column(
+                  Table(
+                    border: TableBorder.all(),
+                    children: [
+                      TableRow(
                         children: [
-                          Text(
-                            'Alert student on how to register and all the field they should sign from the contract.',
-                            style: TextStyle(
-                              color: Colors.grey,
-                            ),
+                          TableCell(
+                            child: Center(
+                                child: Text('Cellphone Number',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold))),
                           ),
-                          SizedBox(
-                            height: 25,
-                          ),
-                          Container(
-                            width: buttonWidth,
-                            child: TextField(
-                              maxLines: 4,
-                              controller: messageController,
-                              decoration: InputDecoration(
-                                  border: OutlineInputBorder(),
-                                  labelText: "Registration Instructions"),
-                            ),
-                          )
-                        ],
-                      )
-                    : Column(
-                        children: [
-                          Text(
-                              'Please provide the reason a student is rejected & let the student know that they can reApply if their prefered room is not available'),
-                          Container(
-                            width: buttonWidth,
-                            child: TextField(
-                              maxLines: 4,
-                              controller: messageController,
-                              decoration: InputDecoration(
-                                  border: OutlineInputBorder(),
-                                  labelText: "Rejected reason"),
-                            ),
+                          TableCell(
+                            child: Center(
+                                child: Text(widget.studentApplicationData[
+                                        'contactDetails'] ??
+                                    '')),
                           ),
                         ],
                       ),
-
-                SizedBox(
-                  height: 10,
-                ),
-
-                //Additional Message to student
-
-                ElevatedButton.icon(
-                  onPressed: () {
-                    _saveApplicationResponse();
-                  },
-                  icon: Icon(
-                    status == true ? Icons.done : Icons.delete,
-                    color: Colors.white,
+                      TableRow(
+                        children: [
+                          TableCell(
+                            child: Center(
+                                child: Text('Email Address',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold))),
+                          ),
+                          TableCell(
+                            child: Center(
+                                child: Text(
+                                    widget.studentApplicationData['email'] ??
+                                        'Mthimkhulu')),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  label: Text('Send Response'),
-                  style: ButtonStyle(
-                      shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5))),
-                      foregroundColor: MaterialStatePropertyAll(Colors.white),
-                      backgroundColor: MaterialStatePropertyAll(
-                          status == true ? Colors.green : Colors.red[300]),
-                      minimumSize:
-                          MaterialStatePropertyAll(Size(buttonWidth, 50))),
-                ),
-                SizedBox(
-                  width: 10,
-                )
-              ],
+                  Table(
+                    border: TableBorder.all(),
+                    children: [
+                      TableRow(
+                        children: [
+                          TableCell(
+                            child: Center(
+                                child: Text('University',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold))),
+                          ),
+                          TableCell(
+                            child: Center(
+                                child: Text(widget
+                                        .studentApplicationData['university'] ??
+                                    '')),
+                          ),
+                        ],
+                      ),
+                      TableRow(
+                        children: [
+                          TableCell(
+                            child: Center(
+                                child: Text('Type of room',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold))),
+                          ),
+                          TableCell(
+                            child: Center(
+                                child: Text(
+                                    widget.studentApplicationData['roomType'] ??
+                                        '')),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Table(
+                    border: TableBorder.all(),
+                    children: [
+                      TableRow(
+                        children: [
+                          TableCell(
+                            child: Center(
+                                child: Text('Year of study',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold))),
+                          ),
+                        ],
+                      ),
+                      TableRow(
+                        children: [
+                          TableCell(
+                            child: Center(
+                                child: Text(widget.studentApplicationData[
+                                        'YearOfStudy'] ??
+                                    '')),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(
+                    height: 20,
+                  ),
+
+                  Container(
+                    width: buttonWidth,
+                    child: ExpansionTile(
+                      title: Text('Choose Status'),
+                      children: [
+                        Row(
+                          children: [
+                            Radio(
+                              activeColor: Colors.green,
+                              fillColor: MaterialStatePropertyAll(Colors.green),
+                              value: true,
+                              groupValue: status,
+                              onChanged: (value) {
+                                setState(() {
+                                  status = value!;
+                                });
+                              },
+                            ),
+                            Text('Accept applicant'),
+                          ],
+                        ),
+                        SizedBox(width: 16),
+                        Row(
+                          children: [
+                            Radio(
+                              activeColor: Colors.red,
+                              fillColor: MaterialStatePropertyAll(Colors.red),
+                              value: false,
+                              groupValue: status,
+                              onChanged: (value) {
+                                setState(() {
+                                  status = value!;
+                                });
+                              },
+                            ),
+                            Text('Reject applicant'),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+
+                  if (status == false)
+                    Column(
+                      children: [
+                        Text(
+                            'Please provide the reason a student is rejected & let the student know that they can reApply if their prefered room is not available'),
+                        Container(
+                          width: buttonWidth,
+                          child: TextField(
+                            maxLines: 4,
+                            controller: messageController,
+                            decoration: InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: "Rejected reason"),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                  SizedBox(
+                    height: 10,
+                  ),
+
+                  //Additional Message to student
+
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      _saveApplicationResponse();
+                    },
+                    icon: Icon(
+                      status == true ? Icons.done : Icons.delete,
+                      color: Colors.white,
+                    ),
+                    label: Text('Send Response'),
+                    style: ButtonStyle(
+                        shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5))),
+                        foregroundColor: MaterialStatePropertyAll(Colors.white),
+                        backgroundColor: MaterialStatePropertyAll(
+                            status == true ? Colors.green : Colors.red[300]),
+                        minimumSize:
+                            MaterialStatePropertyAll(Size(buttonWidth, 50))),
+                  ),
+                  SizedBox(
+                    width: 10,
+                  )
+                ],
+              ),
             ),
           ),
         ));
-  }
-
-  Future<void> downloadFile(
-      BuildContext context, String downloadUrl, String fileName) async {
-    try {
-      // Check for storage permission
-      // var status = await Permission.storage.status;
-      // if (!status.isGranted) {
-      //   await Permission.storage.request();
-      // }
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        backgroundColor: Colors.blue,
-        content: Text('Downloading...', style: TextStyle(color: Colors.white)),
-        duration: Duration(seconds: 2),
-      ));
-      // Get the application documents directory
-      // Get the Downloads directory
-      Directory? downloadsDirectory = await getDownloadsDirectory();
-
-      if (downloadsDirectory != null) {
-        String savePath = '${downloadsDirectory.path}/${fileName}.pdf';
-
-        // Create a reference to the Firebase Storage file
-        Reference storageReference =
-            FirebaseStorage.instance.ref().child(downloadUrl);
-
-        // Download the file to the device
-        await Dio().download(storageReference.fullPath, savePath);
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.green,
-          content: Text('File downloaded successfully!',
-              style: TextStyle(color: Colors.white)),
-        ),
-      );
-    } catch (e) {
-      print('Error downloading file: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error downloading file'),
-        ),
-      );
-    }
   }
 }

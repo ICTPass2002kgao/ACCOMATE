@@ -14,30 +14,21 @@ class HelpPage extends StatefulWidget {
 class _HelpPageState extends State<HelpPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  void initState() {
+  void initState() async{
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
 
     _user = FirebaseAuth.instance.currentUser!;
-    _loadUserData();
+
+    await _loadStudentHelpIssues();
+    await _loadLandlordHelpIssues();
   }
 
   List<Map<String, dynamic>> _studentHelpMessages = [];
   List<Map<String, dynamic>> _landlordHelpMessages = [];
 
   late User _user;
-  Map<String, dynamic>? _userData;
-  Future<void> _loadUserData() async {
-    DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(_user.uid)
-        .get();
-    setState(() {
-      _userData = userDataSnapshot.data() as Map<String, dynamic>?;
-    });
-    await _loadStudentHelpIssues();
-    await _loadLandlordHelpIssues();
-  }
+
 
   Future<void> _loadStudentHelpIssues() async {
     try {
@@ -45,7 +36,7 @@ class _HelpPageState extends State<HelpPage>
       String helpCenterUserId = _user.uid;
 
       QuerySnapshot registrationSnapshot = await FirebaseFirestore.instance
-          .collection('users')
+          .collection('Students')
           .doc(helpCenterUserId)
           .collection('studentHelpMessage')
           .get();
@@ -121,7 +112,7 @@ class _HelpPageState extends State<HelpPage>
       String helpCenterUserId = _user.uid;
 
       QuerySnapshot registrationSnapshot = await FirebaseFirestore.instance
-          .collection('users')
+          .collection('Landlords')
           .doc(helpCenterUserId)
           .collection('landlordHelpMessage')
           .get();

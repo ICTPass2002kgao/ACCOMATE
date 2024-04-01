@@ -3,7 +3,6 @@
 import 'package:api_com/UpdatedApp/LandlordPages/AccountDetails.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/Notification.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/Home.dart';
-import 'package:api_com/UpdatedApp/LandlordPages/Messages.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -30,7 +29,7 @@ class _LandlordPageState extends State<LandlordPage> {
   Map<String, dynamic>? _userData;
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
-        .collection('users')
+        .collection('Landlords')
         .doc(_user.uid)
         .get();
     setState(() {
@@ -44,7 +43,7 @@ class _LandlordPageState extends State<LandlordPage> {
       barrierDismissible: false, // user must tap button for close
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.blue[100],
           title: Text('Logout',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           content: SingleChildScrollView(
@@ -52,7 +51,8 @@ class _LandlordPageState extends State<LandlordPage> {
               children: <Widget>[
                 Row(
                   children: [
-                    Icon(Icons.warning_outlined, color: Colors.red, size: 40),
+                    Icon(Icons.warning_outlined,
+                        color: Color.fromARGB(255, 167, 156, 60), size: 40),
                     SizedBox(width: 10),
                     Expanded(child: Text('Are you sure you want to logout?')),
                   ],
@@ -144,7 +144,7 @@ class _LandlordPageState extends State<LandlordPage> {
       String landlordUserId = _user.uid;
       String helpCenterId = '3MdElZpzxgbOFJMqgkt32NnQ4UQ2';
       await FirebaseFirestore.instance
-          .collection('users')
+          .collection('Landlords')
           .doc(helpCenterId)
           .collection('studentHelpMessage')
           .doc(landlordUserId)
@@ -197,7 +197,7 @@ class _LandlordPageState extends State<LandlordPage> {
   }
 
   int _currentIndex = 0;
-  List screens = [HomePage(), Notifications(), Messages(), AccountDetails()];
+  List screens = [HomePage(), Notifications(), AccountDetails()];
 
   List<int> _badgeValues = [10, 0, 10, 99];
 
@@ -555,6 +555,7 @@ class _LandlordPageState extends State<LandlordPage> {
                   leading: Icon(Icons.logout_outlined, color: Colors.white),
                   title: Text('Logout'),
                   onTap: () {
+                    Navigator.of(context).pop();
                     setState(() {
                       _showLogoutConfirmationDialog(context);
                     });
@@ -663,8 +664,6 @@ class _LandlordPageState extends State<LandlordPage> {
                 _buildNavigationRailDestination(Icons.notifications_active,
                     'Notification', _badgeValues[1]),
                 _buildNavigationRailDestination(
-                    Icons.mail, 'Messages', _badgeValues[2]),
-                _buildNavigationRailDestination(
                     Icons.person, 'Account Details', _badgeValues[3]),
               ],
             ),
@@ -685,11 +684,15 @@ class _LandlordPageState extends State<LandlordPage> {
       return Scaffold(
         body: screens[_currentIndex],
         bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          useLegacyColorScheme: false,
+          fixedColor: Colors.white,
+          backgroundColor: Colors.blue,
+          unselectedItemColor: Colors.white70,
           items: [
             _buildBottomNavigatorBar('Home', Icons.home),
             _buildBottomNavigatorBar(
                 'Notification', Icons.notifications_active),
-            _buildBottomNavigatorBar('Messages', Icons.mail),
             _buildBottomNavigatorBar('Account Details', Icons.person),
           ],
           currentIndex: _currentIndex,
