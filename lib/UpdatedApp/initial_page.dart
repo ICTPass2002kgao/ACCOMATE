@@ -47,7 +47,7 @@ class _StartPageState extends State<StartPage> {
                 height: 300,
                 child: Swiper(
                   itemBuilder: (BuildContext context, int index) {
-                    return Image.network(
+                    return Image.Asset(
                       images[index],
                       fit: BoxFit.cover,
                     );
