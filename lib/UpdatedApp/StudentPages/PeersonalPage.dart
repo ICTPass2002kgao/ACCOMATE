@@ -259,9 +259,8 @@ class _PersonalPageState extends State<PersonalPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Display the user image in a Card
               Container(
-                  width: double.infinity,
+                  color: Colors.blue[100],
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [

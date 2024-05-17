@@ -1,7 +1,12 @@
 // ignore_for_file: prefer_const_constructors
+import 'dart:io';
+
+import 'package:api_com/UpdatedApp/CreateAnAccount.dart';
 import 'package:api_com/UpdatedApp/LandlordPage.dart';
 import 'package:api_com/UpdatedApp/admin-page.dart';
+import 'package:api_com/UpdatedApp/either_landlord_or_student.dart';
 import 'package:api_com/UpdatedApp/help-page.dart';
+import 'package:api_com/UpdatedApp/initial_page.dart';
 import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:api_com/UpdatedApp/student_page.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -18,6 +23,9 @@ void main() async {
     messagingSenderId: '1088298291155',
     appId: '1:1088298291155:android:61a70167a445cb5f61a926',
   ));
+  HttpClient()
+    ..badCertificateCallback =
+        (X509Certificate cert, String host, int port) => true;
   runApp(
     MyApp(),
   );
@@ -26,19 +34,24 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       themeMode: ThemeMode.light,
       debugShowCheckedModeBanner: false,
-      home: LoginPage(),
+      home: StartPage(),
       routes: {
-        '/login': (context) => LoginPage(),
+        '/login': (context) => LoginPage(
+              userRole: '',
+            ),
         '/landlordPage': (context) => LandlordPage(),
         '/studentPage': (context) => StudentPage(),
         '/adminPage': (context) => AdminPage(),
-        '/helpCenter': (context) => HelpPage()
+        '/helpCenter': (context) => HelpPage(),
+        '/studentRegistration': (context) => StudentOrLandlord(
+              isLandlord: false,
+            ),
+        '/CreateAccountPage': (context) => RegistrationOption(),
       },
     );
   }

@@ -2,6 +2,7 @@
 
 import 'dart:math';
 
+import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -80,7 +81,7 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
         'fieldOfStudy': '',
         'appliedAccomodation': false,
         'applicationReviewed': false,
-        'role':'student'
+        'role': 'student'
         // Add more user data as needed
       });
       sendEmail(
@@ -93,7 +94,7 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
           context: context,
           barrierDismissible: false,
           builder: (BuildContext context) => AlertDialog(
-            backgroundColor: Colors.blue[100],
+                backgroundColor: Colors.blue[100],
                 title: Text(
                   'Successful Registration',
                   style: TextStyle(fontSize: 15),
@@ -106,8 +107,12 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
                         // Close the dialog
 
                         Navigator.of(context).pop();
-
-                        Navigator.pushReplacementNamed(context, '/login');
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: ((context) => LoginPage(
+                                      userRole: 'Student',
+                                    ))));
                       },
                       child: Text('Proceed'),
                       style: ButtonStyle(
@@ -150,7 +155,7 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
     }
   }
 
- final HttpsCallable sendEmailCallable =
+  final HttpsCallable sendEmailCallable =
       FirebaseFunctions.instance.httpsCallable('sendEmail');
 
   Future<void> sendEmail(String to, String subject, String body) async {

@@ -95,70 +95,72 @@ class _NotificationPageState extends State<NotificationPage>
               semanticsLabel: 'Loading...',
               semanticsValue: 'Loading...',
             ))
-          : Container(
-              height: double.infinity,
-              color: Colors.blue[100],
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Notifications',
-                        style: TextStyle(
-                            fontSize: 25, fontWeight: FontWeight.bold),
-                      ),
-                      for (int index = 0;
-                          index < _studentApplications.length;
-                          index++)
-                        if (_studentApplications[index]['status'] == true)
-                          Container(
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: Colors.blue)),
-                            child: Column(
-                              children: [
-                                ListTile(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            ViewApplicationResponses(
-                                          studentApplicationData:
-                                              _studentApplications[index],
+          : Flexible(
+              child: Container(
+                height: double.infinity,
+                color: Colors.blue[100],
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Notifications',
+                          style: TextStyle(
+                              fontSize: 25, fontWeight: FontWeight.bold),
+                        ),
+                        for (int index = 0;
+                            index < _studentApplications.length;
+                            index++)
+                          if (_studentApplications[index]['status'] == true)
+                            Container(
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: Colors.blue)),
+                              child: Column(
+                                children: [
+                                  ListTile(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              ViewApplicationResponses(
+                                            studentApplicationData:
+                                                _studentApplications[index],
+                                          ),
                                         ),
+                                      );
+                                      setState(() {
+                                        // Toggle the clicked state of the tile
+                                        if (clickedTiles.contains(index)) {
+                                          clickedTiles.remove(index);
+                                        } else {
+                                          clickedTiles.add(index);
+                                        }
+                                      });
+                                    },
+                                    title: Text(
+                                      '${_studentApplications[index]['accomodationName']}',
+                                      style: TextStyle(
+                                        fontWeight: clickedTiles.contains(index)
+                                            ? FontWeight.normal
+                                            : FontWeight.bold,
                                       ),
-                                    );
-                                    setState(() {
-                                      // Toggle the clicked state of the tile
-                                      if (clickedTiles.contains(index)) {
-                                        clickedTiles.remove(index);
-                                      } else {
-                                        clickedTiles.add(index);
-                                      }
-                                    });
-                                  },
-                                  title: Text(
-                                    '${_studentApplications[index]['accomodationName']}',
-                                    style: TextStyle(
-                                      fontWeight: clickedTiles.contains(index)
-                                          ? FontWeight.normal
-                                          : FontWeight.bold,
                                     ),
-                                  ),
-                                  subtitle: Text(
-                                    '${_studentApplications[index]['landlordMessage']} Your application was successfully accepted',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  trailing:
-                                      Icon(Icons.arrow_forward_ios_rounded),
-                                )
-                              ],
-                            ),
-                          )
-                    ]),
+                                    subtitle: Text(
+                                      '${_studentApplications[index]['landlordMessage']} Your application was successfully accepted',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    trailing:
+                                        Icon(Icons.arrow_forward_ios_rounded),
+                                  )
+                                ],
+                              ),
+                            )
+                      ]),
+                ),
               ),
             ),
     );

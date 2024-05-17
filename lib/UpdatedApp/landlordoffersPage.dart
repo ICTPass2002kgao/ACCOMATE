@@ -3,9 +3,10 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ class OffersPage extends StatefulWidget {
   final bool isLandlord;
   final String location;
   final XFile? imageFile;
+
   final Map<String, bool> selectedPaymentsMethods;
   const OffersPage({
     super.key,
@@ -44,7 +46,7 @@ class _OffersPageState extends State<OffersPage> {
   Map<String, bool> selectedOffers = {
     'Uncapped/Unlimited Wifi': false,
     'Study room': false,
-    'swimmingPool': false,
+    'Swimming Pool': false,
     'Free Laundry': false,
     'Sports Ground': false,
     'Gym': false,
@@ -63,11 +65,17 @@ class _OffersPageState extends State<OffersPage> {
 
   Map<String, bool> selectedUniversity = {
     'Vaal University of Technology': false,
-    'North West University(vaal campus)': false,
+    'North West University(Vaal campus)': false,
   };
 
+  Map<String, bool> selectedMonths = {
+    'Half Year': false,
+    'Full Year': false,
+  };
   bool usesTransport = true;
   bool isAccomodation = true;
+  bool isNsfasAccredited = false;
+  bool isFull = false;
 
   Future<void> _showAddOffersDialog() async {
     TextEditingController offerController = TextEditingController();
@@ -208,7 +216,7 @@ class _OffersPageState extends State<OffersPage> {
                               ],
                             ));
               },
-              child: Text('Confirm and register'),
+              child: Text('Verify'),
               style: ButtonStyle(
                 shape: MaterialStatePropertyAll(RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(5))),
@@ -224,15 +232,11 @@ class _OffersPageState extends State<OffersPage> {
 
   static String _generateRandomCode() {
     final random = Random();
-    // Generate a random 6-digit code
     return '${random.nextInt(999999).toString().padLeft(6, '0')}';
   }
 
   Future<void> sendEmail(
-    String recipientEmail,
-    String subject,
-    String body,
-  ) async {
+      String recipientEmail, String subject, String body) async {
     final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
     final message = Message()
       ..from = Address('accomate33@gmail.com', 'Accomate')
@@ -251,12 +255,13 @@ class _OffersPageState extends State<OffersPage> {
   final String verificationCode = _generateRandomCode();
   bool isLandlord = true;
   bool status = false;
+
   void _registerUserToFirebase() async {
     List<String> images = pickedImages.map((file) => file.path).toList();
     try {
       showDialog(
         context: context,
-        barrierDismissible: false, // Prevent user from dismissing the dialog
+        barrierDismissible: false,
         builder: (BuildContext context) {
           return Center(
             child: CircularProgressIndicator(),
@@ -267,11 +272,11 @@ class _OffersPageState extends State<OffersPage> {
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: widget.landlordEmail,
-        password: widget.password, // Set your desired password
+        password: widget.password,
       );
-      // Step 2: Upload the image to Firebase Storage
+
       Reference storageReference = FirebaseStorage.instance.ref().child(
-          'Accomodation Images/${widget.accomodationName}(${DateTime.now().toString()})');
+          'Accommodation Images/${widget.accomodationName}(${DateTime.now().toString()})');
       UploadTask uploadTask =
           storageReference.putFile(File(widget.imageFile!.path));
       TaskSnapshot storageTaskSnapshot =
@@ -280,14 +285,11 @@ class _OffersPageState extends State<OffersPage> {
 
       List<String> downloadUrls = await uploadImagesToFirebaseStorage(images);
 
-      // Step 4: Send verification email
-
       String? userEmail = FirebaseAuth.instance.currentUser!.email;
-
       String userId = userCredential.user!.uid;
-      // Step 5: Store additional user data in Firestore
+
       await FirebaseFirestore.instance.collection('Landlords').doc(userId).set({
-        'accomodationStatus': false,
+        'accommodationStatus': false,
         'accomodationName': widget.accomodationName,
         'location': widget.location,
         'email': userEmail,
@@ -298,23 +300,26 @@ class _OffersPageState extends State<OffersPage> {
         'selectedPaymentsMethods': widget.selectedPaymentsMethods,
         'transport availability': usesTransport,
         'contactDetails': widget.contactDetails,
-        'accomodationType': isAccomodation,
+        'accommodationType': isAccomodation,
         'verificationCode': verificationCode,
         'profilePicture': downloadUrl,
         'userId': userId,
         'roomType': selectedRoomTypes,
-        'displayedImages': downloadUrls
+        'displayedImages': downloadUrls,
+        'isNsfasAccredited': isNsfasAccredited,
+        'isFull': false,
       });
 
-      sendEmail(
-          'accomate33@gmail.com', // Admin email
-          'Review Accomodation',
-          'Goodday Accomate Review officer, \nYou have a new review request from ${widget.accomodationName}.\n\n\n\n\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
+      sendEmail('accomate33@gmail.com', 'Review Accommodation',
+          'Gooday Review officer, \nYou have a new review request from ${widget.accomodationName}.\n\n\n\n\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
 
-      sendEmail(
-          widget.landlordEmail, // Student's email
-          'Successful Account',
-          'Goodday ${widget.accomodationName} landlord, \nYour account have been registered successfully,Please note that your accomodation will go under review for verification you will get further communication soon.\n\n\n\n\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
+      sendEmail(widget.landlordEmail, 'Successful Account',
+          '''<p>Good day ${widget.accomodationName} landlord,</p>
+          
+          <p>Your account has been registered successfully. Please note that your accommodation will undergo a review for verification. You will receive further communication soon.</p>
+          
+           
+          <p>Best Regards,<br/>Yours Accomate</p>''');
 
       showDialog(
           context: context,
@@ -326,15 +331,17 @@ class _OffersPageState extends State<OffersPage> {
                   style: TextStyle(fontSize: 15),
                 ),
                 content: Text(
-                    'The account was registered successfully.You can now proceed to login'),
+                    'The account was registered successfully. You can now proceed to login.'),
                 actions: <Widget>[
                   OutlinedButton(
                       onPressed: () async {
-                        // Close the dialog
-
                         Navigator.of(context).pop();
-
-                        Navigator.pushReplacementNamed(context, '/login');
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: ((context) => LoginPage(
+                                      userRole: 'Landlord',
+                                    ))));
                       },
                       child: Text('Proceed'),
                       style: ButtonStyle(
@@ -348,11 +355,7 @@ class _OffersPageState extends State<OffersPage> {
 
       print(
           'Registration successful. Please check your email for verification.');
-
-      // You can also navigate to a different screen if needed
-      // For example, you can navigate to a home screen:
     } catch (e) {
-      // Handle registration errors
       showDialog(
         context: context,
         builder: (context) => Container(
@@ -360,7 +363,7 @@ class _OffersPageState extends State<OffersPage> {
           width: 250,
           child: AlertDialog(
             title: Text(
-              'Error occured',
+              'Error occurred',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             content: Text(
@@ -370,8 +373,6 @@ class _OffersPageState extends State<OffersPage> {
             actions: [
               OutlinedButton(
                   onPressed: () async {
-                    // Close the dialog
-
                     Navigator.of(context).pop();
                   },
                   child: Text('Retry'),
@@ -385,7 +386,6 @@ class _OffersPageState extends State<OffersPage> {
           ),
         ),
       );
-      // You might want to show an error message to the user
     }
   }
 
@@ -393,7 +393,9 @@ class _OffersPageState extends State<OffersPage> {
 
   final ImagePicker _imagePicker = ImagePicker();
   Future<void> pickImages() async {
-    List<XFile>? pickedFiles = await _imagePicker.pickMultiImage();
+    List<XFile>? pickedFiles = await _imagePicker.pickMultiImage(
+      limit: 5,
+    );
 
     setState(() {
       pickedImages = pickedFiles;
@@ -562,6 +564,45 @@ class _OffersPageState extends State<OffersPage> {
                     SizedBox(
                       height: 5,
                     ),
+                    ExpansionTile(
+                      title: Text('Select Accrediation state'),
+                      children: [
+                        Row(
+                          children: [
+                            Radio(
+                              activeColor: Colors.blue,
+                              value: false,
+                              groupValue: isNsfasAccredited,
+                              onChanged: (value) {
+                                setState(() {
+                                  isNsfasAccredited = value!;
+                                });
+                              },
+                            ),
+                            Text('Nsfas Accredited'),
+                          ],
+                        ),
+                        SizedBox(width: 10),
+                        Row(
+                          children: [
+                            Radio(
+                              activeColor: Colors.blue,
+                              value: true,
+                              groupValue: isNsfasAccredited,
+                              onChanged: (value) {
+                                setState(() {
+                                  isNsfasAccredited = value!;
+                                });
+                              },
+                            ),
+                            Text('Not Nsfas Accredited'),
+                          ],
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
 
                     ExpansionTile(
                       title: Text('Select Room types',
@@ -629,6 +670,24 @@ class _OffersPageState extends State<OffersPage> {
                           onChanged: (value) {
                             setState(() {
                               selectedUniversity[university] = value ?? false;
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    ExpansionTile(
+                      title: Text('Accomodated Months',
+                          style: TextStyle(color: Colors.black)),
+                      children: selectedMonths.keys.map((months) {
+                        return CheckboxListTile(
+                          title: Text(months),
+                          value: selectedMonths[months] ?? false,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedMonths[months] = value ?? false;
                             });
                           },
                         );
@@ -749,7 +808,7 @@ class _OffersPageState extends State<OffersPage> {
                                     height: 20,
                                   ),
                                   Text(
-                                    'Hi, ${widget.accomodationName} landlord\n A verification email has been sent to ${widget.landlordEmail}.Please verify by providing the verification codes',
+                                    'Hi, ${widget.accomodationName} landlord\n A verification email has been sent to ${widget.landlordEmail}.Please verify by Clicking on the link provided',
                                   ),
                                 ],
                               ),
@@ -777,7 +836,7 @@ class _OffersPageState extends State<OffersPage> {
                           ),
                         );
                       },
-                      child: Text('Register Accomodaton'),
+                      child: Text('Create account'),
                       style: ButtonStyle(
                           shape: MaterialStatePropertyAll(
                               RoundedRectangleBorder(

@@ -40,10 +40,10 @@ class _HomePageState extends State<HomePage>
 
   Future<void> _loadStudentApplications() async {
     try {
-      String studentId = _userData?['userId'] ?? '';
+      String landlordId = _userData?['userId'] ?? '';
       QuerySnapshot applicationsSnapshot = await FirebaseFirestore.instance
           .collection('Landlords')
-          .doc(studentId)
+          .doc(landlordId)
           .collection('applications')
           .get();
 
@@ -112,35 +112,39 @@ class _HomePageState extends State<HomePage>
                     ],
                   ),
                   // Table rows for student applications
-                  for (Map<String, dynamic> studentApplication
-                      in _studentApplications)
+                  for (int index = 0;
+                      index < _studentApplications.length;
+                      index++)
                     TableRow(
                       children: [
                         TableCell(
                           child: Center(
-                              child:
-                                  Text(studentApplication['name'] ?? 'null')),
+                              child: Text(_studentApplications[index]['name'] ??
+                                  'null')),
                         ),
                         TableCell(
                           child: Center(
-                              child: Text(
-                                  studentApplication['surname'] ?? 'null')),
+                              child: Text(_studentApplications[index]
+                                      ['surname'] ??
+                                  'null')),
                         ),
                         TableCell(
                           child: Center(
-                              child:
-                                  Text(studentApplication['gender'] ?? 'null')),
+                              child: Text(_studentApplications[index]
+                                      ['gender'] ??
+                                  'null')),
                         ),
                         TableCell(
                           child: Center(
-                              child: Text(
-                                  studentApplication['contactDetails'] ??
-                                      'null')),
+                              child: Text(_studentApplications[index]
+                                      ['contactDetails'] ??
+                                  'null')),
                         ),
                         TableCell(
                           child: Center(
-                              child:
-                                  Text(studentApplication['email'] ?? 'null')),
+                              child: Text(_studentApplications[index]
+                                      ['email'] ??
+                                  'null')),
                         ),
                       ],
                     ),

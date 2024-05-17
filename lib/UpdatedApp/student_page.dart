@@ -74,12 +74,12 @@ class _StudentPageState extends State<StudentPage> {
     _loadUserData();
   }
 
-  late User _user;
+  late User? _user;
   Map<String, dynamic>? _userData;
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
         .collection('Students')
-        .doc(_user.uid)
+        .doc(_user?.uid)
         .get();
     setState(() {
       _userData = userDataSnapshot.data() as Map<String, dynamic>?;
@@ -145,7 +145,7 @@ class _StudentPageState extends State<StudentPage> {
           );
         },
       );
-      String studentUserId = _user.uid;
+      String studentUserId = _user!.uid;
       String helpCenterId = '3MdElZpzxgbOFJMqgkt32NnQ4UQ2';
       await FirebaseFirestore.instance
           .collection('StudentAccounts')
@@ -213,17 +213,16 @@ class _StudentPageState extends State<StudentPage> {
         ),
         bottomNavigationBar: BottomNavigationBar(
             type: BottomNavigationBarType.fixed,
-                onTap: (index) {
-                  setState(() {
-                     _index = index;
-                  });
-                },
-                currentIndex: _index,
-                backgroundColor: Colors.blue,
-                useLegacyColorScheme: false,
-                fixedColor: Colors.white,
-                unselectedItemColor: Colors.white70,
-           
+            onTap: (index) {
+              setState(() {
+                _index = index;
+              });
+            },
+            currentIndex: _index,
+            backgroundColor: Colors.blue,
+            useLegacyColorScheme: false,
+            fixedColor: Colors.white,
+            unselectedItemColor: Colors.white70,
             items: [
               BottomNavigationBarItem(
                 backgroundColor: Colors.blue,

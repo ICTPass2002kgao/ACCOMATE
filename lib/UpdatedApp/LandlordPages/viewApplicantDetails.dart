@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, deprecated_member_use
 
+import 'package:api_com/UpdatedApp/LandlordPages/Tables.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -239,142 +240,34 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Table(
-                    border: TableBorder.all(),
-                    children: [
-                      TableRow(
-                        children: [
-                          TableCell(
-                            child: Center(
-                                child: Text('Name',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold))),
-                          ),
-                          TableCell(
-                            child: Center(
-                                child: Text(
-                                    widget.studentApplicationData['name'] ??
-                                        '')),
-                          ),
-                        ],
-                      ),
-                      TableRow(
-                        children: [
-                          TableCell(
-                            child: Center(
-                                child: Text('Surname',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold))),
-                          ),
-                          TableCell(
-                            child: Center(
-                                child: Text(
-                                    widget.studentApplicationData['surname'] ??
-                                        'Mthimkhulu')),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Table(
-                    border: TableBorder.all(),
-                    children: [
-                      TableRow(
-                        children: [
-                          TableCell(
-                            child: Center(
-                                child: Text('Cellphone Number',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold))),
-                          ),
-                          TableCell(
-                            child: Center(
-                                child: Text(widget.studentApplicationData[
-                                        'contactDetails'] ??
-                                    '')),
-                          ),
-                        ],
-                      ),
-                      TableRow(
-                        children: [
-                          TableCell(
-                            child: Center(
-                                child: Text('Email Address',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold))),
-                          ),
-                          TableCell(
-                            child: Center(
-                                child: Text(
-                                    widget.studentApplicationData['email'] ??
-                                        'Mthimkhulu')),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Table(
-                    border: TableBorder.all(),
-                    children: [
-                      TableRow(
-                        children: [
-                          TableCell(
-                            child: Center(
-                                child: Text('University',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold))),
-                          ),
-                          TableCell(
-                            child: Center(
-                                child: Text(widget
-                                        .studentApplicationData['university'] ??
-                                    '')),
-                          ),
-                        ],
-                      ),
-                      TableRow(
-                        children: [
-                          TableCell(
-                            child: Center(
-                                child: Text('Type of room',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold))),
-                          ),
-                          TableCell(
-                            child: Center(
-                                child: Text(
-                                    widget.studentApplicationData['roomType'] ??
-                                        '')),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Table(
-                    border: TableBorder.all(),
-                    children: [
-                      TableRow(
-                        children: [
-                          TableCell(
-                            child: Center(
-                                child: Text('Year of study',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold))),
-                          ),
-                        ],
-                      ),
-                      TableRow(
-                        children: [
-                          TableCell(
-                            child: Center(
-                                child: Text(widget.studentApplicationData[
-                                        'YearOfStudy'] ??
-                                    '')),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  Tables(
+                      columnName: 'Name',
+                      columnValue: widget.studentApplicationData['name'] ?? ''),
+                  Tables(
+                      columnName: 'Surname',
+                      columnValue:
+                          widget.studentApplicationData['surname'] ?? ''),
+                  Tables(
+                      columnName: 'Cellphone Number',
+                      columnValue:
+                          widget.studentApplicationData['contactDetails'] ??
+                              ''),
+                  Tables(
+                      columnName: 'Email Address',
+                      columnValue:
+                          widget.studentApplicationData['email'] ?? ''),
+                  Tables(
+                      columnName: 'Enrolled University',
+                      columnValue:
+                          widget.studentApplicationData['university'] ?? ''),
+                  Tables(
+                      columnName: 'Type of room',
+                      columnValue:
+                          widget.studentApplicationData['roomType'] ?? ''),
+                  Tables(
+                      columnName: 'Year of study',
+                      columnValue:
+                          widget.studentApplicationData['fieldOfStudy'] ?? ''),
 
                   SizedBox(
                     height: 20,
