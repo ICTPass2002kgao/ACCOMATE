@@ -8,12 +8,6 @@ class StartPage extends StatefulWidget {
   @override
   State<StartPage> createState() => _StartPageState();
 }
-/**    'https://lottie.host/d7aac53c-6640-47b7-8f42-6581408ba1c7/LASbeQEhrY.json',
-    'assets/icon1.jpg',
-    'assets/icon2.jpg',
-    'assets/icon3.jpg',
-    'assets/icon4.jpg',
-    'https://lottie.host/c25aedf9-7b5d-4852-8677-f079d5445808/SOhXthR1lW.json' */
 
 class _StartPageState extends State<StartPage> {
   final List<String> images = [
@@ -47,7 +41,7 @@ class _StartPageState extends State<StartPage> {
                 height: 300,
                 child: Swiper(
                   itemBuilder: (BuildContext context, int index) {
-                    return Image.Asset(
+                    return Image.asset(
                       images[index],
                       fit: BoxFit.cover,
                     );
@@ -102,3 +96,9 @@ class _StartPageState extends State<StartPage> {
         ));
   }
 }
+/**    'https://lottie.host/d7aac53c-6640-47b7-8f42-6581408ba1c7/LASbeQEhrY.json',
+   * 'assets/icon1.jpg',
+    *'assets/icon2.jpg',
+    *'assets/icon3.jpg',
+    *'assets/icon4.jpg',
+    *'https://lottie.host/c25aedf9-7b5d-4852-8677-f079d5445808/SOhXthR1lW.json' */
