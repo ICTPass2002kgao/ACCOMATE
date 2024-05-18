@@ -30,7 +30,7 @@ class _PersonalPageState extends State<PersonalPage> {
 
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
-        .collection('users')
+        .collection('Students')
         .doc(_user.uid)
         .get();
     setState(() {
@@ -210,7 +210,7 @@ class _PersonalPageState extends State<PersonalPage> {
       User? user = FirebaseAuth.instance.currentUser;
 
       if (user != null) {
-        await user.updateEmail(emailController.text);
+        await user.verifyBeforeUpdateEmail(emailController.text);
         print("Email updated successfully to ${emailController.text}");
       } else {
         print("User not signed in");
@@ -254,129 +254,145 @@ class _PersonalPageState extends State<PersonalPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Display the user image in a Card
-            Container(
-                width: double.infinity,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Center(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(78),
-                              child: Container(
-                                color: Colors.blue,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(75),
-                                    child: Image.asset(
-                                      'assets/icon.jpg',
-                                      width: 150,
-                                      height: 150,
-                                      fit: BoxFit.cover,
+        child: Container(
+          color: Colors.blue[100],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                  color: Colors.blue[100],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Center(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(78),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        const Color.fromARGB(
+                                            255, 187, 222, 251),
+                                        Colors.blue,
+                                        const Color.fromARGB(255, 15, 76, 167)
+                                      ],
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(75),
+                                      child: Image.asset(
+                                        'assets/icon.jpg',
+                                        width: 150,
+                                        height: 150,
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  child: TextField(
-                                    maxLines: 1,
-                                    controller: emailController,
-                                    decoration: InputDecoration(
-                                        border: OutlineInputBorder(),
-                                        labelText:
-                                            "${_userData?['email'] ?? ''}"),
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    child: TextField(
+                                      maxLines: 1,
+                                      controller: emailController,
+                                      decoration: InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          labelText:
+                                              "${_userData?['email'] ?? ''}"),
+                                    ),
                                   ),
-                                ),
-                                SizedBox(height: 10),
-                                Container(
-                                  child: TextField(
-                                    maxLines: 1,
-                                    readOnly: true,
-                                    controller: nameController,
-                                    decoration: InputDecoration(
-                                        border: OutlineInputBorder(),
-                                        labelText:
-                                            "${_userData?['name'] ?? ''}"),
+                                  SizedBox(height: 10),
+                                  Container(
+                                    child: TextField(
+                                      maxLines: 1,
+                                      readOnly: true,
+                                      controller: nameController,
+                                      decoration: InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          hintText:
+                                              "${_userData?['name'] ?? ''}"),
+                                    ),
                                   ),
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                Container(
-                                  child: TextField(
-                                    readOnly: true,
-                                    maxLines: 1,
-                                    controller: nameController,
-                                    decoration: InputDecoration(
-                                        border: OutlineInputBorder(),
-                                        labelText:
-                                            "${_userData?['studentNumber'] ?? ''}"),
+                                  SizedBox(
+                                    height: 10,
                                   ),
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                Container(
-                                  child: TextField(
-                                    maxLines: 1,
-                                    readOnly: true,
-                                    controller: nameController,
-                                    decoration: InputDecoration(
-                                        border: OutlineInputBorder(),
-                                        labelText:
-                                            "${_userData?['university'] ?? ''}"),
+                                  Container(
+                                    child: TextField(
+                                      readOnly: true,
+                                      maxLines: 1,
+                                      controller: nameController,
+                                      decoration: InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          hintText:
+                                              "${_userData?['surname'] ?? ''}"),
+                                    ),
                                   ),
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                TextButton(
-                                  onPressed: () => emailController.text
-                                              .contains('@gmail.com') ||
-                                          emailController.text
-                                              .contains('@edu.vut.ac.za')
-                                      ? _confirmUpdate()
-                                      : null,
-                                  child: Text('Update'),
-                                  style: ButtonStyle(
-                                      backgroundColor: MaterialStatePropertyAll(
-                                          emailController.text
-                                                      .contains('@gmail.com') ||
-                                                  emailController.text.contains(
-                                                      '@edu.vut.ac.za')
-                                              ? Colors.blue
-                                              : Colors.grey),
-                                      foregroundColor: MaterialStatePropertyAll(
-                                          Colors.white),
-                                      minimumSize: MaterialStatePropertyAll(
-                                          Size(double.infinity, 50))),
-                                )
-                              ],
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Container(
+                                    child: TextField(
+                                      maxLines: 1,
+                                      readOnly: true,
+                                      controller: nameController,
+                                      decoration: InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          hintText:
+                                              "${_userData?['university'] ?? ''}"),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  TextButton(
+                                    onPressed: () => emailController.text
+                                                .contains('@gmail.com') ||
+                                            emailController.text
+                                                .contains('@edu.vut.ac.za')
+                                        ? _confirmUpdate()
+                                        : null,
+                                    child: Text('Update'),
+                                    style: ButtonStyle(
+                                        backgroundColor:
+                                            MaterialStatePropertyAll(
+                                                emailController.text.contains(
+                                                            '@gmail.com') ||
+                                                        emailController.text
+                                                            .contains(
+                                                                '@edu.vut.ac.za')
+                                                    ? Colors.blue
+                                                    : Colors.grey),
+                                        foregroundColor:
+                                            MaterialStatePropertyAll(
+                                                Colors.white),
+                                        minimumSize: MaterialStatePropertyAll(
+                                            Size(double.infinity, 50))),
+                                  )
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    )
-                  ],
-                )),
-          ],
+                        ],
+                      )
+                    ],
+                  )),
+            ],
+          ),
         ),
       ),
     );

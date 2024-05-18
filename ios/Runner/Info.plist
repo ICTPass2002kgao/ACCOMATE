@@ -7,7 +7,12 @@
 <key>NSLocationAlwaysUsageDescription</key>
 <string>We need your current location</string>
 
-
+<key>FirebaseAppDelegateProxyEnabled</key>
+<true/>
+<key>UIBackgroundModes</key>
+<array>
+    <string>remote-notification</string>
+</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

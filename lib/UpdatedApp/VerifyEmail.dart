@@ -1,12 +1,14 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously
 
-import 'dart:io';
+import 'dart:math';
 
+import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server/gmail.dart';
 
 class CodeVerificationPage extends StatefulWidget {
   final String email;
@@ -18,99 +20,26 @@ class CodeVerificationPage extends StatefulWidget {
   final String contactDetails;
   final bool isLandlord;
   final String verificationCode;
-  final File? studentIdDoc;
-  final File? studentPor;
 
-  final String studentId;
-  final String studentNumber;
-
-  const CodeVerificationPage(
-      {super.key,
-      required this.isLandlord,
-      required this.email,
-      required this.verificationCode,
-      required this.name,
-      required this.password,
-      required this.surname,
-      required this.gender,
-      required this.university,
-      required this.contactDetails,
-      this.studentIdDoc,
-      this.studentPor,
-      required this.studentId,
-      required this.studentNumber});
+  const CodeVerificationPage({
+    super.key,
+    required this.isLandlord,
+    required this.email,
+    required this.verificationCode,
+    required this.name,
+    required this.password,
+    required this.surname,
+    required this.gender,
+    required this.university,
+    required this.contactDetails,
+  });
 
   @override
   State<CodeVerificationPage> createState() => _CodeVerificationPageState();
 }
 
 class _CodeVerificationPageState extends State<CodeVerificationPage> {
-  Future<String?> _uploadPickProofOfRegistration(
-      File pdfFile, BuildContext context) async {
-    try {
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      firebase_storage.Reference reference = firebase_storage
-          .FirebaseStorage.instance
-          .ref('Proof of registrations')
-          .child(
-              "${widget.name} ${widget.surname}'s Proof of registration($fileName).pdf");
-
-      await reference.putFile(pdfFile);
-
-      return await reference.getDownloadURL();
-    } catch (e) {
-      print(e.toString());
-      return null;
-    }
-  }
-
-  Future<String?> _uploadIdDocumentPDFFile(
-      File pdfFile, BuildContext context) async {
-    try {
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      firebase_storage.Reference reference = firebase_storage
-          .FirebaseStorage.instance
-          .ref('Students IDs')
-          .child("${widget.name} ${widget.surname}'s Id($fileName).pdf");
-
-      await reference.putFile(pdfFile);
-
-      return await reference.getDownloadURL();
-    } on firebase_storage.FirebaseException catch (e) {
-      // Handle login error
-      Navigator.pop(context);
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
-          title: Text('Upload Error',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-          content: Text(e.message.toString()),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Retry'),
-              style: ButtonStyle(
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5))),
-                  foregroundColor: MaterialStatePropertyAll(Colors.white),
-                  backgroundColor: MaterialStatePropertyAll(Colors.red[300]),
-                  minimumSize: MaterialStatePropertyAll(Size(300, 50))),
-            ),
-          ],
-        ),
-      );
-      return null;
-    }
-  }
-
   bool isLandlord = false;
-  String _pdfPorDocument = '';
-  String _pdfIdDocument = '';
   void checkStudentValues() async {
     try {
       // Show loading indicator
@@ -138,44 +67,21 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
 
       // Upload files asynchronously
 
-      //Uploading proof of registration Document
-      String? downloadPORURL =
-          await _uploadPickProofOfRegistration(widget.studentPor!, context);
-      if (downloadPORURL != null) {
-        setState(() {
-          _pdfPorDocument = downloadPORURL;
-        });
-      }
-      //Uploading Id Document
-      String? downloadIDURL =
-          await _uploadIdDocumentPDFFile(widget.studentIdDoc!, context);
-      if (downloadIDURL != null) {
-        setState(() {
-          _pdfIdDocument = downloadIDURL;
-        });
-      }
       String? user = FirebaseAuth.instance.currentUser!.email;
       // Save user data to Firestore
-      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+      await FirebaseFirestore.instance.collection('Students').doc(userId).set({
         'name': widget.name,
         'surname': widget.surname,
         'email': user,
-        'role': isLandlord,
         'university': widget.university,
         'contactDetails': widget.contactDetails,
-        'verificationCode': widget.verificationCode,
         'userId': userId,
         'gender': widget.gender,
-        'ProofOfRegistration': _pdfPorDocument,
-        'IdDocument': _pdfIdDocument,
-        'studentNumber': widget.studentNumber,
-        'studentId': widget.studentId,
         'roomType': '',
         'fieldOfStudy': '',
-        'registered': false,
-        'registeredAccomodation': '',
-        'registrationReviewed': false,
+        'appliedAccomodation': false,
         'applicationReviewed': false,
+        'role': 'student'
         // Add more user data as needed
       });
       sendEmail(
@@ -188,6 +94,7 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
           context: context,
           barrierDismissible: false,
           builder: (BuildContext context) => AlertDialog(
+                backgroundColor: Colors.blue[100],
                 title: Text(
                   'Successful Registration',
                   style: TextStyle(fontSize: 15),
@@ -195,34 +102,30 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
                 content: Text(
                     'Your account was registered successfully. You can now proceed to login'),
                 actions: <Widget>[
-                  TextButton(
+                  OutlinedButton(
                       onPressed: () async {
                         // Close the dialog
 
                         Navigator.of(context).pop();
-
-                        Navigator.pushReplacementNamed(context, '/login');
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: ((context) => LoginPage(
+                                      userRole: 'Student',
+                                    ))));
                       },
+                      child: Text('Proceed'),
                       style: ButtonStyle(
-                          shape: MaterialStatePropertyAll(
-                              RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5))),
-                          foregroundColor:
-                              MaterialStatePropertyAll(Colors.white),
-                          backgroundColor:
-                              MaterialStatePropertyAll(Colors.green),
-                          minimumSize: MaterialStatePropertyAll(
-                              Size(double.infinity, 50))),
-                      child: Text('Proceed')),
+                        shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5))),
+                        foregroundColor: MaterialStatePropertyAll(Colors.white),
+                        backgroundColor: MaterialStatePropertyAll(Colors.green),
+                      )),
                 ],
               ));
       // Show success dialog
     } on FirebaseException catch (e) {
-      FirebaseException(plugin: "").message!.contains('email badly format')
-          ? SnackBar(content: Text('data'))
-          :
-          // Handle registration error
-          Navigator.pop(context); // Dismiss loading indicator
+      Navigator.pop(context); // Dismiss loading indicator
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -233,18 +136,19 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
           content: Text(e.message.toString()),
           actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              style: ButtonStyle(
+            OutlinedButton(
+                onPressed: () async {
+                  // Close the dialog
+
+                  Navigator.of(context).pop();
+                },
+                child: Text('Retry'),
+                style: ButtonStyle(
                   shape: MaterialStatePropertyAll(RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(5))),
                   foregroundColor: MaterialStatePropertyAll(Colors.white),
-                  backgroundColor: MaterialStatePropertyAll(Colors.red[300]),
-                  minimumSize: MaterialStatePropertyAll(Size(300, 50))),
-              child: Text('Retry'),
-            ),
+                  backgroundColor: MaterialStatePropertyAll(Colors.red),
+                )),
           ],
         ),
       );
@@ -262,9 +166,7 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
         'body': body,
       });
       print(result.data);
-    } catch (e) {
-      print('Error  $e');
-    }
+    } catch (e) {}
   }
 
   List<TextEditingController> otpControllers =
@@ -276,122 +178,168 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registration Page(3/3)'),
+        title: const Text('Registration Page(2/2)'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         centerTitle: true,
       ),
       body: Container(
+        height: double.infinity,
+        color: Colors.blue[100],
         width: buttonWidth,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                  child:
-                      Icon(Icons.verified_user, color: Colors.blue, size: 130)),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(
-                  6,
-                  (index) => SizedBox(
-                    width: 50,
-                    child: TextField(
-                      controller: otpControllers[index],
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      // Hide the entered digits
-                      maxLength: 1,
-                      onChanged: (value) {
-                        // Handle OTP input
-                        if (index < 5 && value.isNotEmpty) {
-                          FocusScope.of(context)
-                              .nextFocus(); // Move focus to the next TextField
-                        }
-                      },
-                      decoration: InputDecoration(
-                        counterText: '', // Hide the default character counter
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.blue),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.blue),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      sendEmail(
-                          widget.email, // Student's email
-                          'Verification Code',
-                          widget.gender == 'Male'
-                              ? 'Hello Mr ${widget.surname},\nWe are aware that you are trying to register your account on accomate App\nHere  is your verification code: ${widget.verificationCode}'
-                              : 'Hello Mrs ${widget.surname},\nWe are aware that you are trying to register your account on accomate App\nHere  is your verification code: ${widget.verificationCode}');
-                    },
-                    child: Text(
-                      'Resend code',
-                      style: TextStyle(
-                          fontSize: 15,
-                          decoration: TextDecoration.underline,
-                          decorationColor: Colors.blue,
-                          color: Colors.blue[900]),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  String enteredOTP = otpControllers
-                      .map((controller) => controller.text)
-                      .join('');
-
-                  if (enteredOTP == widget.verificationCode) {
-                    checkStudentValues();
-                  } else {
-                    // Show an error message or handle incorrect OTP
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text('Error'),
-                        content:
-                            Text('Incorrect Verification. Please try again.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: Text('OK'),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(105),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              const Color.fromARGB(255, 187, 222, 251),
+                              Colors.blue,
+                              const Color.fromARGB(255, 15, 76, 167)
+                            ],
                           ),
-                        ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(100),
+                            child: Image.asset(
+                              'assets/icon.jpg',
+                              width: 200,
+                              height: 200,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
                       ),
-                    );
-                  }
-                },
-                style: ButtonStyle(
-                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5))),
-                    foregroundColor: MaterialStatePropertyAll(Colors.white),
-                    backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                    minimumSize:
-                        MaterialStatePropertyAll(Size(buttonWidth, 50))),
-                child: Text(
-                  'Confirm Account',
-                  style: TextStyle(color: Colors.white),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: List.generate(
+                    6,
+                    (index) => SizedBox(
+                      width: 50,
+                      child: TextField(
+                        controller: otpControllers[index],
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        // Hide the entered digits
+                        maxLength: 1,
+                        onChanged: (value) {
+                          // Handle OTP input
+                          if (index < 5 && value.isNotEmpty) {
+                            FocusScope.of(context)
+                                .nextFocus(); // Move focus to the next TextField
+                          }
+                        },
+                        decoration: InputDecoration(
+                          counterText: '', // Hide the default character counter
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.blue),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.blue),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 5),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        String _generateRandomCode() {
+                          final random = Random();
+                          // Generate a random 6-digit code
+                          return '${random.nextInt(999999).toString().padLeft(6, '0')}';
+                        }
+
+                        String verificationCode = _generateRandomCode();
+
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            backgroundColor: Colors.blue,
+                            content: Text('Verification code sent',
+                                style: TextStyle(color: Colors.white))));
+                        sendEmail(
+                            widget.email, // Student's email
+                            'Verification Code',
+                            widget.gender == 'Male'
+                                ? 'Hello Mr ${widget.surname},\nWe are aware that you are trying to register your account on accomate App\nHere  is your verification code: ${verificationCode}'
+                                : 'Hello Mrs ${widget.surname},\nWe are aware that you are trying to register your account on accomate App\nHere  is your verification code: ${verificationCode}');
+                      },
+                      child: Text(
+                        'Resend code',
+                        style: TextStyle(
+                            fontSize: 15,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Colors.blue,
+                            color: Colors.blue),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () async {
+                    String enteredOTP = otpControllers
+                        .map((controller) => controller.text)
+                        .join('');
+
+                    if (enteredOTP == widget.verificationCode) {
+                      checkStudentValues();
+                    } else {
+                      // Show an error message or handle incorrect OTP
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text('Error'),
+                          content:
+                              Text('Incorrect Verification. Please try again.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text('OK'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                  },
+                  style: ButtonStyle(
+                      shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5))),
+                      foregroundColor: MaterialStatePropertyAll(Colors.white),
+                      backgroundColor: MaterialStatePropertyAll(Colors.blue),
+                      minimumSize:
+                          MaterialStatePropertyAll(Size(buttonWidth, 50))),
+                  child: Text(
+                    'Confirm Account',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

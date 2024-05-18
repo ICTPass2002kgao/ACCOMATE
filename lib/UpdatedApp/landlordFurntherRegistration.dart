@@ -1,8 +1,7 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors, sort_child_properties_last,
-import 'package:path/path.dart';
+
 import 'dart:io';
 import 'package:api_com/UpdatedApp/landlordoffersPage.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -73,9 +72,6 @@ class _LandlordFurtherRegistrationState
       showError(context);
     } else if (_imageFile == null) {
       showError(context);
-    } else if (_pdfContractPath == '') {
-      showError(context);
-      showError(context);
     } else if (distanceController.text == '') {
       showError(context);
     } else if (selectedPaymentsMethods.isEmpty) {
@@ -86,8 +82,6 @@ class _LandlordFurtherRegistrationState
             context,
             MaterialPageRoute(
                 builder: ((context) => OffersPage(
-                      contractPath: _pdfContractPath,
-                      contract: pdfContractFile,
                       selectedPaymentsMethods: selectedPaymentsMethods,
                       imageFile: _imageFile,
                       location: txtLiveLocation.text,
@@ -117,33 +111,8 @@ class _LandlordFurtherRegistrationState
     requestLocationPermission();
   }
 
-  String _pdfContractPath = '';
-
   bool isFileChosen = false;
   File? pdfContractFile;
-  Future<void> _pickSignedContract(context) async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf'],
-      );
-
-      if (result != null) {
-        pdfContractFile = File(result.files.single.path!);
-        setState(() {
-          _pdfContractPath = pdfContractFile.toString();
-          isFileChosen = true; // Set the flag to true when a file is chosen
-        });
-      } else {
-        // No file chosen
-        setState(() {
-          isFileChosen = false;
-        });
-      }
-    } catch (e) {
-      _showErrorDialog(e.toString(), context);
-    }
-  }
 
   void _showErrorDialog(String errorMessage, BuildContext context) {
     showDialog(
@@ -249,47 +218,55 @@ class _LandlordFurtherRegistrationState
         backgroundColor: Colors.blue,
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
-          child: Center(
-            child: Container(
-              width: buttonWidth,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Image.asset('assets/icon.jpg',
-                        height: 150, width: double.infinity),
-                  ),
-                  SizedBox(height: 10),
-                  TextField(
-                    controller: distanceController,
-                    decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.blue),
-                          borderRadius: BorderRadius.circular(10),
+      body: Container(
+        height: double.infinity,
+        color: Colors.blue[100],
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20.0, right: 20),
+          child: SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
+            child: Center(
+              child: Container(
+                width: buttonWidth,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Center(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(105),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  const Color.fromARGB(255, 187, 222, 251),
+                                  Colors.blue,
+                                  const Color.fromARGB(255, 15, 76, 167)
+                                ],
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(100),
+                                child: Image.asset(
+                                  'assets/icon.jpg',
+                                  width: 200,
+                                  height: 200,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.blue),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        focusColor: Colors.blue,
-                        fillColor: Color.fromARGB(255, 230, 230, 230),
-                        filled: true,
-                        prefixIcon: Icon(
-                          Icons.location_pin,
-                          color: Colors.blue,
-                        ),
-                        hintText: 'Distance to Campus e.g 4km'),
-                  ),
-                  SizedBox(height: 5),
-                  Tooltip(
-                    message:
-                        'Click on get location button to get your current location',
-                    child: TextField(
-                      controller: txtLiveLocation,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    TextField(
+                      controller: distanceController,
                       decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderSide: BorderSide(color: Colors.blue),
@@ -300,190 +277,166 @@ class _LandlordFurtherRegistrationState
                             borderRadius: BorderRadius.circular(10),
                           ),
                           focusColor: Colors.blue,
-                          fillColor: Color.fromARGB(255, 230, 230, 230),
+                          fillColor: Colors.blue[50],
                           filled: true,
                           prefixIcon: Icon(
-                            Icons.location_on_outlined,
+                            Icons.location_pin,
                             color: Colors.blue,
                           ),
-                          hintText: 'Address e.g Province,Address'),
+                          hintText: 'Distance to Campus e.g 4km'),
                     ),
-                  ),
-                  SizedBox(height: 5),
-                  Tooltip(
-                    message:
-                        'This determines how ent should pay the accomodation',
-                    child: ExpansionTile(
-                      title: Text(
-                        'Students Payment Methods',
-                        style: TextStyle(
-                            color: selectedPaymentsMethods.isEmpty
-                                ? Colors.red
-                                : Colors.black),
+                    SizedBox(height: 5),
+                    Tooltip(
+                      message:
+                          'Click on get location button to get your current location',
+                      child: TextField(
+                        controller: txtLiveLocation,
+                        decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blue),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blue),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            focusColor: Colors.blue,
+                            fillColor: Colors.blue[50],
+                            filled: true,
+                            prefixIcon: Icon(
+                              Icons.location_on_outlined,
+                              color: Colors.blue,
+                            ),
+                            hintText:
+                                'Address e.g Country,Province,City,street,PostalCode'),
                       ),
-                      children:
-                          selectedPaymentsMethods.keys.map((paymentMethod) {
-                        return CheckboxListTile(
-                          title: Text(paymentMethod),
-                          value:
-                              selectedPaymentsMethods[paymentMethod] ?? false,
-                          onChanged: (value) {
-                            setState(() {
-                              selectedPaymentsMethods[paymentMethod] =
-                                  value ?? false;
-                            });
+                    ),
+                    SizedBox(height: 5),
+                    Tooltip(
+                      message:
+                          'This determines how ent should pay the accomodation',
+                      child: ExpansionTile(
+                        title: Text(
+                          'Students Payment Methods',
+                          style: TextStyle(
+                              color: selectedPaymentsMethods.isEmpty
+                                  ? Colors.red
+                                  : Colors.black),
+                        ),
+                        children:
+                            selectedPaymentsMethods.keys.map((paymentMethod) {
+                          return CheckboxListTile(
+                            title: Text(paymentMethod),
+                            value:
+                                selectedPaymentsMethods[paymentMethod] ?? false,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedPaymentsMethods[paymentMethod] =
+                                    value ?? false;
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    TextButton.icon(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          barrierDismissible:
+                              false, // Prevent user from dismissing the dialog
+                          builder: (BuildContext context) {
+                            return Center(
+                              child: CircularProgressIndicator(),
+                            );
                           },
                         );
-                      }).toList(),
+                        showLocationDialog(context);
+                      },
+                      icon:
+                          Icon(Icons.location_on_outlined, color: Colors.white),
+                      label: Text(
+                        'Get Location',
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                      style: ButtonStyle(
+                          shape: MaterialStatePropertyAll(
+                              RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5))),
+                          foregroundColor:
+                              MaterialStatePropertyAll(Colors.blue),
+                          backgroundColor:
+                              MaterialStatePropertyAll(Colors.blue),
+                          minimumSize:
+                              MaterialStatePropertyAll(Size(buttonWidth, 50))),
                     ),
-                  ),
-                  SizedBox(height: 5),
-                  TextButton.icon(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        barrierDismissible:
-                            false, // Prevent user from dismissing the dialog
-                        builder: (BuildContext context) {
-                          return Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        },
-                      );
-                      showLocationDialog(context);
-                    },
-                    icon: Icon(Icons.location_on_outlined, color: Colors.white),
-                    label: Text(
-                      'Get Location',
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                    style: ButtonStyle(
-                        foregroundColor: MaterialStatePropertyAll(Colors.blue),
-                        backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                        minimumSize:
-                            MaterialStatePropertyAll(Size(buttonWidth, 50))),
-                  ),
-                  SizedBox(height: 5),
-                  Container(
-                    width: buttonWidth,
-                    height: 50,
-                    color: const Color.fromARGB(179, 236, 236, 236),
-                    child: Row(
-                      children: [
-                        TextButton.icon(
-                          onPressed: () {
-                            _pickImage(ImageSource.gallery);
-                          },
-                          icon: Icon(Icons.add_photo_alternate_outlined,
-                              color: Colors.white),
-                          label: Text(
-                            'Add Profile',
-                            style: TextStyle(color: Colors.white, fontSize: 18),
-                          ),
-                          style: ButtonStyle(
-                              shape: MaterialStatePropertyAll(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(5))),
-                              foregroundColor:
-                                  MaterialStatePropertyAll(Colors.blue),
-                              backgroundColor:
-                                  MaterialStatePropertyAll(Colors.blue),
-                              minimumSize:
-                                  MaterialStatePropertyAll(Size(130, 50))),
-                        ),
-                        SizedBox(width: 5),
-                        if (_imageFile != null)
-                          Image.file(
-                            File(
-                              _imageFile!.path,
+                    SizedBox(height: 5),
+                    Container(
+                      color: Colors.blue[50],
+                      width: buttonWidth,
+                      height: 50,
+                      child: Row(
+                        children: [
+                          TextButton.icon(
+                            onPressed: () {
+                              _pickImage(ImageSource.gallery);
+                            },
+                            icon: Icon(Icons.add_photo_alternate_outlined,
+                                color: Colors.white),
+                            label: Text(
+                              'Add Profile',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 18),
                             ),
-                            fit: BoxFit.cover,
-                            height: 45,
-                            width: 50,
+                            style: ButtonStyle(
+                                shape: MaterialStatePropertyAll(
+                                    RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(5))),
+                                foregroundColor:
+                                    MaterialStatePropertyAll(Colors.blue),
+                                backgroundColor:
+                                    MaterialStatePropertyAll(Colors.blue),
+                                minimumSize:
+                                    MaterialStatePropertyAll(Size(130, 50))),
                           ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Container(
-                    width: buttonWidth,
-                    height: 50,
-                    color: const Color.fromARGB(179, 236, 236, 236),
-                    child: Row(
-                      children: [
-                        TextButton.icon(
-                          onPressed: () {
-                            _pickSignedContract(context);
-                            setState(() {
-                              print(_pdfContractPath);
-                            });
-                          },
-                          icon: Icon(Icons.file_present_outlined,
-                              color: Colors.white),
-                          label: Text(
-                            'Add Contract',
-                            style: TextStyle(color: Colors.white, fontSize: 18),
-                          ),
-                          style: ButtonStyle(
-                              shape: MaterialStatePropertyAll(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(5))),
-                              foregroundColor:
-                                  MaterialStatePropertyAll(Colors.blue),
-                              backgroundColor:
-                                  MaterialStatePropertyAll(Colors.blue),
-                              minimumSize:
-                                  MaterialStatePropertyAll(Size(130, 50))),
-                        ),
-                        SizedBox(
-                          width: 5,
-                        ),
-                        Expanded(
-                          child: TextField(
-                            readOnly: true, // Prevent manual editing
-                            controller: TextEditingController(
-                                text: basename(_pdfContractPath)),
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.blue),
-                                borderRadius: BorderRadius.circular(10),
+                          SizedBox(width: 5),
+                          if (_imageFile != null)
+                            Image.file(
+                              File(
+                                _imageFile!.path,
                               ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.blue),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              disabledBorder: OutlineInputBorder(),
-                              focusColor: Color.fromARGB(255, 230, 230, 230),
-                              fillColor: Color.fromARGB(255, 230, 230, 230),
-                              filled: true,
-                              hintText: 'Upload contract',
+                              fit: BoxFit.cover,
+                              height: 45,
+                              width: 50,
                             ),
-                          ),
-                        )
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      checkLandlordDetails(context);
-                    },
-                    child: Text(
-                      'Proceed',
-                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: () {
+                        checkLandlordDetails(context);
+                      },
+                      child: Text(
+                        'Proceed',
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                      style: ButtonStyle(
+                          shape: MaterialStatePropertyAll(
+                              RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5))),
+                          foregroundColor:
+                              MaterialStatePropertyAll(Colors.blue),
+                          backgroundColor:
+                              MaterialStatePropertyAll(Colors.blue),
+                          minimumSize:
+                              MaterialStatePropertyAll(Size(buttonWidth, 50))),
                     ),
-                    style: ButtonStyle(
-                        shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5))),
-                        foregroundColor: MaterialStatePropertyAll(Colors.blue),
-                        backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                        minimumSize:
-                            MaterialStatePropertyAll(Size(buttonWidth, 50))),
-                  ),
-                  SizedBox(height: 10)
-                ],
+                    SizedBox(height: 10)
+                  ],
+                ),
               ),
             ),
           ),
@@ -514,10 +467,15 @@ class _LandlordFurtherRegistrationState
       // Display the address in a text field
       Navigator.of(context).pop();
       if (placemarks.isNotEmpty) {
+        String city = placemarks.first.subLocality ?? 'Unknown';
+        String postalCode = placemarks.first.postalCode ?? 'Unknown';
         String street = placemarks.first.street ?? 'Unknown';
-        String country = placemarks.first.administrativeArea ?? 'Unknown';
+        String province = placemarks.first.administrativeArea ?? 'Unknown';
 
-        txtLiveLocation.text = ' $country,${street}';
+        String country = placemarks.first.country ?? 'Unknown';
+
+        txtLiveLocation.text =
+            '$country, $province, $city, $street, $postalCode';
       }
     } catch (e) {
       print('Error fetching address: $e');

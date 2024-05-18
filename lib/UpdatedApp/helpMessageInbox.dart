@@ -18,22 +18,9 @@ class _StudentMessagesIssuesState extends State<StudentMessagesIssues> {
     super.initState();
 
     _user = FirebaseAuth.instance.currentUser!;
-    _loadUserData();
   }
 
   late User _user;
-  Map<String, dynamic>? _userData; // Make _userData nullable
-
-  Future<void> _loadUserData() async {
-    DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(_user.uid)
-        .get();
-    setState(() {
-      _userData = userDataSnapshot.data() as Map<String, dynamic>?;
-    });
-    // After loading landlord data, load student applications
-  }
 
   Future<void> _sendMessage(BuildContext context) async {
     try {
@@ -47,11 +34,11 @@ class _StudentMessagesIssuesState extends State<StudentMessagesIssues> {
         },
       );
 
-      String helpCenterUserId = FirebaseAuth.instance.currentUser!.uid;
+      String helpCenterUserId = _user.uid;
       String studentUserId = widget.studentsHelpMesseges['userId'];
 
       await FirebaseFirestore.instance
-          .collection('users')
+          .collection('Students')
           .doc(helpCenterUserId)
           .collection('messages')
           .doc(studentUserId)
@@ -71,7 +58,11 @@ class _StudentMessagesIssuesState extends State<StudentMessagesIssues> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Help Center'),
+        title: Row(
+          children: [
+            Text('Help Center'),
+          ],
+        ),
         centerTitle: true,
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
