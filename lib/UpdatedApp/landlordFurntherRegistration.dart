@@ -51,12 +51,11 @@ class _LandlordFurtherRegistrationState
             },
             child: Text('Okay'),
             style: ButtonStyle(
-                shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(5))),
-                foregroundColor: MaterialStatePropertyAll(Colors.white),
-                backgroundColor: MaterialStatePropertyAll(Colors.red[300]),
-                minimumSize:
-                    MaterialStatePropertyAll(Size(double.infinity, 50))),
+                foregroundColor: WidgetStatePropertyAll(Colors.white),
+                backgroundColor: WidgetStatePropertyAll(Colors.red[300]),
+                minimumSize: WidgetStatePropertyAll(Size(double.infinity, 50))),
           ),
         ],
       ),
@@ -136,12 +135,12 @@ class _LandlordFurtherRegistrationState
             },
             child: Text('OK'),
             style: ButtonStyle(
-              shape: MaterialStateProperty.all(RoundedRectangleBorder(
+              shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(5),
               )),
-              foregroundColor: MaterialStateProperty.all(Colors.white),
-              backgroundColor: MaterialStateProperty.all(Colors.blue),
-              minimumSize: MaterialStateProperty.all(Size(double.infinity, 50)),
+              foregroundColor: WidgetStatePropertyAll(Colors.white),
+              backgroundColor: WidgetStatePropertyAll(Colors.blue),
+              minimumSize: WidgetStatePropertyAll(Size(double.infinity, 50)),
             ),
           ),
         ],
@@ -357,19 +356,16 @@ class _LandlordFurtherRegistrationState
                       icon:
                           Icon(Icons.location_on_outlined, color: Colors.white),
                       label: Text(
-                        'Get Location',
+                        'Get Current Location',
                         style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
                       style: ButtonStyle(
-                          shape: MaterialStatePropertyAll(
-                              RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5))),
-                          foregroundColor:
-                              MaterialStatePropertyAll(Colors.blue),
-                          backgroundColor:
-                              MaterialStatePropertyAll(Colors.blue),
+                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5))),
+                          foregroundColor: WidgetStatePropertyAll(Colors.blue),
+                          backgroundColor: WidgetStatePropertyAll(Colors.blue),
                           minimumSize:
-                              MaterialStatePropertyAll(Size(buttonWidth, 50))),
+                              WidgetStatePropertyAll(Size(buttonWidth, 50))),
                     ),
                     SizedBox(height: 5),
                     Container(
@@ -390,16 +386,16 @@ class _LandlordFurtherRegistrationState
                                   TextStyle(color: Colors.white, fontSize: 18),
                             ),
                             style: ButtonStyle(
-                                shape: MaterialStatePropertyAll(
+                                shape: WidgetStatePropertyAll(
                                     RoundedRectangleBorder(
                                         borderRadius:
                                             BorderRadius.circular(5))),
                                 foregroundColor:
-                                    MaterialStatePropertyAll(Colors.blue),
+                                    WidgetStatePropertyAll(Colors.blue),
                                 backgroundColor:
-                                    MaterialStatePropertyAll(Colors.blue),
+                                    WidgetStatePropertyAll(Colors.blue),
                                 minimumSize:
-                                    MaterialStatePropertyAll(Size(130, 50))),
+                                    WidgetStatePropertyAll(Size(130, 50))),
                           ),
                           SizedBox(width: 5),
                           if (_imageFile != null)
@@ -420,19 +416,16 @@ class _LandlordFurtherRegistrationState
                         checkLandlordDetails(context);
                       },
                       child: Text(
-                        'Proceed',
+                        'Continue',
                         style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
                       style: ButtonStyle(
-                          shape: MaterialStatePropertyAll(
-                              RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5))),
-                          foregroundColor:
-                              MaterialStatePropertyAll(Colors.blue),
-                          backgroundColor:
-                              MaterialStatePropertyAll(Colors.blue),
+                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5))),
+                          foregroundColor: WidgetStatePropertyAll(Colors.blue),
+                          backgroundColor: WidgetStatePropertyAll(Colors.blue),
                           minimumSize:
-                              MaterialStatePropertyAll(Size(buttonWidth, 50))),
+                              WidgetStatePropertyAll(Size(buttonWidth, 50))),
                     ),
                     SizedBox(height: 10)
                   ],

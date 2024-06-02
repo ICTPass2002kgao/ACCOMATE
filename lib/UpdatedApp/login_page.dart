@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_const, prefer_const_constructors, avoid_unnecessary_containers, sort_child_properties_last, prefer_const_literals_to_create_immutables, sized_box_for_whitespace, avoid_print, use_build_context_synchronously, unrelated_type_equality_checks
 
 import 'package:api_com/UpdatedApp/CreateAnAccount.dart';
+import 'package:api_com/forgot_password.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -41,23 +42,7 @@ class _LoginPageState extends State<LoginPage> {
 
   late GoogleSignIn _googleSignIn;
   Future<User?> _handleSignIn() async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-          ),
-        );
-      },
-    );
     try {
-      Navigator.of(context);
-      User? user;
-      _auth = FirebaseAuth.instance;
-      _googleSignIn = GoogleSignIn();
-      await _googleSignIn.signOut();
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -72,7 +57,6 @@ class _LoginPageState extends State<LoginPage> {
 
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
-      Navigator.pop(context);
       if (googleUser != null) {
         final GoogleSignInAuthentication googleAuth =
             await googleUser.authentication;
@@ -82,28 +66,37 @@ class _LoginPageState extends State<LoginPage> {
           idToken: googleAuth.idToken,
         );
 
-        user = (await _auth.signInWithCredential(credential)).user;
+        final UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithCredential(credential);
 
-        if (widget.userRole == 'Student') {
-          Navigator.pushReplacementNamed(context, '/studentPage');
-        }
+        User? user = userCredential.user;
 
-        if (widget.userRole == 'Landlord') {
-          Navigator.pushReplacementNamed(context, '/landlordPage');
+        if (user != null) {
+          if (widget.userRole == 'Student') {
+            Navigator.pushReplacementNamed(context, '/studentPage');
+          } else if (widget.userRole == 'Landlord') {
+            Navigator.pushReplacementNamed(context, '/landlordPage');
+          } else if (widget.userRole == 'Admin') {
+            Navigator.pushReplacementNamed(context, '/adminPage');
+          }
         }
-        if (widget.userRole == 'Admin') {
-          Navigator.pushReplacementNamed(context, '/adminPage');
-        }
+        return user;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('Google Sign-In Failed'),
+        ));
+        return null;
       }
-      return user;
-    } catch (e) {
+    } on FirebaseException catch (e) {
       print(e);
-
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         backgroundColor: Colors.red,
-        content: Text('An error occurred. Please try again later.\n$e'),
+        content: Text(e.message.toString()),
       ));
       return null;
+    } finally {
+      Navigator.pop(context);
     }
   }
 
@@ -136,12 +129,9 @@ class _LoginPageState extends State<LoginPage> {
 
       if (widget.userRole == 'Student') {
         Navigator.pushReplacementNamed(context, '/studentPage');
-      }
-
-      if (widget.userRole == 'Landlord') {
+      } else if (widget.userRole == 'Landlord') {
         Navigator.pushReplacementNamed(context, '/landlordPage');
-      }
-      if (widget.userRole == 'Admin') {
+      } else if (widget.userRole == 'Admin') {
         Navigator.pushReplacementNamed(context, '/adminPage');
       }
 
@@ -149,71 +139,26 @@ class _LoginPageState extends State<LoginPage> {
     } on FirebaseAuthException catch (e) {
       Navigator.pop(context);
 
+      String errorMessage = '';
+
+      if (e.code == 'user-not-found') {
+        errorMessage = 'User not found. Please check your email or register.';
+      } else if (e.code == 'wrong-password') {
+        errorMessage = 'Incorrect password. Please try again.';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'The entered email is invalid. Please try again.';
+      } else if (e.code == 'user-disabled') {
+        errorMessage = 'The user is disabled. Please try again.';
+      } else {
+        errorMessage = 'Something went wrong. Please try again later.';
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          backgroundColor: Colors.blue, content: Text(e.message.toString())));
-    }
-  }
-
-  Future<void> _resetPassword() async {
-    try {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-            ),
-          );
-        },
-      );
-      await _auth.sendPasswordResetEmail(email: txtEmail.text);
-
-      Navigator.pop(context);
-      AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(5),
-        ),
-        title: Text('Password reset Successful',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-        content: Text('Password reset email sent to ${txtEmail.text}'),
-        actions: [
-          ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Ok'))
-        ],
-      );
-
-      print('Password reset email sent to $txtEmail');
-    } on FirebaseAuthException catch (e) {
-      Navigator.pop(context);
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
-          title: Text('Reset password error',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-          content: Text('Please provide your correct email\n ${e.message}'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Retry'),
-              style: ButtonStyle(
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5))),
-                  foregroundColor: MaterialStatePropertyAll(Colors.white),
-                  backgroundColor: MaterialStatePropertyAll(Colors.red[300]),
-                  minimumSize: MaterialStatePropertyAll(Size(300, 50))),
-            ),
-          ],
-        ),
-      );
+        showCloseIcon: true,
+        content: Text(errorMessage),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 3),
+      ));
     }
   }
 
@@ -231,11 +176,22 @@ class _LoginPageState extends State<LoginPage> {
     bool isIOS = Theme.of(context).platform == TargetPlatform.iOS;
 
     return Scaffold(
+        backgroundColor: Colors.blue[100],
         body: isLoading
             ? Center(
-                child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-              )) // Show a loading indicator
+                child: Container(
+                    width: 100,
+                    height: 100,
+                    child: Center(
+                        child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Center(child: Text("Loading...")),
+                        Center(
+                            child: LinearProgressIndicator(color: Colors.blue)),
+                      ],
+                    ))))
             : MediaQuery.of(context).size.width < 768
                 ? Container(
                     height: double.infinity,
@@ -274,14 +230,15 @@ class _LoginPageState extends State<LoginPage> {
                                               ),
                                               child: Padding(
                                                 padding:
-                                                    const EdgeInsets.all(5.0),
+                                                    const EdgeInsets.all(7.0),
                                                 child: ClipRRect(
                                                   borderRadius:
-                                                      BorderRadius.circular(50),
+                                                      BorderRadius.circular(
+                                                          100),
                                                   child: Image.asset(
                                                     'assets/icon.jpg',
-                                                    width: 100,
-                                                    height: 100,
+                                                    width: 200,
+                                                    height: 200,
                                                     fit: BoxFit.cover,
                                                   ),
                                                 ),
@@ -290,17 +247,42 @@ class _LoginPageState extends State<LoginPage> {
                                           ),
                                         ),
                                       ),
-                                      Center(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(
-                                              'Effortless Accommodation Solution\nBridging the Gap Between Landlords and Students',
-                                              style: TextStyle(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.blue[700])),
+                                      if (widget.userRole == 'Student')
+                                        Center(
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                                "You're Logging in as a Student",
+                                                style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.blue[700])),
+                                          ),
                                         ),
-                                      ),
+                                      if (widget.userRole == 'Landlord')
+                                        Center(
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                                "You're Logging in as a Landlord",
+                                                style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.blue[700])),
+                                          ),
+                                        ),
+                                      if (widget.userRole == 'Admin')
+                                        Center(
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                                "You're Logging in as a Admin",
+                                                style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.blue[700])),
+                                          ),
+                                        ),
                                       SizedBox(height: 0),
                                       Padding(
                                         padding: EdgeInsets.all(0.0),
@@ -393,7 +375,11 @@ class _LoginPageState extends State<LoginPage> {
                                                                 Colors.blue),
                                                       ),
                                                     )
-                                                  : await _resetPassword();
+                                                  : Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                          builder: ((context) =>
+                                                              ForgotPasswordPage())));
                                             },
                                             child: Text(
                                               'Forgot Password ?',
@@ -402,7 +388,7 @@ class _LoginPageState extends State<LoginPage> {
                                                   decoration:
                                                       TextDecoration.underline,
                                                   color: Colors.blue,
-                                                  decorationThickness: 2,
+                                                  decorationThickness: 0.5,
                                                   decorationStyle:
                                                       TextDecorationStyle.solid,
                                                   fontSize: 16),
@@ -424,116 +410,87 @@ class _LoginPageState extends State<LoginPage> {
                                               fontSize: 18),
                                         ),
                                         style: ButtonStyle(
-                                            shape: MaterialStatePropertyAll(
+                                            shape: WidgetStatePropertyAll(
                                                 RoundedRectangleBorder(
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                             5))),
                                             foregroundColor:
-                                                MaterialStatePropertyAll(
+                                                WidgetStatePropertyAll(
                                                     Colors.blue),
                                             backgroundColor:
-                                                MaterialStatePropertyAll(
+                                                WidgetStatePropertyAll(
                                                     Colors.blue),
-                                            minimumSize:
-                                                MaterialStatePropertyAll(
-                                                    Size(buttonWidth, 50))),
+                                            minimumSize: WidgetStatePropertyAll(
+                                                Size(buttonWidth, 50))),
                                       ),
                                       SizedBox(
                                         height: 10,
                                       ),
-                                      OutlinedButton(
-                                        onPressed: () async {
-                                          Navigator.pushReplacementNamed(
-                                              context, '/studentPage');
-                                        },
-                                        child: Text(
-                                          'Proceed without login',
-                                        ),
-                                        style: ButtonStyle(
-                                            shape: MaterialStatePropertyAll(
-                                                RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            5))),
-                                            foregroundColor:
-                                                MaterialStatePropertyAll(
-                                                    Colors.blue),
-                                            backgroundColor:
-                                                MaterialStatePropertyAll(
-                                              Colors.blue[50],
-                                            ),
-                                            minimumSize:
-                                                MaterialStatePropertyAll(
-                                                    Size(buttonWidth, 50))),
-                                      ),
-                                      SizedBox(
-                                        height: 20,
-                                      ),
-                                      if (widget.userRole == 'Student')
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: <Widget>[
-                                            Expanded(
-                                              child: Divider(
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 8.0),
-                                              child: Text(
-                                                'OR sign in with',
-                                                style: TextStyle(
-                                                  color: Colors.black,
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Divider(
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      SizedBox(
-                                        height: 20,
-                                      ),
-                                      if (widget.userRole == 'Student')
-                                        Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(90),
-                                                child: GestureDetector(
-                                                  onTap: () async {
-                                                    await _handleSignIn();
-                                                  },
-                                                  child: Image.asset(
-                                                      'assets/google.png',
-                                                      height: 55,
-                                                      width: 55),
-                                                ),
-                                              ),
-                                              SizedBox(width: 10),
-                                              if (isIOS)
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          bottom: 10.0),
-                                                  child: GestureDetector(
-                                                    onTap: () {},
-                                                    child: Icon(
-                                                      Icons.apple,
-                                                      size: 77,
-                                                    ),
-                                                  ),
-                                                )
-                                            ]),
+                                      // if (widget.userRole == 'Student')
+                                      //   Row(
+                                      //     mainAxisAlignment:
+                                      //         MainAxisAlignment.center,
+                                      //     children: <Widget>[
+                                      //       Expanded(
+                                      //         child: Divider(
+                                      //           color: Colors.black,
+                                      //         ),
+                                      //       ),
+                                      //       Padding(
+                                      //         padding:
+                                      //             const EdgeInsets.symmetric(
+                                      //                 horizontal: 8.0),
+                                      //         child: Text(
+                                      //           'OR sign in with',
+                                      //           style: TextStyle(
+                                      //             color: Colors.black,
+                                      //           ),
+                                      //         ),
+                                      //       ),
+                                      //       Expanded(
+                                      //         child: Divider(
+                                      //           color: Colors.black,
+                                      //         ),
+                                      //       ),
+                                      //     ],
+                                      //   ),
+                                      // SizedBox(
+                                      //   height: 20,
+                                      // ),
+                                      // if (widget.userRole == 'Student')
+                                      //   Row(
+                                      //       mainAxisAlignment:
+                                      //           MainAxisAlignment.center,
+                                      //       children: [
+                                      //         ClipRRect(
+                                      //           borderRadius:
+                                      //               BorderRadius.circular(90),
+                                      //           child: GestureDetector(
+                                      //             onTap: () async {
+                                      //               await _handleSignIn();
+                                      //             },
+                                      //             child: Image.asset(
+                                      //                 'assets/google.png',
+                                      //                 height: 55,
+                                      //                 width: 55),
+                                      //           ),
+                                      //         ),
+                                      //         SizedBox(width: 10),
+                                      //         if (isIOS)
+                                      //           Padding(
+                                      //             padding:
+                                      //                 const EdgeInsets.only(
+                                      //                     bottom: 10.0),
+                                      //             child: GestureDetector(
+                                      //               onTap: () {},
+                                      //               child: Icon(
+                                      //                 Icons.apple,
+                                      //                 size: 77,
+                                      //               ),
+                                      //             ),
+                                      //           )
+                                      //       ]),
                                     ],
                                   )
                                 ]),
@@ -601,7 +558,7 @@ class _LoginPageState extends State<LoginPage> {
                                       child: Padding(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
-                                            'Effortless Accommodation Solutions Bridging the Gap Between Landlords and Students',
+                                            'You are Logging in as a Landlord',
                                             style: TextStyle(
                                                 fontSize: 25,
                                                 fontWeight: FontWeight.bold,
@@ -718,7 +675,11 @@ class _LoginPageState extends State<LoginPage> {
                                                                   Colors.blue),
                                                         ),
                                                       )
-                                                    : await _resetPassword();
+                                                    : Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder: ((context) =>
+                                                                ForgotPasswordPage())));
                                               },
                                               child: Text(
                                                 'Forgot Password ?',
@@ -742,7 +703,7 @@ class _LoginPageState extends State<LoginPage> {
                                         ),
                                         OutlinedButton(
                                           onPressed: () async {
-                                            _loginFunction;
+                                            _loginFunction();
                                           },
                                           child: Text(
                                             'Sign-in',
@@ -751,19 +712,19 @@ class _LoginPageState extends State<LoginPage> {
                                                 fontSize: 18),
                                           ),
                                           style: ButtonStyle(
-                                              shape: MaterialStatePropertyAll(
+                                              shape: WidgetStatePropertyAll(
                                                   RoundedRectangleBorder(
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                               5))),
                                               foregroundColor:
-                                                  MaterialStatePropertyAll(
+                                                  WidgetStatePropertyAll(
                                                       Colors.blue),
                                               backgroundColor:
-                                                  MaterialStatePropertyAll(
+                                                  WidgetStatePropertyAll(
                                                       Colors.blue),
                                               minimumSize:
-                                                  MaterialStatePropertyAll(
+                                                  WidgetStatePropertyAll(
                                                       Size(buttonWidth, 50))),
                                         ),
                                         SizedBox(

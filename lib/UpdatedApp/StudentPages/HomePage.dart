@@ -3,6 +3,9 @@
 import 'package:api_com/UpdatedApp/accomodation_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -15,12 +18,24 @@ class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   List<Map<String, dynamic>> _landlordsData = [];
   late TabController _tabController;
+  late Future<void> _fetchData;
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-    _loadLandlordData();
+    _tabController = TabController(length: 2, vsync: this);
+    _fetchData = _loadLandlordData();
+    loadData();
+  }
+
+  bool isLoading = true;
+  Future<void> loadData() async {
+    await Future.delayed(Duration(seconds: 2));
+    setState(() {
+      isLoading = false;
+    });
   }
 
   Future<void> _loadLandlordData() async {
@@ -38,10 +53,11 @@ class _HomePageState extends State<HomePage>
     setState(() {
       _landlordsData = landlordsData;
     });
+    _refreshController.refreshCompleted();
   }
 
   Future<void> _handleRefresh() async {
-    return await Future.delayed(Duration(seconds: 2));
+    await _loadLandlordData();
   }
 
   @override
@@ -50,560 +66,189 @@ class _HomePageState extends State<HomePage>
       body: Container(
         color: Colors.blue[100],
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TabBar(
-              isScrollable: true,
-              labelColor: Colors.blue,
-              indicatorColor: Colors.blue,
-              controller: _tabController,
-              tabs: [
-                Tab(
-                  iconMargin: const EdgeInsets.only(bottom: 1.0),
-                  text: 'Full Year Accommodations',
-                  icon: Icon(Icons.location_city, color: Colors.blue),
+            Row(children: [
+              Expanded(
+                child: TabBar(
+                  labelColor: Colors.blue,
+                  indicatorColor: Colors.blue,
+                  controller: _tabController,
+                  tabs: [
+                    Tab(
+                      iconMargin: const EdgeInsets.only(bottom: 1.0),
+                      text: 'Accommodations',
+                      icon: Icon(Icons.location_city, color: Colors.blue),
+                    ),
+                    Tab(
+                      iconMargin: const EdgeInsets.only(bottom: 1.0),
+                      text: 'Houses',
+                      icon: Icon(Icons.home_work, color: Colors.blue),
+                    ),
+                  ],
                 ),
-                Tab(
-                  iconMargin: const EdgeInsets.only(bottom: 1.0),
-                  text: 'Semester Accomodation',
-                  icon: Icon(Icons.home_work, color: Colors.blue),
-                ),
-                Tab(
-                  iconMargin: const EdgeInsets.only(bottom: 1.0),
-                  text: 'Full Year Houses',
-                  icon: Icon(Icons.home_work, color: Colors.blue),
-                ),
-                Tab(
-                  iconMargin: const EdgeInsets.only(bottom: 1.0),
-                  text: 'Semester Houses',
-                  icon: Icon(Icons.home_work, color: Colors.blue),
-                ),
-              ],
-            ),
+              ),
+              IconButton(
+                  onPressed: () {},
+                  icon: Column(
+                    children: [
+                      PopupMenuButton<String>(
+                        color: Colors.blue[50],
+                        onSelected: (value) {},
+                        itemBuilder: (BuildContext context) {
+                          return [
+                            PopupMenuItem<String>(
+                              value: "Six months",
+                              child: Text("Six months residences"),
+                            ),
+                            PopupMenuItem<String>(
+                              value: "Ten months",
+                              child: Text("Ten months"),
+                            ),
+                          ];
+                        },
+                        icon: Icon(Icons.sort, color: Colors.blue),
+                      ),
+                      Text(
+                        'Sort',
+                        style: TextStyle(),
+                      )
+                    ],
+                  ))
+            ]),
             Expanded(
-              child: TabBarView(
-                physics: NeverScrollableScrollPhysics(),
-                controller: _tabController,
-                children: [
-                  SingleChildScrollView(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+              child: FutureBuilder(
+                future: _fetchData,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(
+                        child: Container(
+                            width: 100,
+                            height: 100,
+                            child: Center(
+                                child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                // Display Transport Accommodation
-                                if (_landlordsData.any((landlord) =>
-                                    landlord['transport availability'] ==
-                                        true &&
-                                    landlord['accomodationType'] == false &&
-                                    landlord['accomodationStatus'] == true &&
-                                    landlord['Full Year'] == true))
-                                  SingleChildScrollView(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Padding(
-                                          padding:
-                                              const EdgeInsets.only(left: 10.0),
-                                          child: Text(
-                                            'Transport Accommodation',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                        SingleChildScrollView(
-                                          scrollDirection: Axis.horizontal,
-                                          child: Row(
-                                            children: [
-                                              SizedBox(width: 10),
-                                              for (Map<String,
-                                                      dynamic> landlordData
-                                                  in _landlordsData)
-                                                if (landlordData[
-                                                            'transport availability'] ==
-                                                        true &&
-                                                    landlordData['Full Year'] ==
-                                                        true &&
-                                                    landlordData[
-                                                            'accomodationType'] ==
-                                                        false &&
-                                                    landlordData[
-                                                            'accomodationStatus'] ==
-                                                        true)
-                                                  GestureDetector(
-                                                    onTap: () {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              AccomodationPage(
-                                                            landlordData:
-                                                                landlordData,
-                                                          ),
-                                                        ),
-                                                      );
-                                                    },
-                                                    child: buildLandlordCard(
-                                                        landlordData),
-                                                  ),
-                                              SizedBox(
-                                                width: 10,
-                                              )
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                // Display Non-Transport Accommodation
-                                if (_landlordsData.any((landlord) =>
-                                    landlord['Full Year'] == true &&
-                                    landlord['transport availability'] ==
-                                        false &&
-                                    landlord['accomodationType'] == true &&
-                                    landlord['accomodationStatus'] == true))
-                                  SingleChildScrollView(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        SizedBox(height: 10),
-                                        Text(
-                                          'Non-Transport Accommodation',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        SingleChildScrollView(
-                                          scrollDirection: Axis.horizontal,
-                                          child: Row(
-                                            children: [
-                                              SizedBox(width: 10),
-                                              for (Map<String,
-                                                      dynamic> landlordData
-                                                  in _landlordsData)
-                                                if (landlordData[
-                                                            'transport availability'] ==
-                                                        false &&
-                                                    landlordData[
-                                                            'accomodationType'] ==
-                                                        true &&
-                                                    landlordData['Full Year'] ==
-                                                        true &&
-                                                    landlordData[
-                                                            'accomodationStatus'] ==
-                                                        true)
-                                                  GestureDetector(
-                                                    onTap: () {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              AccomodationPage(
-                                                            landlordData:
-                                                                landlordData,
-                                                          ),
-                                                        ),
-                                                      );
-                                                    },
-                                                    child: buildLandlordCard(
-                                                        landlordData),
-                                                  ),
-                                              SizedBox(width: 10)
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                Center(child: Text("Loading...")),
+                                Center(
+                                    child: LinearProgressIndicator(
+                                        color: Colors.blue)),
                               ],
-                            ),
-                          )
-                        ]),
-                  ),
-                  SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Display Transport Accommodation
-                        if (_landlordsData.any((landlord) =>
-                            landlord['transport availability'] == true &&
-                            landlord['Half Year'] == false &&
-                            landlord['accomodationType'] == true &&
-                            landlord['accomodationStatus'] == true))
-                          SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Transport Houses',
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
+                            ))));
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error loading data'));
+                  } else {
+                    return SmartRefresher(
+                      controller: _refreshController,
+                      onRefresh: _handleRefresh,
+                      header: WaterDropMaterialHeader(
+                        backgroundColor: Colors.blue,
+                      ),
+                      child: isLoading
+                          ? Center(
+                              child: Container(
+                                  width: 100,
+                                  height: 100,
+                                  child: Center(
+                                      child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
-                                      SizedBox(width: 10),
-                                      for (Map<String, dynamic> landlordData
-                                          in _landlordsData)
-                                        if (landlordData[
-                                                    'transport availability'] ==
-                                                true &&
-                                            landlordData['accomodationType'] ==
-                                                true &&
-                                            landlordData[
-                                                    'accomodationStatus'] ==
-                                                true &&
-                                            landlordData['Half Year'] == false)
-                                          GestureDetector(
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      AccomodationPage(
-                                                    landlordData: landlordData,
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                            child:
-                                                buildLandlordCard(landlordData),
-                                          ),
-                                      SizedBox(
-                                        width: 10,
-                                      )
+                                      Center(child: Text("Loading...")),
+                                      Center(
+                                          child: LinearProgressIndicator(
+                                              color: Colors.blue)),
                                     ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                        if (_landlordsData.any((landlord) =>
-                            landlord['transport availability'] == false &&
-                            landlord['accomodationType'] == true &&
-                            landlord['accomodationStatus'] == true &&
-                            landlord['Half Year'] == false))
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(height: 10),
-                              Text(
-                                'Non-Transport Houses',
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    for (Map<String, dynamic> landlordData
-                                        in _landlordsData)
-                                      if (landlordData[
-                                                  'transport availability'] ==
-                                              false &&
-                                          landlordData['accomodationType'] ==
-                                              true &&
-                                          landlordData['accomodationStatus'] ==
-                                              true &&
-                                          landlordData['Half Year'] == false)
-                                        GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    AccomodationPage(
-                                                  landlordData: landlordData,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          child:
-                                              buildLandlordCard(landlordData),
-                                        ),
-                                    SizedBox(
-                                      width: 10,
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  ),
-                  SingleChildScrollView(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                                  ))))
+                          : TabBarView(
+                              physics: NeverScrollableScrollPhysics(),
+                              controller: _tabController,
                               children: [
-                                // Display Transport Accommodation
-                                if (_landlordsData.any((landlord) =>
-                                    landlord['transport availability'] ==
-                                        true &&
-                                    landlord['accomodationType'] == false &&
-                                    landlord['accomodationStatus'] == true &&
-                                    landlord['Full Year'] == true))
-                                  SingleChildScrollView(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Padding(
-                                          padding:
-                                              const EdgeInsets.only(left: 10.0),
-                                          child: Text(
-                                            'Transport Accommodation',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                        SingleChildScrollView(
-                                          scrollDirection: Axis.horizontal,
-                                          child: Row(
-                                            children: [
-                                              SizedBox(width: 10),
-                                              for (Map<String,
-                                                      dynamic> landlordData
-                                                  in _landlordsData)
-                                                if (landlordData['transport availability'] ==
-                                                        true &&
-                                                    landlordData['accomodationType'] ==
-                                                        false &&
-                                                    landlordData[
-                                                            'accomodationStatus'] ==
-                                                        true &&
-                                                    landlordData['Full Year'] ==
-                                                        true)
-                                                  GestureDetector(
-                                                    onTap: () {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              AccomodationPage(
-                                                            landlordData:
-                                                                landlordData,
-                                                          ),
-                                                        ),
-                                                      );
-                                                    },
-                                                    child: buildLandlordCard(
-                                                        landlordData),
-                                                  ),
-                                              SizedBox(
-                                                width: 10,
-                                              )
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                // Display Non-Transport Accommodation
-                                if (_landlordsData.any((landlord) =>
-                                    landlord['transport availability'] ==
-                                        false &&
-                                    landlord['accomodationType'] == false &&
-                                    landlord['accomodationStatus'] == true &&
-                                    landlord['Full Year'] == true))
-                                  SingleChildScrollView(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        SizedBox(height: 10),
-                                        Text(
-                                          'Non-Transport Accommodation',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        SingleChildScrollView(
-                                          scrollDirection: Axis.horizontal,
-                                          child: Row(
-                                            children: [
-                                              SizedBox(width: 10),
-                                              for (Map<String,
-                                                      dynamic> landlordData
-                                                  in _landlordsData)
-                                                if (landlordData['transport availability'] == false &&
-                                                    landlordData[
-                                                            'accomodationType'] ==
-                                                        false &&
-                                                    landlordData[
-                                                            'accomodationStatus'] ==
-                                                        true &&
-                                                    landlordData['Full Year'] ==
-                                                        true)
-                                                  GestureDetector(
-                                                    onTap: () {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              AccomodationPage(
-                                                            landlordData:
-                                                                landlordData,
-                                                          ),
-                                                        ),
-                                                      );
-                                                    },
-                                                    child: buildLandlordCard(
-                                                        landlordData),
-                                                  ),
-                                              SizedBox(width: 10)
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                _buildAccommodationList(false),
+                                _buildAccommodationList(true),
                               ],
                             ),
-                          )
-                        ]),
-                  ),
-                  SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Display Transport Accommodation
-                        if (_landlordsData.any((landlord) =>
-                            landlord['transport availability'] == true &&
-                            landlord['accomodationType'] == true &&
-                            landlord['accomodationStatus'] == true &&
-                            landlord['Half Year'] == false))
-                          SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Transport Houses',
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    children: [
-                                      SizedBox(width: 10),
-                                      for (Map<String, dynamic> landlordData
-                                          in _landlordsData)
-                                        if (landlordData[
-                                                    'transport availability'] ==
-                                                true &&
-                                            landlordData['accomodationType'] ==
-                                                true &&
-                                            landlordData[
-                                                    'accomodationStatus'] ==
-                                                true &&
-                                            landlordData['Half Year'] == false)
-                                          GestureDetector(
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      AccomodationPage(
-                                                    landlordData: landlordData,
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                            child:
-                                                buildLandlordCard(landlordData),
-                                          ),
-                                      SizedBox(
-                                        width: 10,
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                        // Display Non-Transport Accommodation
-                        if (_landlordsData.any((landlord) =>
-                            landlord['transport availability'] == false &&
-                            landlord['accomodationType'] == true &&
-                            landlord['accomodationStatus'] == true &&
-                            landlord['Half Year'] == false))
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(height: 10),
-                              Text(
-                                'Non-Transport Houses',
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    for (Map<String, dynamic> landlordData
-                                        in _landlordsData)
-                                      if (landlordData[
-                                                  'transport availability'] ==
-                                              false &&
-                                          landlordData['accomodationType'] ==
-                                              true &&
-                                          landlordData['accomodationStatus'] ==
-                                              true &&
-                                          landlordData['Half Year'] == false)
-                                        GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    AccomodationPage(
-                                                  landlordData: landlordData,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          child:
-                                              buildLandlordCard(landlordData),
-                                        ),
-                                    SizedBox(
-                                      width: 10,
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  )
-                ],
+                    );
+                  }
+                },
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAccommodationList(bool isHouse) {
+    List<Map<String, dynamic>> filteredList = _landlordsData
+        .where((landlord) =>
+            landlord['accomodationType'] == isHouse &&
+            landlord['accomodationStatus'] == true)
+        .toList();
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (filteredList
+              .any((landlord) => landlord['transport availability'] == true))
+            _buildAccommodationSection(
+                'Transport', filteredList, true, isHouse),
+          if (filteredList
+              .any((landlord) => landlord['transport availability'] == false))
+            _buildAccommodationSection(
+                'Non-Transport', filteredList, false, isHouse),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAccommodationSection(
+      String title,
+      List<Map<String, dynamic>> list,
+      bool transportAvailability,
+      bool isHouse) {
+    String fullTitle = '$title ${isHouse ? 'Houses' : 'Accommodation'}';
+
+    List<Map<String, dynamic>> sectionList = list
+        .where((landlord) =>
+            landlord['transport availability'] == transportAvailability)
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 10.0, top: 10.0),
+          child: Text(
+            fullTitle,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              SizedBox(width: 10),
+              for (Map<String, dynamic> landlordData in sectionList)
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            AccomodationPage(landlordData: landlordData),
+                      ),
+                    );
+                  },
+                  child: buildLandlordCard(landlordData),
+                ),
+              SizedBox(width: 10),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -615,15 +260,14 @@ Widget buildLandlordCard(Map<String, dynamic> landlordData) {
     borderRadius: BorderRadius.circular(10),
     child: Card(
       color: Colors.blue[50],
-      elevation: 2,
+      elevation: 5,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10.0),
       ),
       child: Padding(
         padding: const EdgeInsets.all(5.0),
         child: Container(
-          width: 290,
-          height: 300,
+          width: 250,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -633,8 +277,8 @@ Widget buildLandlordCard(Map<String, dynamic> landlordData) {
                 child: profilePictureUrl != null
                     ? Image.network(
                         profilePictureUrl,
-                        width: double.infinity,
-                        height: 250,
+                        width: 249,
+                        height: 200,
                         fit: BoxFit.cover,
                       )
                     : Container(), // Or replace with a placeholder image
@@ -642,10 +286,14 @@ Widget buildLandlordCard(Map<String, dynamic> landlordData) {
               SizedBox(height: 5.0),
               Row(
                 children: [
-                  Text(
-                    ' ${landlordData['accomodationName'] ?? 'N/A'}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Text(
+                      ' ${landlordData['accomodationName'] ?? 'N/A'}',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   Icon(
@@ -660,8 +308,13 @@ Widget buildLandlordCard(Map<String, dynamic> landlordData) {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Available Now',
-                    style: TextStyle(color: Colors.green),
+                    landlordData['isFull'] == false
+                        ? 'Available Now'
+                        : 'Unavailable due to space',
+                    style: TextStyle(
+                        color: landlordData['isFull'] == false
+                            ? Colors.green
+                            : Colors.red),
                   ),
                   Icon(
                       landlordData['isFull'] == false
@@ -672,9 +325,9 @@ Widget buildLandlordCard(Map<String, dynamic> landlordData) {
               ),
               SizedBox(height: 5.0),
               Text(
-                '${landlordData['isNsfasAccredited'] == true ? 'Nsfas Accredited' : 'Not Nsfas accredited'}',
+                '${landlordData['isNsfasAccredited'] == false ? 'Nsfas Accredited' : 'Not Nsfas accredited'}',
                 style: TextStyle(
-                    color: landlordData['isNsfasAccredited'] == true
+                    color: landlordData['isNsfasAccredited'] == false
                         ? Colors.green
                         : Colors.red),
               ),

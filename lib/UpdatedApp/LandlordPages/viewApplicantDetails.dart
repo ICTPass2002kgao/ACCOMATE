@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
 
@@ -29,11 +30,18 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
     super.initState();
     _user = FirebaseAuth.instance.currentUser!;
     _loadUserData();
+    loadData();
+  }
 
-    FirebaseFirestore.instance
-        .collection('Students')
-        .doc(widget.studentApplicationData['userId'] ?? '')
-        .update({'applicationReviewed': true});
+  bool isLoading = true;
+  Future<void> loadData() async {
+    // Simulate loading data
+    await Future.delayed(Duration(seconds: 3));
+
+    // Set isLoading to false when data is loaded
+    setState(() {
+      isLoading = false;
+    });
   }
 
   Future<void> _loadUserData() async {
@@ -46,10 +54,68 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
     });
   }
 
+  void _showFeedback() {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) => Container(
+        height: 200,
+        width: 250,
+        child: AlertDialog(
+          backgroundColor: Colors.blue[100],
+          title: Text(
+            'Successful Feedback',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
+          content: Container(
+            height: 200,
+            width: 250,
+            child: Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(40),
+                  child: Container(
+                    color: Colors.green,
+                    width: 80,
+                    height: 80,
+                    child: Icon(Icons.done, color: Colors.white, size: 35),
+                  ),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Your feedback have been sent successfully to ${widget.studentApplicationData['name']}.',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            OutlinedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                Navigator.pushReplacementNamed(context, '/landlordPage');
+
+                print('email sent successfully');
+              },
+              child: Text('Continue'),
+              style: ButtonStyle(
+                shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5))),
+                foregroundColor: MaterialStatePropertyAll(Colors.white),
+                backgroundColor: MaterialStatePropertyAll(Colors.blue),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _saveApplicationResponse() async {
     try {
       showDialog(
-        context: context, // Prevent user from dismissing the dialog
+        barrierDismissible: false,
+        context: context,
         builder: (BuildContext context) {
           return Center(
             child: CircularProgressIndicator(
@@ -62,6 +128,12 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
       String studentUserId = widget.studentApplicationData['userId'] ?? '';
       String landlordUserId = _userData?['userId'] ?? '';
 
+      DateTime now = DateTime.now();
+      Timestamp feedbackDate = Timestamp.fromDate(now);
+      FirebaseFirestore.instance
+          .collection('Students')
+          .doc(widget.studentApplicationData['userId'] ?? '')
+          .update({'applicationReviewed': true});
       await FirebaseFirestore.instance
           .collection('Students')
           .doc(studentUserId)
@@ -70,96 +142,40 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
           .set({
         'landlordMessage': messageController.text,
         'accomodationName': _userData?['accomodationName'] ?? '',
-
         'status': status,
         'userId': _userData?['userId'] ?? '',
-
-        // Add more details as needed
+        'feedbackDate': feedbackDate
       });
 
-      print('email sent successfully');
-
-      showDialog(
-        barrierDismissible: false,
-        context: context,
-        builder: (context) => Container(
-          height: 200,
-          width: 250,
-          child: AlertDialog(
-            backgroundColor: Colors.blue[100],
-            title: Text(
-              'Successful Response',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-            content: Container(
-              height: 200,
-              width: 250,
-              child: Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(40),
-                    child: Container(
-                      color: Colors.green,
-                      width: 80,
-                      height: 80,
-                      child: Icon(Icons.done, color: Colors.white, size: 35),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    'Your response have been sent successfully to ${widget.studentApplicationData['name']}.',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              OutlinedButton(
-                onPressed: () async {
-                  showDialog(
-                    context: context, // Prevent user from dismissing the dialog
-                    builder: (BuildContext context) {
-                      return Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.blue,
-                        ),
-                      );
-                    },
-                  );
-
-                  if (status == true) {
-                    await sendEmail(
-                        _userData?['email'] ?? '', // Student's email
-                        'Response sent successfully',
-                        'Hi ${_userData?['accomodationName']} landlord, \nYour application was sent successfully to ${widget.studentApplicationData['name']}');
-                  } else {
-                    await sendEmail(
-                        _userData?['email'] ?? '', // Student's email
-                        'Response sent successfully',
-                        'Hi ${_userData?['accomodationName']} landlord, \nYour application was sent successfully to ${widget.studentApplicationData['name']}');
-                    await sendEmail(
-                        widget
-                            .studentApplicationData['email'], // Student's email
-                        'Rejected Application',
-                        'Hi ${widget.studentApplicationData['name']} , \nYour application from ${_userData?['accomodationName']} have been rejected due to some reasons');
-                  }
-                  Navigator.pushReplacementNamed(context, '/landlordPage');
-
-                  print('email sent successfully');
-                },
-                child: Text('Continue'),
-                style: ButtonStyle(
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5))),
-                  foregroundColor: MaterialStatePropertyAll(Colors.white),
-                  backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                ),
-              ),
-            ],
-          ),
-        ),
+      await sendEmail(
+        _userData?['email'] ?? '',
+        'Response sent successfully',
+        'Hi ${_userData?['accomodationName']} landlord, \nYour feedback was sent successfully to ${widget.studentApplicationData['name']} ${widget.studentApplicationData['surname']}.\nBest Regards\nYour Accomate Team',
       );
+
+      if (status == true) {
+        await sendEmail(
+          widget.studentApplicationData['email'],
+          'Application Approved',
+          'Hi ${widget.studentApplicationData['name']} , \nYour application from ${_userData?['accomodationName']} have been approved. Go to notification page in our app for more information.\nBest Regards\nYour Accomate Team',
+        );
+      } else {
+        await sendEmail(
+          widget.studentApplicationData['email'],
+          'Application Rejected',
+          'Hi ${widget.studentApplicationData['name']} , \nYour application from ${_userData?['accomodationName']} have been rejected due to some reasons. Go to notification page in our app for more information.\nBest Regards\nYour Accomate Team',
+        );
+      }
+
+      // Dismiss the progress indicator
+      Navigator.of(context).pop();
+
+      // Show feedback dialog
+      _showFeedback();
     } catch (e) {
+      // Dismiss the progress indicator in case of error
+      Navigator.of(context).pop();
+
       showDialog(
         context: context,
         builder: (context) => Container(
@@ -167,7 +183,7 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
           width: 250,
           child: AlertDialog(
             title: Text(
-              'Successful Response',
+              'Error',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             content: Text(
@@ -176,17 +192,20 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
             ),
             actions: [
               TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop;
+                onPressed: () {
+                  Navigator.of(context).pop();
                 },
                 child: Text('Okay'),
                 style: ButtonStyle(
-                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5))),
-                    foregroundColor: MaterialStatePropertyAll(Colors.white),
-                    backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                    minimumSize:
-                        MaterialStatePropertyAll(Size(double.infinity, 50))),
+                  shape: MaterialStatePropertyAll(
+                    RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5)),
+                  ),
+                  foregroundColor: MaterialStatePropertyAll(Colors.white),
+                  backgroundColor: MaterialStatePropertyAll(Colors.blue),
+                  minimumSize:
+                      MaterialStatePropertyAll(Size(double.infinity, 50)),
+                ),
               ),
             ],
           ),
@@ -194,9 +213,6 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
       );
     }
   }
-
-  // final HttpsCallable sendEmailCallable =
-  //     FirebaseFunctions.instance.httpsCallable('sendEmail');
 
   Future<void> sendEmail(
     String recipientEmail,
@@ -230,143 +246,172 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
           foregroundColor: Colors.white,
           backgroundColor: Colors.blue,
         ),
-        body: Container(
-          color: Colors.blue[100],
-          height: double.infinity,
-          child: SingleChildScrollView(
-            physics: AlwaysScrollableScrollPhysics(),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Tables(
-                      columnName: 'Name',
-                      columnValue: widget.studentApplicationData['name'] ?? ''),
-                  Tables(
-                      columnName: 'Surname',
-                      columnValue:
-                          widget.studentApplicationData['surname'] ?? ''),
-                  Tables(
-                      columnName: 'Cellphone Number',
-                      columnValue:
-                          widget.studentApplicationData['contactDetails'] ??
-                              ''),
-                  Tables(
-                      columnName: 'Email Address',
-                      columnValue:
-                          widget.studentApplicationData['email'] ?? ''),
-                  Tables(
-                      columnName: 'Enrolled University',
-                      columnValue:
-                          widget.studentApplicationData['university'] ?? ''),
-                  Tables(
-                      columnName: 'Type of room',
-                      columnValue:
-                          widget.studentApplicationData['roomType'] ?? ''),
-                  Tables(
-                      columnName: 'Year of study',
-                      columnValue:
-                          widget.studentApplicationData['fieldOfStudy'] ?? ''),
-
-                  SizedBox(
-                    height: 20,
-                  ),
-
-                  Container(
-                    width: buttonWidth,
-                    child: ExpansionTile(
-                      title: Text('Choose Status'),
+        body: isLoading
+            ? Center(
+                child: Container(
+                    width: 100,
+                    height: 100,
+                    child: Center(
+                        child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Row(
-                          children: [
-                            Radio(
-                              activeColor: Colors.green,
-                              fillColor: MaterialStatePropertyAll(Colors.green),
-                              value: true,
-                              groupValue: status,
-                              onChanged: (value) {
-                                setState(() {
-                                  status = value!;
-                                });
-                              },
-                            ),
-                            Text('Accept applicant'),
-                          ],
-                        ),
-                        SizedBox(width: 16),
-                        Row(
-                          children: [
-                            Radio(
-                              activeColor: Colors.red,
-                              fillColor: MaterialStatePropertyAll(Colors.red),
-                              value: false,
-                              groupValue: status,
-                              onChanged: (value) {
-                                setState(() {
-                                  status = value!;
-                                });
-                              },
-                            ),
-                            Text('Reject applicant'),
-                          ],
-                        ),
+                        Center(child: Text("Loading...")),
+                        Center(
+                            child: LinearProgressIndicator(color: Colors.blue)),
                       ],
-                    ),
-                  ),
-                  SizedBox(
-                    height: 20,
-                  ),
-
-                  if (status == false)
-                    Column(
+                    ))))
+            : Container(
+                color: Colors.blue[100],
+                height: double.infinity,
+                child: SingleChildScrollView(
+                  physics: AlwaysScrollableScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                            'Please provide the reason a student is rejected & let the student know that they can reApply if their prefered room is not available'),
+                        Tables(
+                            columnName: 'Name',
+                            columnValue:
+                                widget.studentApplicationData['name'] ?? ''),
+                        Tables(
+                            columnName: 'Surname',
+                            columnValue:
+                                widget.studentApplicationData['surname'] ?? ''),
+                        Tables(
+                            columnName: 'Cellphone Number',
+                            columnValue: widget
+                                    .studentApplicationData['contactDetails'] ??
+                                ''),
+                        Tables(
+                            columnName: 'Email Address',
+                            columnValue:
+                                widget.studentApplicationData['email'] ?? ''),
+                        Tables(
+                            columnName: 'Enrolled University',
+                            columnValue:
+                                widget.studentApplicationData['university'] ??
+                                    ''),
+                        Tables(
+                            columnName: 'Type of room',
+                            columnValue:
+                                widget.studentApplicationData['roomType'] ??
+                                    ''),
+                        Tables(
+                            columnName: 'Period of study',
+                            columnValue:
+                                widget.studentApplicationData['fieldOfStudy'] ??
+                                    ''),
+                        Tables(
+                            columnName: 'Year of study',
+                            columnValue: widget
+                                    .studentApplicationData['periodOfStudy'] ??
+                                ''),
+                        Tables(
+                            columnName: 'Application Date & Time',
+                            columnValue: DateFormat('yyyy-MM-dd HH:mm').format(
+                                widget.studentApplicationData['appliedDate']
+                                    .toDate())),
+                        SizedBox(
+                          height: 20,
+                        ),
                         Container(
                           width: buttonWidth,
-                          child: TextField(
-                            maxLines: 4,
-                            controller: messageController,
-                            decoration: InputDecoration(
-                                border: OutlineInputBorder(),
-                                labelText: "Rejected reason"),
+                          child: ExpansionTile(
+                            title: Text('Choose Status'),
+                            children: [
+                              Row(
+                                children: [
+                                  Radio(
+                                    activeColor: Colors.green,
+                                    fillColor:
+                                        MaterialStatePropertyAll(Colors.green),
+                                    value: true,
+                                    groupValue: status,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        status = value!;
+                                      });
+                                    },
+                                  ),
+                                  Text('Accept applicant'),
+                                ],
+                              ),
+                              SizedBox(width: 16),
+                              Row(
+                                children: [
+                                  Radio(
+                                    activeColor: Colors.red,
+                                    fillColor:
+                                        MaterialStatePropertyAll(Colors.red),
+                                    value: false,
+                                    groupValue: status,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        status = value!;
+                                      });
+                                    },
+                                  ),
+                                  Text('Reject applicant'),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        if (status == false)
+                          Column(
+                            children: [
+                              Text(
+                                  'Please provide the reason a student is rejected & let the student know that they can reApply if their prefered room is not available or the problem can be resolved.'),
+                              Container(
+                                width: buttonWidth,
+                                child: TextField(
+                                  maxLines: 4,
+                                  controller: messageController,
+                                  decoration: InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: "Rejected reason"),
+                                ),
+                              ),
+                            ],
+                          ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            _saveApplicationResponse();
+                          },
+                          icon: Icon(
+                            Icons.feedback_outlined,
+                            color: Colors.white,
+                          ),
+                          label: Text('Send Response'),
+                          style: ButtonStyle(
+                              shape: MaterialStatePropertyAll(
+                                  RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(5))),
+                              foregroundColor:
+                                  MaterialStatePropertyAll(Colors.white),
+                              backgroundColor: MaterialStatePropertyAll(
+                                  status == true
+                                      ? Colors.green
+                                      : Colors.red[300]),
+                              minimumSize: MaterialStatePropertyAll(
+                                  Size(buttonWidth, 50))),
+                        ),
+                        SizedBox(
+                          width: 10,
+                        )
                       ],
                     ),
-
-                  SizedBox(
-                    height: 10,
                   ),
-
-                  //Additional Message to student
-
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      _saveApplicationResponse();
-                    },
-                    icon: Icon(
-                      status == true ? Icons.done : Icons.delete,
-                      color: Colors.white,
-                    ),
-                    label: Text('Send Response'),
-                    style: ButtonStyle(
-                        shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5))),
-                        foregroundColor: MaterialStatePropertyAll(Colors.white),
-                        backgroundColor: MaterialStatePropertyAll(
-                            status == true ? Colors.green : Colors.red[300]),
-                        minimumSize:
-                            MaterialStatePropertyAll(Size(buttonWidth, 50))),
-                  ),
-                  SizedBox(
-                    width: 10,
-                  )
-                ],
-              ),
-            ),
-          ),
-        ));
+                ),
+              ));
   }
 }

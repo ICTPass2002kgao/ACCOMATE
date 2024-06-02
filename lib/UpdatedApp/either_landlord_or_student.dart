@@ -6,6 +6,7 @@ import 'package:api_com/UpdatedApp/VerifyEmail.dart';
 import 'package:api_com/UpdatedApp/landlordFurntherRegistration.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_intl_phone_field/flutter_intl_phone_field.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
 
@@ -22,9 +23,84 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
   final TextEditingController surnameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController contactDetails = TextEditingController();
   final TextEditingController accomodationName = TextEditingController();
   final TextEditingController distanceController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    selectedUniversity = 'Vaal University of Technology';
+    // Listen to changes in the TextField
+    nameController.addListener(() {
+      // Get the current text
+      String nameText = nameController.text;
+
+      // If the last character is a space, remove it
+      if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
+        nameController.text = nameText.trim();
+        nameController.selection = TextSelection.fromPosition(
+            TextPosition(offset: nameController.text.length));
+      }
+    });
+    surnameController.addListener(() {
+      // Get the current text
+      String nameText = surnameController.text;
+
+      // If the last character is a space, remove it
+      if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
+        surnameController.text = nameText.trim();
+        surnameController.selection = TextSelection.fromPosition(
+            TextPosition(offset: surnameController.text.length));
+      }
+    });
+    emailController.addListener(() {
+      // Get the current text
+      String nameText = emailController.text;
+
+      // If the last character is a space, remove it
+      if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
+        emailController.text = nameText.trim();
+        emailController.selection = TextSelection.fromPosition(
+            TextPosition(offset: emailController.text.length));
+      }
+    });
+    accomodationName.addListener(() {
+      // Get the current text
+      String nameText = accomodationName.text;
+
+      // If the last character is a space, remove it
+      if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
+        accomodationName.text = nameText.trim();
+        accomodationName.selection = TextSelection.fromPosition(
+            TextPosition(offset: accomodationName.text.length));
+      }
+    });
+    passwordController.addListener(() {
+      // Get the current text
+      String nameText = passwordController.text;
+
+      // If the last character is a space, remove it
+      if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
+        passwordController.text = nameText.trim();
+        passwordController.selection = TextSelection.fromPosition(
+            TextPosition(offset: passwordController.text.length));
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    surnameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    accomodationName.dispose();
+    super.dispose();
+  }
+
+  String phoneNumber = '';
+  final TextEditingController _phoneController = TextEditingController();
   void showError(String val) {
     showDialog(
       context: context,
@@ -42,34 +118,53 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
             },
             child: Text('Retry'),
             style: ButtonStyle(
-                shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(5))),
-                foregroundColor: MaterialStatePropertyAll(Colors.white),
-                backgroundColor: MaterialStatePropertyAll(Colors.red[300]),
-                minimumSize: MaterialStatePropertyAll(Size(300, 50))),
+                foregroundColor: WidgetStatePropertyAll(Colors.white),
+                backgroundColor: WidgetStatePropertyAll(Colors.red[300]),
+                minimumSize: WidgetStatePropertyAll(Size(300, 50))),
           ),
         ],
       ),
     );
   }
 
-  final HttpsCallable sendEmailCallable =
-      FirebaseFunctions.instance.httpsCallable('sendEmail');
+  Future<void> sendEmail(
+      String recipientEmail, String subject, String body) async {
+    final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
+    final message = Message()
+      ..from = Address('accomate33@gmail.com', 'Accomate Team')
+      ..recipients.add(recipientEmail)
+      ..subject = subject
+      ..html = body;
 
-  Future<void> sendEmail(String to, String subject, String body) async {
     try {
-      final result = await sendEmailCallable.call({
-        'to': to,
-        'subject': subject,
-        'body': body,
-      });
-      print(result.data);
-    } catch (e) {}
+      await send(message, smtpServer);
+      print('Email sent successfully');
+    } catch (e) {
+      print('Error sending email: $e');
+    }
+  }
+
+  String maskEmail(String email) {
+    final emailParts = email.split('@');
+    if (emailParts.length != 2) return email;
+
+    final domain = emailParts[1];
+    final local = emailParts[0];
+    if (local.length <= 3) {
+      return '***@$domain';
+    }
+
+    final maskedLocal =
+        local.substring(0, local.length - 3).replaceAll(RegExp('.'), '*') +
+            local.substring(local.length - 3);
+    return '$maskedLocal@$domain';
   }
 
   void checkStudentValues() {
     String email = emailController.text;
-    String contacts = contactDetails.text;
+    String contacts = _phoneController.text;
     String password = passwordController.text;
     if (nameController.text == '') {
       showError('Please make sure you fill in all the required details');
@@ -94,9 +189,9 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
       showError(
           'Invalid email, Please make sure the email is in a correct format');
     }
-    if (contactDetails.text == '') {
+    if (_phoneController.text == '') {
       showError('Please make sure you fill in all the required details');
-    } else if (contacts.length != 10) {
+    } else if (contacts.length != 9) {
       showError('Please make sure the contacts are correct');
     } else {
       String _generateRandomCode() {
@@ -128,8 +223,8 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
             icon: Icon(Icons.verified_user_rounded, size: 50),
             iconColor: Colors.blue,
             content: Text(selectedGender == 'Male'
-                ? 'Hello Mr ${surnameController.text},\nA verification code have been sent to ${emailController.text} provide the codes to proceed'
-                : 'Hello Mrs ${surnameController.text},\nA verification code have been sent to ${emailController.text} provide the codes to proceed'),
+                ? 'Hello Mr ${surnameController.text},\nA verification code have been sent to ${maskEmail(emailController.text)} provide the codes to proceed'
+                : 'Hello Mrs ${surnameController.text},\nA verification code have been sent to ${maskEmail(emailController.text)} provide the codes to proceed'),
             actions: [
               OutlinedButton(
                   child: Text('Verify'),
@@ -147,15 +242,15 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                   university: selectedUniversity,
                                   gender: selectedGender,
                                   password: passwordController.text,
-                                  contactDetails: contactDetails.text,
+                                  contactDetails: phoneNumber,
                                   isLandlord: widget.isLandlord,
                                 ))));
                   },
                   style: ButtonStyle(
-                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                    shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5))),
-                    foregroundColor: MaterialStatePropertyAll(Colors.white),
-                    backgroundColor: MaterialStatePropertyAll(Colors.blue),
+                    foregroundColor: WidgetStatePropertyAll(Colors.white),
+                    backgroundColor: WidgetStatePropertyAll(Colors.blue),
                   )),
             ],
           ),
@@ -166,7 +261,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
 
   void checkLandlordValues() {
     String email = emailController.text;
-    String contacts = contactDetails.text;
+    String contacts = _phoneController.text;
     String password = passwordController.text;
     if (emailController.text == '') {
       showError('Please make sure you fill in all the required details');
@@ -186,11 +281,11 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
       showError(
           'Invalid email, Please make sure the email is in a correct format');
     }
-    if (contactDetails.text == '') {
+    if (_phoneController.text == '') {
       showError('Please make sure you fill in all the required details');
-    } else if (contacts.length != 10) {
+    } else if (contacts.length != 9) {
       showError('Please make sure the contacts are correct');
-    } else if (contacts.length != 10) {
+    } else if (contacts.length != 9) {
       showError('Please make sure the contacts are correct');
     } else {
       setState(() {
@@ -200,7 +295,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
             MaterialPageRoute(
                 builder: ((context) => LandlordFurtherRegistration(
                       password: passwordController.text,
-                      contactDetails: contactDetails.text,
+                      contactDetails: phoneNumber,
                       isLandlord: widget.isLandlord,
                       accomodationName: accomodationName.text,
                       landlordEmail: emailController.text,
@@ -221,12 +316,6 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
     'Male',
     'Female',
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    selectedUniversity = 'Vaal University of Technology'; // Default value
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -252,7 +341,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
             left: 20,
             right: 20,
           ),
-          child: !widget.isLandlord //This is for student
+          child: !widget.isLandlord
               ? SingleChildScrollView(
                   physics: AlwaysScrollableScrollPhysics(),
                   child: Center(
@@ -312,10 +401,10 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                   Icons.person,
                                   color: Colors.blue,
                                 ),
-                                hintText: 'Name'),
+                                labelText: 'Name'),
                           ),
                         ),
-                        SizedBox(height: 5),
+                        SizedBox(height: 8),
                         Container(
                           width: buttonWidth,
                           child: TextField(
@@ -336,10 +425,10 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                   Icons.person,
                                   color: Colors.blue,
                                 ),
-                                hintText: 'Surname'),
+                                labelText: 'Surname'),
                           ),
                         ),
-                        SizedBox(height: 5),
+                        SizedBox(height: 8),
                         Container(
                           width: buttonWidth,
                           child: TextField(
@@ -361,10 +450,10 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                   Icons.mail,
                                   color: Colors.blue,
                                 ),
-                                hintText: 'Email account'),
+                                labelText: 'Email account'),
                           ),
                         ),
-                        SizedBox(height: 5),
+                        SizedBox(height: 8),
                         Container(
                           width: buttonWidth,
                           child: TextField(
@@ -398,17 +487,16 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                   Icons.lock,
                                   color: Colors.blue,
                                 ),
-                                hintText: 'Password'),
+                                labelText: 'Password'),
                             obscureText: _obscureText,
                           ),
                         ),
-                        SizedBox(height: 5),
+                        SizedBox(height: 8),
                         Container(
-                          width: buttonWidth,
-                          child: TextField(
-                            keyboardType: TextInputType.number,
-                            controller: contactDetails,
-                            decoration: InputDecoration(
+                            width: buttonWidth,
+                            child: IntlPhoneField(
+                              decoration: InputDecoration(
+                                labelText: 'Phone Number',
                                 border: OutlineInputBorder(
                                   borderSide: BorderSide(color: Colors.blue),
                                   borderRadius: BorderRadius.circular(10),
@@ -420,18 +508,20 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                 focusColor: Colors.blue,
                                 fillColor: Colors.blue[50],
                                 filled: true,
-                                prefixIcon: Icon(
-                                  Icons.phone,
-                                  color: Colors.blue,
-                                ),
-                                hintText: 'Contact details'),
-                          ),
-                        ),
-                        SizedBox(height: 5),
+                              ),
+                              initialCountryCode: 'ZA',
+                              onChanged: (phone) {
+                                setState(() {
+                                  phoneNumber = phone.completeNumber;
+                                });
+                              },
+                              controller: _phoneController,
+                            )),
+                        SizedBox(height: 8),
                         Container(
                           width: buttonWidth,
                           child: ExpansionTile(
-                            title: Text('Select University Or College'),
+                            title: Text('Select University'),
                             children: universities.map((university) {
                               return RadioListTile<String>(
                                 title: Text(university),
@@ -446,7 +536,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                             }).toList(),
                           ),
                         ),
-                        SizedBox(height: 5),
+                        SizedBox(height: 8),
                         Container(
                           width: buttonWidth,
                           child: ExpansionTile(
@@ -479,14 +569,14 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                             style: TextStyle(color: Colors.white, fontSize: 18),
                           ),
                           style: ButtonStyle(
-                              shape: MaterialStatePropertyAll(
+                              shape: WidgetStatePropertyAll(
                                   RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(5))),
                               foregroundColor:
-                                  MaterialStatePropertyAll(Colors.blue),
+                                  WidgetStatePropertyAll(Colors.blue),
                               backgroundColor:
-                                  MaterialStatePropertyAll(Colors.blue),
-                              minimumSize: MaterialStatePropertyAll(
+                                  WidgetStatePropertyAll(Colors.blue),
+                              minimumSize: WidgetStatePropertyAll(
                                   Size(buttonWidth, 50))),
                         ),
                         SizedBox(height: 20.0),
@@ -556,10 +646,10 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                   Icons.mail,
                                   color: Colors.blue,
                                 ),
-                                hintText: 'Email'),
+                                labelText: 'Email'),
                           ),
                         ),
-                        SizedBox(height: 5),
+                        SizedBox(height: 8),
                         Container(
                           width: buttonWidth,
                           child: TextField(
@@ -593,11 +683,11 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                   Icons.lock,
                                   color: Colors.blue,
                                 ),
-                                hintText: 'Password'),
+                                labelText: 'Password'),
                             obscureText: _obscureText,
                           ),
                         ),
-                        SizedBox(height: 5),
+                        SizedBox(height: 8),
                         TextField(
                           controller: accomodationName,
                           decoration: InputDecoration(
@@ -616,30 +706,33 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                 Icons.maps_home_work_outlined,
                                 color: Colors.blue,
                               ),
-                              hintText: 'Accomodation Name'),
+                              labelText: 'Accomodation Name'),
                         ),
-                        SizedBox(height: 5),
-                        TextField(
-                          keyboardType: TextInputType.number,
-                          controller: contactDetails,
-                          decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.blue),
-                                borderRadius: BorderRadius.circular(10),
+                        SizedBox(height: 8),
+                        Container(
+                            width: buttonWidth,
+                            child: IntlPhoneField(
+                              decoration: InputDecoration(
+                                labelText: 'Phone Number',
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.blue),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.blue),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                               ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.blue),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              focusColor: Colors.blue,
-                              fillColor: Colors.blue[50],
-                              filled: true,
-                              prefixIcon: Icon(
-                                Icons.phone_enabled_sharp,
-                                color: Colors.blue,
-                              ),
-                              hintText: 'Contact details'),
-                        ),
+                              initialCountryCode: 'ZA',
+                              onChanged: (phone) {
+                                setState(() {
+                                  if (phone.isValidNumber()) {
+                                    phoneNumber = phone.completeNumber;
+                                  }
+                                });
+                              },
+                              controller: _phoneController,
+                            )),
                         SizedBox(height: 20.0),
                         ElevatedButton(
                           onPressed: () async {
@@ -650,14 +743,14 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                             style: TextStyle(color: Colors.white, fontSize: 18),
                           ),
                           style: ButtonStyle(
-                              shape: MaterialStatePropertyAll(
+                              shape: WidgetStatePropertyAll(
                                   RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(5))),
                               foregroundColor:
-                                  MaterialStatePropertyAll(Colors.blue),
+                                  WidgetStatePropertyAll(Colors.blue),
                               backgroundColor:
-                                  MaterialStatePropertyAll(Colors.blue),
-                              minimumSize: MaterialStatePropertyAll(
+                                  WidgetStatePropertyAll(Colors.blue),
+                              minimumSize: WidgetStatePropertyAll(
                                   Size(buttonWidth, 50))),
                         )
                       ]),

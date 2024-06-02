@@ -1,9 +1,10 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, deprecated_member_use, curly_braces_in_flow_control_structures
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server/gmail.dart';
 
 class ViewApplicationResponses extends StatefulWidget {
   final Map<String, dynamic> studentApplicationData;
@@ -117,7 +118,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
 
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
-        .collection('Studets')
+        .collection('Students')
         .doc(_user.uid)
         .get();
     setState(() {
@@ -125,24 +126,27 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
     });
   }
 
-  final HttpsCallable sendEmailCallable =
-      FirebaseFunctions.instance.httpsCallable('sendEmail');
+  Future<void> sendEmail(
+      String recipientEmail, String subject, String body) async {
+    final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
+    final message = Message()
+      ..from = Address('accomate33@gmail.com', 'Accomate Team')
+      ..recipients.add(recipientEmail)
+      ..subject = subject
+      ..html = body;
 
-  Future<void> sendEmail(String to, String subject, String body) async {
     try {
-      final result = await sendEmailCallable.call({
-        'to': to,
-        'subject': subject,
-        'body': body,
-      });
-      print(result.data);
-    } catch (e) {}
+      await send(message, smtpServer);
+      print('Email sent successfully');
+    } catch (e) {
+      print('Error sending email: $e');
+    }
   }
 
   bool isLoading = true;
   Future<void> loadData() async {
     // Simulate loading data
-    await Future.delayed(Duration(seconds: 5));
+    await Future.delayed(Duration(seconds: 3));
 
     // Set isLoading to false when data is loaded
     setState(() {
@@ -155,6 +159,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
     double buttonWidth =
         MediaQuery.of(context).size.width < 550 ? double.infinity : 400;
     return Scaffold(
+      backgroundColor: Colors.blue[100],
       appBar: AppBar(
         title: Text(
             '${widget.studentApplicationData['accomodationName'] ?? 'n/a'}'),
@@ -164,10 +169,21 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
       ),
       body: isLoading
           ? Center(
-              child: CircularProgressIndicator(
-                color: Colors.blue,
-              ),
-            )
+              child: Container(
+                  width: 100,
+                  height: 100,
+                  child: Center(
+                      child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Center(child: Text("Loading...")),
+                      Center(
+                          child: LinearProgressIndicator(
+                        color: Colors.blue,
+                      )),
+                    ],
+                  ))))
           : Container(
               color: Colors.blue[100],
               height: double.infinity,
@@ -234,7 +250,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                       child: Column(
                                         children: [
                                           Text(
-                                            'Hi, ${_userData?['name'] ?? 'N/A'} Your Application have been rejected due to the following reasons ${widget.studentApplicationData['landlordMessage']}',
+                                            'Hi, ${_userData?['name'] ?? 'N/A'} Your Application have been rejected due to the following reasons:\n${widget.studentApplicationData['landlordMessage']}',
                                           )
                                         ],
                                       )),
@@ -253,7 +269,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                             height: 10,
                                           ),
                                           Text(
-                                            'Hi, ${_userData?['name'] ?? ''} Your application have been accepted you can now register by downloading the contract on the received email and sign all the required field. \n\n\n\nRegistration Instructions: ${widget.studentApplicationData['landlordMessage']}',
+                                            'Hi, ${_userData?['name'] ?? ''} Your application have been approved you have 3 days limited for you to register otherwise your application will be considered as failed.',
                                             maxLines: 100,
                                           ),
                                         ],
@@ -263,6 +279,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                   ),
                                   ElevatedButton.icon(
                                     onPressed: () {
+                                      Navigator.of(context).pop();
                                       Navigator.pushReplacementNamed(
                                           context, '/studentPage');
                                     },

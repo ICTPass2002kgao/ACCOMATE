@@ -57,6 +57,7 @@ class _StudentMessagesIssuesState extends State<StudentMessagesIssues> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.blue[100],
       appBar: AppBar(
         title: Row(
           children: [
@@ -67,69 +68,72 @@ class _StudentMessagesIssuesState extends State<StudentMessagesIssues> {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(7),
-                child: Container(
-                  color: Colors.grey[400],
-                  constraints: BoxConstraints(maxWidth: 250),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Text(
-                      '${widget.studentsHelpMesseges['message'] ?? ''}',
-                      style: TextStyle(
-                        color: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(7),
+                  child: Container(
+                    color: Colors.grey[400],
+                    constraints: BoxConstraints(maxWidth: 250),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Text(
+                        '${widget.studentsHelpMesseges['message'] ?? ''}',
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
                 ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  messagesController.text,
+                  style: TextStyle(
+                      color: Colors.black, backgroundColor: Colors.grey),
+                ),
               ),
-            ],
-          ),
-          SizedBox(height: 10),
-          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Text(
-                messagesController.text,
-                style: TextStyle(
-                    color: Colors.black, backgroundColor: Colors.grey),
+            ]),
+            Container(
+              alignment: Alignment.bottomCenter,
+              height: 50,
+              color: Color.fromARGB(255, 230, 230, 230),
+              child: TextField(
+                controller: messagesController,
+                decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    focusColor: Colors.blue,
+                    fillColor: Color.fromARGB(255, 230, 230, 230),
+                    filled: true,
+                    suffixIcon: IconButton(
+                        onPressed: () {
+                          messagesController.text.isNotEmpty
+                              ? _sendMessage(context)
+                              : ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content:
+                                          Text("Can't sent an empty message")));
+                        },
+                        icon: Icon(
+                          Icons.send,
+                          color: Colors.blue,
+                        )),
+                    hintText: 'Sent a message'),
               ),
             ),
-          ]),
-          Container(
-            alignment: Alignment.bottomCenter,
-            height: 50,
-            color: Color.fromARGB(255, 230, 230, 230),
-            child: TextField(
-              controller: messagesController,
-              decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  focusColor: Colors.blue,
-                  fillColor: Color.fromARGB(255, 230, 230, 230),
-                  filled: true,
-                  suffixIcon: IconButton(
-                      onPressed: () {
-                        messagesController.text.isNotEmpty
-                            ? _sendMessage(context)
-                            : ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content:
-                                        Text("Can't sent an empty message")));
-                      },
-                      icon: Icon(
-                        Icons.send,
-                        color: Colors.blue,
-                      )),
-                  hintText: 'Sent a message'),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,48 +1,75 @@
-// ignore_for_file: prefer_const_constructors, unnecessary_brace_in_string_interps, sized_box_for_whitespace
-
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server/gmail.dart';
 
 class PersonalPage extends StatefulWidget {
-  const PersonalPage({super.key});
+  const PersonalPage({Key? key}) : super(key: key);
 
   @override
   State<PersonalPage> createState() => _PersonalPageState();
 }
 
 class _PersonalPageState extends State<PersonalPage> {
+  late User _user;
+  Map<String, dynamic>? _userData;
+
   TextEditingController emailController = TextEditingController();
   TextEditingController nameController = TextEditingController();
-
-  late User _user;
-  Map<String, dynamic>? _userData; // Make _userData nullable
+  List<TextEditingController> otpControllers =
+      List.generate(4, (index) => TextEditingController());
 
   @override
   void initState() {
     super.initState();
     _user = FirebaseAuth.instance.currentUser!;
     _loadUserData();
+    loadData();
   }
 
+  String registeredDate = '';
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
         .collection('Students')
         .doc(_user.uid)
         .get();
+
+    // if (userDataSnapshot.exists) {
+    //   Timestamp registeredTimestamp = userDataSnapshot['registeredDate'];
+    //   DateTime registeredDateTime = registeredTimestamp.toDate();
+
+    //   String formattedDate =
+    //       DateFormat('yyyy-MM-dd HH:mm').format(registeredDateTime);
+
+    //   print('User registered on: $formattedDate');
+
     setState(() {
+      // registeredDate = formattedDate;
       _userData = userDataSnapshot.data() as Map<String, dynamic>?;
     });
+    // }
   }
 
   String verificationCode = _generateRandomCode();
+
   static String _generateRandomCode() {
     final random = Random();
-    // Generate a random 6-digit code
     return '${random.nextInt(9999).toString().padLeft(4, '0')}';
+  }
+
+  bool isLoading = true;
+
+  Future<void> loadData() async {
+    await Future.delayed(Duration(seconds: 2));
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   void _confirmUpdate() {
@@ -61,20 +88,22 @@ class _PersonalPageState extends State<PersonalPage> {
         _userData?['email'] ?? 'Loading...', // Student's email
         'Verification Code',
         _userData?['gender'] == 'Male'
-            ? 'Hello Mr ${_userData?['surname'] ?? 'Loading...'},,\nWe are aware that you are trying to update your email account on accomate App\nHere  is your verification code: ${verificationCode}'
-            : 'Hello Mrs ${_userData?['surname'] ?? 'Loading...'},,\nWe are aware that you are trying to update your email account on accomate App\nHere  is your verification code: ${verificationCode}');
-
+            ? 'Hello Mr ${_userData?['surname'] ?? 'Loading...'},,\nWe are aware that you are trying to update your email account on accomate App\nHere  is your verification code: $verificationCode'
+            : 'Hello Mrs ${_userData?['surname'] ?? 'Loading...'},,\nWe are aware that you are trying to update your email account on accomate App\nHere  is your verification code: $verificationCode');
+    print(verificationCode);
     showDialog<void>(
       context: context,
-      barrierDismissible: false, // user must tap button for close
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(5),
           ),
-          backgroundColor: Colors.white,
-          title: Text('Verification Code',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.blue[50],
+          title: Text(
+            'Verification Code',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
@@ -93,18 +122,14 @@ class _PersonalPageState extends State<PersonalPage> {
                             controller: otpControllers[index],
                             textAlign: TextAlign.center,
                             keyboardType: TextInputType.number,
-                            // Hide the entered digits
                             maxLength: 1,
                             onChanged: (value) {
-                              // Handle OTP input
                               if (index < 3 && value.isNotEmpty) {
-                                FocusScope.of(context)
-                                    .nextFocus(); // Move focus to the next TextField
+                                FocusScope.of(context).nextFocus();
                               }
                             },
                             decoration: InputDecoration(
-                              counterText:
-                                  '', // Hide the default character counter
+                              counterText: '',
                               enabledBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.blue),
                                 borderRadius: BorderRadius.circular(10),
@@ -129,8 +154,8 @@ class _PersonalPageState extends State<PersonalPage> {
                                     'Loading...', // Student's email
                                 'Verification Code',
                                 _userData?['email'] ?? 'Loading..' == 'Male'
-                                    ? 'Hello Mr ${_userData?['email'] ?? 'Loading...'},,\nWe are aware that you are trying to update your email account on accomate App\nHere  is your verification code: ${verificationCode}'
-                                    : 'Hello Mrs ${_userData?['email'] ?? 'Loading...'},,\nWe are aware that you are trying to update your email account on accomate App\nHere  is your verification code: ${verificationCode}');
+                                    ? 'Hello Mr ${_userData?['email'] ?? 'Loading...'},,\nWe are aware that you are trying to update your email account on accomate App\nHere  is your verification code: $verificationCode'
+                                    : 'Hello Mrs ${_userData?['email'] ?? 'Loading...'},,\nWe are aware that you are trying to update your email account on accomate App\nHere  is your verification code: $verificationCode');
                           },
                           child: Text(
                             'Resend code',
@@ -152,19 +177,33 @@ class _PersonalPageState extends State<PersonalPage> {
             TextButton(
               child: Text('Cancel'),
               onPressed: () {
-                setState(() {});
-
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
             ),
             TextButton(
               child: Text('Update'),
               onPressed: () async {
-                Navigator.pop(context);
-                if (otpControllers == verificationCode) {
-                  _updateStudentDetails();
+                Navigator.of(context).pop();
+                String enteredCode =
+                    otpControllers.map((controller) => controller.text).join();
+                if (enteredCode == verificationCode) {
+                  try {
+                    AuthCredential credential = EmailAuthProvider.credential(
+                        email: _user.email!, password: 'password');
+                    await _user.reauthenticateWithCredential(credential);
+
+                    await _user.sendEmailVerification();
+                    await _user.verifyBeforeUpdateEmail(emailController.text);
+                    print(
+                        "Email updated successfully to ${emailController.text}");
+                  } catch (e) {
+                    Navigator.of(context).pop();
+                    print("Error updating email: $e");
+                    // Handle the error, e.g., display an error message to the user
+                  }
+                } else {
+                  print('Verification code does not match');
                 }
-                // navigate to login page
               },
             ),
           ],
@@ -173,95 +212,47 @@ class _PersonalPageState extends State<PersonalPage> {
     );
   }
 
-  final HttpsCallable sendEmailCallable =
-      FirebaseFunctions.instance.httpsCallable('sendEmail');
-
-  Future<void> sendEmail(String to, String subject, String body) async {
-    try {
-      final result = await sendEmailCallable.call({
-        'to': to,
-        'subject': subject,
-        'body': body,
-      });
-      print(result.data);
-    } catch (e) {
-      print('Error  $e');
-    }
-  }
-
-  List<TextEditingController> otpControllers =
-      List.generate(4, (index) => TextEditingController());
-
-  Future<void> _updateStudentDetails() async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Center(
-          child: CircularProgressIndicator(
-            color: Colors.blue,
-          ),
-        );
-      },
-    );
-    print('ongoing');
+  Future<void> sendEmail(
+      String recipientEmail, String subject, String body) async {
+    final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
+    final message = Message()
+      ..from = Address('accomate33@gmail.com', 'Accomate')
+      ..recipients.add(recipientEmail)
+      ..subject = subject
+      ..html = body;
 
     try {
-      User? user = FirebaseAuth.instance.currentUser;
-
-      if (user != null) {
-        await user.verifyBeforeUpdateEmail(emailController.text);
-        print("Email updated successfully to ${emailController.text}");
-      } else {
-        print("User not signed in");
-        // Handle the case where the user is not signed in
-      }
+      await send(message, smtpServer);
+      print('Email sent successfully');
     } catch (e) {
-      print("Error updating email: $e");
-      // Handle the error, e.g., display an error message to the user
+      print('Error sending email: $e');
     }
-
-    showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) => AlertDialog(
-              title: Text(
-                'Successful Update',
-                style: TextStyle(fontSize: 15),
-              ),
-              content:
-                  Text('Your email account have been updated successfully'),
-              actions: <Widget>[
-                TextButton(
-                    onPressed: () async {
-                      // Close the dialog
-
-                      Navigator.of(context).pop();
-                    },
-                    style: ButtonStyle(
-                        shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5))),
-                        foregroundColor: MaterialStatePropertyAll(Colors.white),
-                        backgroundColor: MaterialStatePropertyAll(Colors.green),
-                        minimumSize: MaterialStatePropertyAll(
-                            Size(double.infinity, 50))),
-                    child: Text('Done')),
-              ],
-            ));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.blue[100],
       body: SingleChildScrollView(
-        child: Container(
-          color: Colors.blue[100],
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                  color: Colors.blue[100],
-                  child: Column(
+        child: isLoading
+            ? Center(
+                child: Container(
+                    width: 100,
+                    height: 100,
+                    child: Center(
+                        child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Center(child: Text("Loading...")),
+                        Center(
+                            child: LinearProgressIndicator(color: Colors.blue)),
+                      ],
+                    ))))
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Column(
@@ -288,12 +279,10 @@ class _PersonalPageState extends State<PersonalPage> {
                                     padding: const EdgeInsets.all(4.0),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(75),
-                                      child: Image.asset(
-                                        'assets/icon.jpg',
-                                        width: 150,
-                                        height: 150,
-                                        fit: BoxFit.cover,
-                                      ),
+                                      child: Image.asset('assets/icon.jpg',
+                                          width: 150,
+                                          height: 150,
+                                          fit: BoxFit.fill),
                                     ),
                                   ),
                                 ),
@@ -359,6 +348,24 @@ class _PersonalPageState extends State<PersonalPage> {
                                   SizedBox(
                                     height: 10,
                                   ),
+                                  Container(
+                                    child: TextField(
+                                      maxLines: 1,
+                                      readOnly: true,
+                                      controller: nameController,
+                                      decoration: InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          hintText: DateFormat(
+                                                  'yyyy-MM-dd HH:mm')
+                                              .format(
+                                                  _userData?['registeredDate']
+                                                          .toDate() ??
+                                                      'Loading')),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
                                   TextButton(
                                     onPressed: () => emailController.text
                                                 .contains('@gmail.com') ||
@@ -368,19 +375,17 @@ class _PersonalPageState extends State<PersonalPage> {
                                         : null,
                                     child: Text('Update'),
                                     style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStatePropertyAll(
-                                                emailController.text.contains(
-                                                            '@gmail.com') ||
-                                                        emailController.text
-                                                            .contains(
-                                                                '@edu.vut.ac.za')
-                                                    ? Colors.blue
-                                                    : Colors.grey),
-                                        foregroundColor:
-                                            MaterialStatePropertyAll(
-                                                Colors.white),
-                                        minimumSize: MaterialStatePropertyAll(
+                                        backgroundColor: WidgetStatePropertyAll(
+                                            emailController.text.contains(
+                                                        '@gmail.com') ||
+                                                    emailController.text
+                                                        .contains(
+                                                            '@edu.vut.ac.za')
+                                                ? Colors.blue
+                                                : Colors.grey),
+                                        foregroundColor: WidgetStatePropertyAll(
+                                            Colors.white),
+                                        minimumSize: WidgetStatePropertyAll(
                                             Size(double.infinity, 50))),
                                   )
                                 ],
@@ -390,10 +395,9 @@ class _PersonalPageState extends State<PersonalPage> {
                         ],
                       )
                     ],
-                  )),
-            ],
-          ),
-        ),
+                  ),
+                ],
+              ),
       ),
     );
   }
