@@ -1,14 +1,15 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously
+ //ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously
 
+import 'dart:convert';
 import 'dart:math';
 
-import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
+import 'login_page.dart';
 
 class CodeVerificationPage extends StatefulWidget {
   final String email;
@@ -39,36 +40,38 @@ class CodeVerificationPage extends StatefulWidget {
 }
 
 class _CodeVerificationPageState extends State<CodeVerificationPage> {
-  bool isLandlord = false;
-  void checkStudentValues() async {
-    try {
-      // Show loading indicator
+  List<TextEditingController> otpControllers =
+      List.generate(6, (index) => TextEditingController());
+  String formattedDate = '';
+
+  @override
+  void initState() {
+    super.initState();
+    checkDeviceDate(context);
+  }
+
+  Future<void> checkStudentValues() async {
+    try { 
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          return Center(
-            child: CircularProgressIndicator(
-              color: Colors.blue,
-            ),
-          );
+          return Center(child: CircularProgressIndicator(color: Colors.blue));
         },
       );
-
-      // Create a user in Firebase Auth
+ 
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: widget.email,
         password: widget.password,
       );
 
-      // Get the user ID
       String userId = userCredential.user!.uid;
-
-      // Upload files asynchronously
-
       String? user = FirebaseAuth.instance.currentUser!.email;
-      // Save user data to Firestore
+
+      DateTime now = DateTime.now();
+      Timestamp registeredDate = Timestamp.fromDate(now);
+
       await FirebaseFirestore.instance.collection('Students').doc(userId).set({
         'name': widget.name,
         'surname': widget.surname,
@@ -79,98 +82,153 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
         'gender': widget.gender,
         'roomType': '',
         'fieldOfStudy': '',
+        'periodOfStudy': '',
+        'registeredDate': registeredDate,
         'appliedAccomodation': false,
         'applicationReviewed': false,
-        'role': 'student'
-        // Add more user data as needed
       });
+
       sendEmail(
-          widget.email, // Student's email
+          widget.email,
           'Successful account',
           widget.gender == 'Male'
-              ? 'Hello Mr ${widget.surname},\nYou account have been registered successfully proceed to login.\n\n\n\nBest Regards\nYours Accomate'
-              : 'Hello Mrs ${widget.surname},\nYou account have been registered successfully proceed to login.\n\n\n\nBest Regards\nYours Accomate');
-      showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) => AlertDialog(
-                backgroundColor: Colors.blue[100],
-                title: Text(
-                  'Successful Registration',
-                  style: TextStyle(fontSize: 15),
-                ),
-                content: Text(
-                    'Your account was registered successfully. You can now proceed to login'),
-                actions: <Widget>[
-                  OutlinedButton(
-                      onPressed: () async {
-                        // Close the dialog
+              ? 'Hello Mr ${widget.surname},\nYour account has been registered successfully. Please proceed to login.\n\nBest Regards,\nYours Accomate'
+              : 'Hello Mrs ${widget.surname},\nYour account has been registered successfully. Please proceed to login.\n\nBest Regards,\nYours Accomate');
+       
 
-                        Navigator.of(context).pop();
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: ((context) => LoginPage(
-                                      userRole: 'Student',
-                                    ))));
-                      },
-                      child: Text('Proceed'),
-                      style: ButtonStyle(
-                        shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5))),
-                        foregroundColor: MaterialStatePropertyAll(Colors.white),
-                        backgroundColor: MaterialStatePropertyAll(Colors.green),
-                      )),
-                ],
-              ));
-      // Show success dialog
+      Navigator.pop(context);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage(userRole: 'Student')),
+      );
     } on FirebaseException catch (e) {
-      Navigator.pop(context); // Dismiss loading indicator
+      Navigator.pop(context);
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
           title: Text('Registration Error',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
           content: Text(e.message.toString()),
           actions: [
             OutlinedButton(
-                onPressed: () async {
-                  // Close the dialog
-
-                  Navigator.of(context).pop();
-                },
-                child: Text('Retry'),
-                style: ButtonStyle(
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5))),
-                  foregroundColor: MaterialStatePropertyAll(Colors.white),
-                  backgroundColor: MaterialStatePropertyAll(Colors.red),
-                )),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Retry'),
+              style: ButtonStyle(
+                shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5))),
+                foregroundColor: WidgetStatePropertyAll(Colors.white),
+                backgroundColor: WidgetStatePropertyAll(Colors.red),
+              ),
+            ),
           ],
         ),
       );
     }
   }
 
-  final HttpsCallable sendEmailCallable =
-      FirebaseFunctions.instance.httpsCallable('sendEmail');
+  Future<void> sendEmail(
+      String recipientEmail, String subject, String body) async {
+    final smtpServer = gmail('accomate33@gmail.com',
+        'your_app_password_here'); 
+    final message = Message()
+      ..from = Address('accomate33@gmail.com', 'Accomate Team')
+      ..recipients.add(recipientEmail)
+      ..subject = subject
+      ..html = body;
 
-  Future<void> sendEmail(String to, String subject, String body) async {
     try {
-      final result = await sendEmailCallable.call({
-        'to': to,
-        'subject': subject,
-        'body': body,
-      });
-      print(result.data);
-    } catch (e) {}
+      await send(message, smtpServer);
+      print('Email sent successfully');
+    } catch (e) {
+      print('Error sending email: $e');
+    }
   }
 
-  List<TextEditingController> otpControllers =
-      List.generate(6, (index) => TextEditingController());
+  String maskEmail(String email) {
+    final emailParts = email.split('@');
+    if (emailParts.length != 2) return email;
+
+    final domain = emailParts[1];
+    final local = emailParts[0];
+    if (local.length <= 3) {
+      return '***@$domain';
+    }
+
+    final maskedLocal =
+        local.substring(0, local.length - 3).replaceAll(RegExp('.'), '*') +
+            local.substring(local.length - 3);
+    return '$maskedLocal@$domain';
+  }
+
+  Future<void> checkDeviceDate(BuildContext context) async {
+    final serverTime = await getServerTime();
+    if (serverTime == null) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Error'),
+          content: Text(
+              'Unable to fetch server time. Please check your internet connection.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    final deviceTime = DateTime.now();
+    final difference = deviceTime.difference(serverTime).inMinutes;
+
+    if (difference.abs() > 5) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Incorrect Date/Time'),
+          content: Text(
+              'Your device date and time are incorrect. Please set the correct date and time.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      print('Device date and time are correct.');
+    }
+  }
+
+  Future<DateTime?> getServerTime() async {
+    try {
+      final response =
+          await http.get(Uri.parse('http:worldtimeapi.org/api/ip'));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final dateTimeString = data['utc_datetime'];
+        return DateTime.parse(dateTimeString);
+      } else {
+        print('Failed to load server time');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching server time: $e');
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double buttonWidth =
@@ -178,7 +236,7 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registration Page(2/2)'),
+        title: const Text('Registration Page (2/2)'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         centerTitle: true,
@@ -206,7 +264,7 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
                             colors: [
                               const Color.fromARGB(255, 187, 222, 251),
                               Colors.blue,
-                              const Color.fromARGB(255, 15, 76, 167)
+                              const Color.fromARGB(255, 15, 76, 167),
                             ],
                           ),
                         ),
@@ -226,7 +284,27 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
+                Text(
+                  'Hi, please note that we have sent a verification email to ${maskEmail(widget.email)}.',
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
+                SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'Not your Email?',
+                    style: TextStyle(
+                      decorationThickness: 0.5,
+                      decorationColor: Colors.blue,
+                      fontSize: 16,
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: List.generate(
@@ -237,17 +315,16 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
                         controller: otpControllers[index],
                         textAlign: TextAlign.center,
                         keyboardType: TextInputType.number,
-                        // Hide the entered digits
                         maxLength: 1,
                         onChanged: (value) {
-                          // Handle OTP input
                           if (index < 5 && value.isNotEmpty) {
-                            FocusScope.of(context)
-                                .nextFocus(); // Move focus to the next TextField
+                            FocusScope.of(context).nextFocus();
+                          } else if (index > 0 && value.isEmpty) {
+                            FocusScope.of(context).previousFocus();
                           }
                         },
                         decoration: InputDecoration(
-                          counterText: '', // Hide the default character counter
+                          counterText: '',
                           enabledBorder: OutlineInputBorder(
                             borderSide: BorderSide(color: Colors.blue),
                             borderRadius: BorderRadius.circular(10),
@@ -267,32 +344,34 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        String _generateRandomCode() {
+                        String generateRandomCode() {
                           final random = Random();
-                          // Generate a random 6-digit code
                           return '${random.nextInt(999999).toString().padLeft(6, '0')}';
                         }
 
-                        String verificationCode = _generateRandomCode();
-
+                        String verificationCode = generateRandomCode();
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            backgroundColor: Colors.blue,
-                            content: Text('Verification code sent',
-                                style: TextStyle(color: Colors.white))));
+                          backgroundColor: Colors.blue,
+                          content: Text('Verification code sent',
+                              style: TextStyle(color: Colors.white)),
+                        ));
+
                         sendEmail(
-                            widget.email, // Student's email
-                            'Verification Code',
-                            widget.gender == 'Male'
-                                ? 'Hello Mr ${widget.surname},\nWe are aware that you are trying to register your account on accomate App\nHere  is your verification code: ${verificationCode}'
-                                : 'Hello Mrs ${widget.surname},\nWe are aware that you are trying to register your account on accomate App\nHere  is your verification code: ${verificationCode}');
+                          widget.email,
+                          'Verification Code',
+                          widget.gender == 'Male'
+                              ? 'Hello Mr ${widget.surname},\nWe are aware that you are trying to register your account on Accomate App.\nHere is your verification code: $verificationCode'
+                              : 'Hello Mrs ${widget.surname},\nWe are aware that you are trying to register your account on Accomate App.\nHere is your verification code: $verificationCode',
+                        );
                       },
                       child: Text(
                         'Resend code',
                         style: TextStyle(
-                            fontSize: 15,
-                            decoration: TextDecoration.underline,
-                            decorationColor: Colors.blue,
-                            color: Colors.blue),
+                          fontSize: 15,
+                          decoration: TextDecoration.underline,
+                          decorationColor: Colors.blue,
+                          color: Colors.blue,
+                        ),
                       ),
                     ),
                   ],
@@ -307,13 +386,12 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
                     if (enteredOTP == widget.verificationCode) {
                       checkStudentValues();
                     } else {
-                      // Show an error message or handle incorrect OTP
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
                           title: Text('Error'),
-                          content:
-                              Text('Incorrect Verification. Please try again.'),
+                          content: Text(
+                              'Incorrect verification code. Please try again.'),
                           actions: [
                             TextButton(
                               onPressed: () {
@@ -327,12 +405,12 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
                     }
                   },
                   style: ButtonStyle(
-                      shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5))),
-                      foregroundColor: MaterialStatePropertyAll(Colors.white),
-                      backgroundColor: MaterialStatePropertyAll(Colors.blue),
-                      minimumSize:
-                          MaterialStatePropertyAll(Size(buttonWidth, 50))),
+                    shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5))),
+                    foregroundColor: WidgetStatePropertyAll(Colors.white),
+                    backgroundColor: WidgetStatePropertyAll(Colors.blue),
+                    minimumSize: WidgetStatePropertyAll(Size(buttonWidth, 50)),
+                  ),
                   child: Text(
                     'Confirm Account',
                     style: TextStyle(color: Colors.white),

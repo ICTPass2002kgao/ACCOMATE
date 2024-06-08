@@ -412,12 +412,20 @@ class _RegistrationOptionState extends State<RegistrationOption> {
                                                   });
                                                 },
                                               ),
-                                              Text(
-                                                ' Agree with terms and conditions',
-                                                style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight:
-                                                        FontWeight.bold),
+                                              GestureDetector(
+                                                onTap: () {
+                                                  setState(() {
+                                                    isCheckboxChecked =
+                                                        !isCheckboxChecked;
+                                                  });
+                                                },
+                                                child: Text(
+                                                  ' Agree with terms and conditions',
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
                                               )
                                             ],
                                           ),
@@ -427,20 +435,21 @@ class _RegistrationOptionState extends State<RegistrationOption> {
                                                 : () => _continue(),
                                             child: Text('Agree'),
                                             style: ButtonStyle(
-                                              shape: MaterialStatePropertyAll(
+                                              shape: WidgetStatePropertyAll(
                                                   RoundedRectangleBorder(
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                               5))),
                                               foregroundColor:
-                                                  MaterialStatePropertyAll(
+                                                  WidgetStatePropertyAll(
                                                       Colors.white),
-                                              backgroundColor: !isCheckboxChecked
-                                                  ? MaterialStatePropertyAll(
-                                                      Color.fromARGB(
-                                                          255, 211, 211, 211))
-                                                  : MaterialStatePropertyAll(
-                                                      Colors.blue),
+                                              backgroundColor:
+                                                  !isCheckboxChecked
+                                                      ? WidgetStatePropertyAll(
+                                                          Color.fromARGB(255,
+                                                              211, 211, 211))
+                                                      : WidgetStatePropertyAll(
+                                                          Colors.blue),
                                             ),
                                           ),
                                         ],
@@ -456,14 +465,14 @@ class _RegistrationOptionState extends State<RegistrationOption> {
                                   TextStyle(color: Colors.white, fontSize: 18),
                             ),
                             style: ButtonStyle(
-                              shape: MaterialStatePropertyAll(
+                              shape: WidgetStatePropertyAll(
                                   RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(5))),
                               foregroundColor:
-                                  MaterialStatePropertyAll(Colors.white),
+                                  WidgetStatePropertyAll(Colors.white),
                               backgroundColor:
-                                  MaterialStatePropertyAll(Colors.blue),
-                              minimumSize: MaterialStatePropertyAll(
+                                  WidgetStatePropertyAll(Colors.blue),
+                              minimumSize: WidgetStatePropertyAll(
                                   Size(double.infinity, 50)),
                             ),
                           ),

@@ -6,7 +6,6 @@ import 'dart:math';
 import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
@@ -52,15 +51,14 @@ class _OffersPageState extends State<OffersPage> {
     'Gym': false,
     'Power backup': false,
     'Braai Stands': false,
-
-    // Add more amenities as needed
   };
+  String _selectedDuration = '';
+  List<String> _duration = ['Half Year', 'Full Year', 'Both'];
+
   Map<String, bool> selectedRoomTypes = {
     'Single Rooms': false,
     'Sharing/double Rooms': false,
     "Bachelor's room": false,
-
-    // Add more amenities as needed
   };
 
   Map<String, bool> selectedUniversity = {
@@ -202,13 +200,11 @@ class _OffersPageState extends State<OffersPage> {
                               actions: <Widget>[
                                 TextButton(
                                   onPressed: () async {
-                                    // Close the dialog
-
                                     Navigator.of(context).pop();
                                     sendEmail(
-                                        widget.landlordEmail, // Student's email
+                                        widget.landlordEmail,
                                         'Verification Code',
-                                        'Goodday ${widget.accomodationName} landlord, \nThis is your verification codes: ${verificationCode} please verify it on the app.');
+                                        'Gooday ${widget.accomodationName} landlord, \nThis is your verification codes: ${verificationCode} please verify it on the app.');
                                     _verifyEmail();
                                   },
                                   child: Text('Resend'),
@@ -218,10 +214,10 @@ class _OffersPageState extends State<OffersPage> {
               },
               child: Text('Verify'),
               style: ButtonStyle(
-                shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(5))),
-                foregroundColor: MaterialStatePropertyAll(Colors.white),
-                backgroundColor: MaterialStatePropertyAll(Colors.blue),
+                foregroundColor: WidgetStatePropertyAll(Colors.white),
+                backgroundColor: WidgetStatePropertyAll(Colors.blue),
               ),
             ),
           ],
@@ -256,6 +252,8 @@ class _OffersPageState extends State<OffersPage> {
   bool isLandlord = true;
   bool status = false;
 
+  List<String> durationOptions = ['Half Year', 'Full Year'];
+
   void _registerUserToFirebase() async {
     List<String> images = pickedImages.map((file) => file.path).toList();
     try {
@@ -288,19 +286,20 @@ class _OffersPageState extends State<OffersPage> {
       String? userEmail = FirebaseAuth.instance.currentUser!.email;
       String userId = userCredential.user!.uid;
 
+      DateTime now = DateTime.now();
+      Timestamp registeredDate = Timestamp.fromDate(now);
       await FirebaseFirestore.instance.collection('Landlords').doc(userId).set({
-        'accommodationStatus': false,
+        'accomodationStatus': false,
         'accomodationName': widget.accomodationName,
         'location': widget.location,
         'email': userEmail,
-        'role': 'landlord',
         'selectedOffers': selectedOffers,
         'selectedUniversity': selectedUniversity,
         'distance': widget.distance,
         'selectedPaymentsMethods': widget.selectedPaymentsMethods,
         'transport availability': usesTransport,
         'contactDetails': widget.contactDetails,
-        'accommodationType': isAccomodation,
+        'accomodationType': isAccomodation,
         'verificationCode': verificationCode,
         'profilePicture': downloadUrl,
         'userId': userId,
@@ -308,6 +307,8 @@ class _OffersPageState extends State<OffersPage> {
         'displayedImages': downloadUrls,
         'isNsfasAccredited': isNsfasAccredited,
         'isFull': false,
+        'registeredDate': registeredDate,
+        'Duration': _selectedDuration,
       });
 
       sendEmail('accomate33@gmail.com', 'Review Accommodation',
@@ -345,10 +346,10 @@ class _OffersPageState extends State<OffersPage> {
                       },
                       child: Text('Proceed'),
                       style: ButtonStyle(
-                        shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                        shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(5))),
-                        foregroundColor: MaterialStatePropertyAll(Colors.white),
-                        backgroundColor: MaterialStatePropertyAll(Colors.green),
+                        foregroundColor: WidgetStatePropertyAll(Colors.white),
+                        backgroundColor: WidgetStatePropertyAll(Colors.green),
                       )),
                 ],
               ));
@@ -377,10 +378,10 @@ class _OffersPageState extends State<OffersPage> {
                   },
                   child: Text('Retry'),
                   style: ButtonStyle(
-                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                    shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5))),
-                    foregroundColor: MaterialStatePropertyAll(Colors.white),
-                    backgroundColor: MaterialStatePropertyAll(Colors.red),
+                    foregroundColor: WidgetStatePropertyAll(Colors.white),
+                    backgroundColor: WidgetStatePropertyAll(Colors.red),
                   )),
             ],
           ),
@@ -402,6 +403,7 @@ class _OffersPageState extends State<OffersPage> {
     });
   }
 
+  String duration = '';
   Future<List<String>> uploadImagesToFirebaseStorage(
       List<String> imagePaths) async {
     String accomodationName = widget.accomodationName;
@@ -410,7 +412,6 @@ class _OffersPageState extends State<OffersPage> {
     for (var imagePath in imagePaths) {
       File file = File(imagePath);
 
-      // Step 1: Upload image to Firebase Storage
       Reference storageReference = FirebaseStorage.instance.ref().child(
           '$accomodationName profile_images/${accomodationName} image(${DateTime.now().toString()})');
       UploadTask uploadTask = storageReference.putFile(file);
@@ -418,7 +419,6 @@ class _OffersPageState extends State<OffersPage> {
           await uploadTask.whenComplete(() => null);
       String downloadUrl = await storageTaskSnapshot.ref.getDownloadURL();
 
-      // Step 2: Save download URL to the list
       downloadUrls.add(downloadUrl);
     }
 
@@ -481,7 +481,6 @@ class _OffersPageState extends State<OffersPage> {
                         ),
                       ),
                     ),
-
                     ExpansionTile(
                       title: Text(
                         'Available Transport',
@@ -520,11 +519,9 @@ class _OffersPageState extends State<OffersPage> {
                         ),
                       ],
                     ),
-
                     SizedBox(
                       height: 5,
                     ),
-
                     ExpansionTile(
                       title: Text('Select residence type'),
                       children: [
@@ -603,7 +600,6 @@ class _OffersPageState extends State<OffersPage> {
                     SizedBox(
                       height: 5,
                     ),
-
                     ExpansionTile(
                       title: Text('Select Room types',
                           style: TextStyle(
@@ -622,11 +618,9 @@ class _OffersPageState extends State<OffersPage> {
                         );
                       }).toList(),
                     ),
-
                     SizedBox(
                       height: 5,
                     ),
-
                     ExpansionTile(
                       title: Text('Select accomodation offers',
                           style: TextStyle(
@@ -658,7 +652,7 @@ class _OffersPageState extends State<OffersPage> {
                       height: 5,
                     ),
                     ExpansionTile(
-                      title: Text('Select accomodated University/College',
+                      title: Text('Select accomodated University',
                           style: TextStyle(
                               color: selectedUniversity.isEmpty
                                   ? Colors.red
@@ -681,13 +675,14 @@ class _OffersPageState extends State<OffersPage> {
                     ExpansionTile(
                       title: Text('Accomodated Months',
                           style: TextStyle(color: Colors.black)),
-                      children: selectedMonths.keys.map((months) {
-                        return CheckboxListTile(
-                          title: Text(months),
-                          value: selectedMonths[months] ?? false,
+                      children: _duration.map((parDuration) {
+                        return RadioListTile<String>(
+                          title: Text(parDuration),
+                          value: parDuration,
+                          groupValue: _selectedDuration,
                           onChanged: (value) {
                             setState(() {
-                              selectedMonths[months] = value ?? false;
+                              _selectedDuration = value!;
                             });
                           },
                         );
@@ -705,7 +700,6 @@ class _OffersPageState extends State<OffersPage> {
                     SizedBox(
                       height: 5,
                     ),
-
                     Container(
                       height: 55,
                       width: containerWidth,
@@ -713,7 +707,7 @@ class _OffersPageState extends State<OffersPage> {
                         children: [
                           TextButton.icon(
                             onPressed: () async {
-                              await pickImages(); // Call method to pick images
+                              await pickImages();
                             },
                             icon: Icon(Icons.add_photo_alternate_outlined,
                                 color: Colors.white),
@@ -723,16 +717,16 @@ class _OffersPageState extends State<OffersPage> {
                                   TextStyle(color: Colors.white, fontSize: 18),
                             ),
                             style: ButtonStyle(
-                                shape: MaterialStatePropertyAll(
+                                shape: WidgetStatePropertyAll(
                                     RoundedRectangleBorder(
                                         borderRadius:
                                             BorderRadius.circular(5))),
                                 backgroundColor:
-                                    MaterialStatePropertyAll(Colors.blue),
+                                    WidgetStatePropertyAll(Colors.blue),
                                 foregroundColor:
-                                    MaterialStatePropertyAll(Colors.white),
+                                    WidgetStatePropertyAll(Colors.white),
                                 minimumSize:
-                                    MaterialStatePropertyAll(Size(100, 50))),
+                                    WidgetStatePropertyAll(Size(100, 50))),
                           ),
                           for (int index = 0;
                               index < pickedImages.length;
@@ -765,20 +759,13 @@ class _OffersPageState extends State<OffersPage> {
                         ],
                       ),
                     ),
-
-                    SizedBox(
-                      height: 20,
-                    ),
-
                     SizedBox(
                       height: 20,
                     ),
                     TextButton(
                       onPressed: () async {
-                        sendEmail(
-                            widget.landlordEmail, // Student's email
-                            'Verification Code',
-                            'Hi ${widget.accomodationName} landlord, \nThis is your verification codes:<a href="">$verificationCode</a> <br>please comfirm by entering it.\n\n\n\n\nBest Regards\nYours Accomate');
+                        sendEmail(widget.landlordEmail, 'Verification Code',
+                            '''Hi ${widget.accomodationName} landlord, \nThis is your verification codes:<a href="">$verificationCode</a> <br>please comfirm by entering it.\n\n\n\n\nBest Regards\nYours Accomate''');
                         showDialog(
                           barrierDismissible: false,
                           context: context,
@@ -816,21 +803,19 @@ class _OffersPageState extends State<OffersPage> {
                             actions: [
                               OutlinedButton(
                                   onPressed: () async {
-                                    // Close the dialog
-
                                     Navigator.of(context).pop();
                                     _verifyEmail();
                                   },
                                   child: Text('Verify'),
                                   style: ButtonStyle(
-                                    shape: MaterialStatePropertyAll(
+                                    shape: WidgetStatePropertyAll(
                                         RoundedRectangleBorder(
                                             borderRadius:
                                                 BorderRadius.circular(5))),
                                     foregroundColor:
-                                        MaterialStatePropertyAll(Colors.white),
+                                        WidgetStatePropertyAll(Colors.white),
                                     backgroundColor:
-                                        MaterialStatePropertyAll(Colors.blue),
+                                        WidgetStatePropertyAll(Colors.blue),
                                   )),
                             ],
                           ),
@@ -838,16 +823,13 @@ class _OffersPageState extends State<OffersPage> {
                       },
                       child: Text('Create account'),
                       style: ButtonStyle(
-                          shape: MaterialStatePropertyAll(
-                              RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5))),
-                          backgroundColor:
-                              MaterialStatePropertyAll(Colors.blue),
-                          foregroundColor:
-                              MaterialStatePropertyAll(Colors.white),
-                          minimumSize: MaterialStatePropertyAll(
-                              Size(containerWidth, 50))),
-                    ) //21h24b
+                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5))),
+                          backgroundColor: WidgetStatePropertyAll(Colors.blue),
+                          foregroundColor: WidgetStatePropertyAll(Colors.white),
+                          minimumSize:
+                              WidgetStatePropertyAll(Size(containerWidth, 50))),
+                    )
                   ],
                 ),
               ),

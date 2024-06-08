@@ -71,8 +71,8 @@ class _AccountDetailsState extends State<AccountDetails> {
                             );
                           },
                           itemCount: _userData?['displayedImages'].length,
-                          pagination: SwiperPagination(
-                              builder: SwiperPagination.fraction),
+                          pagination:
+                              SwiperPagination(builder: SwiperPagination.rect),
                           control: SwiperControl(
                               size: 20,
                               color: Colors.blue,
@@ -81,120 +81,141 @@ class _AccountDetailsState extends State<AccountDetails> {
                           autoplay: false,
                         ),
                       ),
-                      SizedBox(height: 5),
-                      _userData!['accomodationStatus'] == true
-                          ? Row(
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 5),
+                            _userData!['accomodationStatus'] == true
+                                ? Row(
+                                    children: [
+                                      Text('Status:'),
+                                      Text('Approved',
+                                          style: TextStyle(color: Colors.green))
+                                    ],
+                                  )
+                                : Row(
+                                    children: [
+                                      Text('Status:'),
+                                      Text(
+                                        'Pending..',
+                                        style: TextStyle(color: Colors.grey),
+                                      )
+                                    ],
+                                  ),
+                            Row(
                               children: [
-                                Text('Status:'),
-                                Text('Approved',
-                                    style: TextStyle(color: Colors.green))
+                                Text('Address: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                Expanded(
+                                  child: Text(
+                                    _userData?['location'] ?? 'Loading...',
+                                    maxLines:
+                                        1, // Set the maximum number of lines
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                            Row(
+                              children: [
+                                Text('Distance to campus: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                Text(_userData?['distance'] ?? 'Loading...'),
+                                Icon(
+                                  Icons.location_on_outlined,
+                                  size: 13,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                            Text('For more information contact us via:'),
+                            SizedBox(
+                              height: 5,
+                            ),
+                            Row(
+                              children: [
+                                Text('Email: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                Text(
+                                  _userData?['email'] ?? '',
+                                  maxLines:
+                                      1, // Set the maximum number of lines
+                                  overflow: TextOverflow.clip,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                            Row(
+                              children: [
+                                Text('Contact: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                Text(
+                                  _userData?['contactDetails'] ?? '',
+                                  maxLines:
+                                      1, // Set the maximum number of lines
+                                  overflow: TextOverflow.clip,
+                                ),
+                              ],
+                            ),
+                            Text('Accommodated institutions',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                            SizedBox(height: 5),
+                            for (String university
+                                in _userData?['selectedUniversity'].keys)
+                              if (_userData?['selectedUniversity']
+                                      ?[university] ??
+                                  false)
+                                Text('$university'),
+                            SizedBox(height: 5),
+                            ExpansionTile(
+                              title: Text('More details',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              children: [
+                                ListTile(
+                                  title: Text('Offered amities',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                                for (String offers
+                                    in _userData?['selectedOffers'].keys)
+                                  if (_userData?['selectedOffers']?[offers] ??
+                                      false)
+                                    ListTile(
+                                      title: Text(offers),
+                                    ),
+                                SizedBox(height: 5),
+                                ListTile(
+                                  title: Text('Payment Methods',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                                for (String paymentMethods
+                                    in _userData?['selectedPaymentsMethods']
+                                        .keys)
+                                  if (_userData?['selectedPaymentsMethods']
+                                          ?[paymentMethods] ??
+                                      false)
+                                    ListTile(
+                                      title: Text(paymentMethods),
+                                    ),
+                                SizedBox(height: 5),
+                                ListTile(
+                                    title: Text(
+                                  'Nsfas Accredited',
+                                  style: TextStyle(color: Colors.green),
+                                )),
                               ],
                             )
-                          : Row(
-                              children: [
-                                Text('Status:'),
-                                Text(
-                                  'Pending..',
-                                  style: TextStyle(color: Colors.grey),
-                                )
-                              ],
-                            ),
-                      Row(
-                        children: [
-                          Text('Address: ',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          Expanded(
-                            child: Text(
-                              _userData?['location'] ?? 'Loading...',
-                              maxLines: 1, // Set the maximum number of lines
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 5),
-                      Row(
-                        children: [
-                          Text('Distance to campus: ',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(_userData?['distance'] ?? 'Loading...'),
-                          Icon(
-                            Icons.location_on_outlined,
-                            size: 13,
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 5),
-                      Text('For more information contact us via:'),
-                      SizedBox(
-                        height: 5,
-                      ),
-                      Row(
-                        children: [
-                          Text('Email: ',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(
-                            _userData?['email'] ?? '',
-                            maxLines: 1, // Set the maximum number of lines
-                            overflow: TextOverflow.clip,
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 5),
-                      Row(
-                        children: [
-                          Text('Contact: ',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(
-                            _userData?['contactDetails'] ?? '',
-                            maxLines: 1, // Set the maximum number of lines
-                            overflow: TextOverflow.clip,
-                          ),
-                        ],
-                      ),
-                      Text('Accommodated institutions',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      SizedBox(height: 5),
-                      for (String university
-                          in _userData?['selectedUniversity'].keys)
-                        if (_userData?['selectedUniversity']?[university] ??
-                            false)
-                          Text('$university'),
-                      SizedBox(height: 5),
-                      ExpansionTile(
-                        title: Text('More details',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        children: [
-                          ListTile(
-                            title: Text('Offered amities',
-                                style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                          for (String offers
-                              in _userData?['selectedOffers'].keys)
-                            if (_userData?['selectedOffers']?[offers] ?? false)
-                              ListTile(
-                                title: Text(offers),
-                              ),
-                          SizedBox(height: 5),
-                          ListTile(
-                            title: Text('Payment Methods',
-                                style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                          for (String paymentMethods
-                              in _userData?['selectedPaymentsMethods'].keys)
-                            if (_userData?['selectedPaymentsMethods']
-                                    ?[paymentMethods] ??
-                                false)
-                              ListTile(
-                                title: Text(paymentMethods),
-                              ),
-                          SizedBox(height: 5),
-                          ListTile(
-                              title: Text(
-                            'Nsfas Accredited',
-                            style: TextStyle(color: Colors.green),
-                          )),
-                        ],
+                          ],
+                        ),
                       )
                     ],
                   ),

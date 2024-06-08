@@ -4,6 +4,8 @@ import 'package:api_com/UpdatedApp/LandlordPages/viewApplicantDetails.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class Notifications extends StatefulWidget {
   const Notifications({super.key});
@@ -16,18 +18,27 @@ class _NotificationsState extends State<Notifications>
     with SingleTickerProviderStateMixin {
   bool isLoading = true;
   List<Map<String, dynamic>> _studentApplications = [];
-  bool isTileClicked = false; // State to track if a ListTile is clicked
-
+  bool isTileClicked = false;
   @override
   void initState() {
     super.initState();
     _user = FirebaseAuth.instance.currentUser!;
     _loadUserData();
+    loadData();
+  }
+
+  Future<void> loadData() async {
+    // Simulate loading data
+    await Future.delayed(Duration(seconds: 3));
+
+    // Set isLoading to false when data is loaded
+    setState(() {
+      isLoading = false;
+    });
   }
 
   late User _user;
-  Map<String, dynamic>? _userData; // Make _userData nullable
-
+  Map<String, dynamic>? _userData;
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
         .collection('Landlords')
@@ -37,13 +48,11 @@ class _NotificationsState extends State<Notifications>
       _userData = userDataSnapshot.data() as Map<String, dynamic>?;
       isLoading = false;
     });
-    // After loading landlord data, load student applications
     await _loadStudentApplications();
   }
 
   Future<void> _loadStudentApplications() async {
     try {
-      // Assuming there is a specific landlord ID (replace 'your_landlord_id' with the actual ID)
       String landlordUserId = _userData?['userId'] ?? '';
 
       QuerySnapshot applicationsSnapshot = await FirebaseFirestore.instance
@@ -69,19 +78,39 @@ class _NotificationsState extends State<Notifications>
     }
   }
 
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
+  Future<void> _handleRefresh() async {
+    await _loadStudentApplications();
+    _refreshController.refreshCompleted();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                color: Colors.blue,
-              ),
-            )
-          : Container(
-              color: Colors.blue[100],
-              height: double.infinity,
-              child: Padding(
+      backgroundColor: Colors.blue[100],
+      body: SmartRefresher(
+        controller: _refreshController,
+        onRefresh: _handleRefresh,
+        header: WaterDropMaterialHeader(
+          backgroundColor: Colors.blue,
+        ),
+        child: isLoading
+            ? Center(
+                child: Container(
+                    width: 100,
+                    height: 100,
+                    child: Center(
+                        child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Center(child: Text("Loading...")),
+                        Center(
+                            child: LinearProgressIndicator(color: Colors.blue)),
+                      ],
+                    ))))
+            : Padding(
                 padding: const EdgeInsets.only(left: 10, right: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +118,7 @@ class _NotificationsState extends State<Notifications>
                     Text(
                       'Notifications',
                       style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(
                       height: 10,
@@ -99,96 +128,59 @@ class _NotificationsState extends State<Notifications>
                         index++)
                       if (_studentApplications[index]['applicationReviewed'] ==
                           false)
-                        Column(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.blue)),
-                              child: ListTile(
-                                shape: Border.all(color: Colors.blue),
-                                tileColor: Color.fromARGB(179, 211, 211, 211),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          ViewApplicantDetails(
-                                        studentApplicationData:
-                                            _studentApplications[index],
-                                      ),
-                                    ),
-                                  );
-                                },
-                                title: Text(
-                                  '${_studentApplications[index]['name'] ?? ''}${_studentApplications[index]['surname'] ?? ''}',
-                                  style: TextStyle(
-                                    fontWeight: _studentApplications[index]
-                                                ['applicationReviewed'] ==
-                                            true
-                                        ? FontWeight.normal
-                                        : FontWeight.bold,
+                        Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.blue)),
+                          child: ListTile(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ViewApplicantDetails(
+                                    studentApplicationData:
+                                        _studentApplications[index],
                                   ),
                                 ),
-                                subtitle: Text(
-                                  'You have a new application from ${_studentApplications[index]['name'] ?? ''}',
-                                  style: TextStyle(
-                                    fontWeight: _studentApplications[index]
-                                                ['applicationReviewed'] ==
-                                            true
-                                        ? FontWeight.normal
-                                        : FontWeight.bold,
-                                  ),
-                                ),
-                                trailing: Icon(Icons.arrow_forward_ios_rounded),
+                              );
+                            },
+                            title: Text(
+                              '${_studentApplications[index]['name'] ?? ''} ${_studentApplications[index]['surname'] ?? ''}',
+                              style: TextStyle(
+                                fontWeight: _studentApplications[index]
+                                            ['applicationReviewed'] ==
+                                        true
+                                    ? FontWeight.normal
+                                    : FontWeight.bold,
                               ),
-                            )
-                          ],
+                            ),
+                            subtitle: Text(
+                              'You have a new application from ${_studentApplications[index]['name'] ?? ''}',
+                              style: TextStyle(
+                                fontWeight: _studentApplications[index]
+                                            ['applicationReviewed'] ==
+                                        true
+                                    ? FontWeight.normal
+                                    : FontWeight.bold,
+                              ),
+                            ),
+                            trailing: Row(
+                              children: [
+                                Text(DateFormat('yyyy-MM-dd HH:mm').format(
+                                    _studentApplications[index]['appliedDate']
+                                        .toDate())),
+                                Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  color: Colors.blue,
+                                ),
+                              ],
+                            ),
+                          ),
                         )
                   ],
                 ),
               ),
-            ),
+      ),
     );
   }
 }
-//  TabBar(
-//                       labelColor: Colors.blue,
-//                       indicatorColor: Colors.blue,
-//                       controller: _tabController,
-//                       tabs: [
-//                         Tab(
-//                           child: Stack(
-//                             children: [
-//                               Row(
-//                                 children: [
-//                                   Text('Available Applications'),
-//                                 ],
-//                               ),
-//                               if (getUnclickedApplicationsCount() > 0)
-//                                 Positioned(
-//                                   right: 0,
-//                                   child: Container(
-//                                     height: 15,
-//                                     width: 15,
-//                                     decoration: BoxDecoration(
-//                                       color: Colors.red,
-//                                       borderRadius: BorderRadius.circular(7.5),
-//                                     ),
-//                                     child: Center(
-//                                       child: Text(
-//                                         getUnclickedApplicationsCount()
-//                                             .toString(),
-//                                         style: TextStyle(
-//                                           color: Colors.white,
-//                                           fontSize: 10,
-//                                         ),
-//                                       ),
-//                                     ),
-//                                   ),
-//                                 ),
-//                             ],
-//                           ),
-//                         ),
-//                       ],
-//                     ),

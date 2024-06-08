@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_swiper_view/flutter_swiper_view.dart';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server/gmail.dart';
 
 class AccomodationApproval extends StatefulWidget {
   final Map<String, dynamic> landlordData;
@@ -26,6 +27,8 @@ class AccomodationApprovalState extends State<AccomodationApproval> {
     _user = FirebaseAuth.instance.currentUser!;
   }
 
+  TextEditingController messageController = TextEditingController();
+
   Future<void> _saveAccomodationApproval() async {
     try {
       showDialog(
@@ -44,6 +47,17 @@ class AccomodationApprovalState extends State<AccomodationApproval> {
           .doc(landlordUserId)
           .update({'accomodationStatus': accomodationStatus});
 
+      // await FirebaseFirestore.instance
+      //     .collection('Students')
+      //     .doc(studentUserId)
+      //     .collection('ReviewResponse')
+      //     .doc(landlordUserId)
+      //     .set({
+      //   'landlordMessage': messageController.text,
+      //   'accomodationName': _userData?['accomodationName'] ?? '',
+      //   'status': status,
+      //   'userId': _userData?['userId'] ?? '',
+      // });
       sendEmail(
         widget.landlordData['email'],
         accomodationStatus == true ? 'Review Approved' : 'Review Rejected',
@@ -110,19 +124,20 @@ class AccomodationApprovalState extends State<AccomodationApproval> {
     }
   }
 
-  final HttpsCallable sendEmailCallable =
-      FirebaseFunctions.instance.httpsCallable('sendEmail');
+  Future<void> sendEmail(
+      String recipientEmail, String subject, String body) async {
+    final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
+    final message = Message()
+      ..from = Address('accomate33@gmail.com', 'Accomate')
+      ..recipients.add(recipientEmail)
+      ..subject = subject
+      ..html = body;
 
-  Future<void> sendEmail(String to, String subject, String body) async {
     try {
-      final result = await sendEmailCallable.call({
-        'to': to,
-        'subject': subject,
-        'body': body,
-      });
-      print(result.data);
+      await send(message, smtpServer);
+      print('Email sent successfully');
     } catch (e) {
-      print('Error: $e');
+      print('Error sending email: $e');
     }
   }
 
@@ -322,6 +337,26 @@ class AccomodationApprovalState extends State<AccomodationApproval> {
                       ),
                     ),
                   ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  if (accomodationStatus == false)
+                    Column(
+                      children: [
+                        Text(
+                            'Please provide the reason a landlord is rejected & let them know if they can reApply.'),
+                        Container(
+                          width: buttonWidth,
+                          child: TextField(
+                            maxLines: 4,
+                            controller: messageController,
+                            decoration: InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: "Rejected reason"),
+                          ),
+                        ),
+                      ],
+                    ),
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: ElevatedButton(

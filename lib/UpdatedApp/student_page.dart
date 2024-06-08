@@ -3,6 +3,8 @@
 import 'package:api_com/UpdatedApp/StudentPages/HomePage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/NotificationPage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/PeersonalPage.dart';
+import 'package:api_com/UpdatedApp/StudentPages/Search-Class.dart';
+import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -47,16 +49,14 @@ class _StudentPageState extends State<StudentPage> {
               child: Text('No'),
               onPressed: () {
                 setState(() {});
-
-                Navigator.of(context).pop(); // Close the dialog
               },
             ),
             TextButton(
               child: Text('Yes'),
               onPressed: () async {
+                Navigator.of(context).pop();
                 await FirebaseAuth.instance.signOut();
-                Navigator.pushReplacementNamed(
-                    context, '/login'); // navigate to login page
+                Navigator.pushReplacementNamed(context, '/startPage');
               },
             ),
           ],
@@ -146,9 +146,9 @@ class _StudentPageState extends State<StudentPage> {
         },
       );
       String studentUserId = _user!.uid;
-      String helpCenterId = '3MdElZpzxgbOFJMqgkt32NnQ4UQ2';
+      String helpCenterId = 'dWKl2xV0gggWQyQycWm52lS3Hpk1';
       await FirebaseFirestore.instance
-          .collection('StudentAccounts')
+          .collection('Help Team')
           .doc(helpCenterId)
           .collection('studentHelpMessage')
           .doc(studentUserId)
@@ -181,6 +181,7 @@ class _StudentPageState extends State<StudentPage> {
 
                         Navigator.of(context).pop();
                         messageController.text = '';
+                        Navigator.pushReplacementNamed(context, '/studentPage');
                       },
                       child: Text('Done'),
                       style: ButtonStyle(
@@ -200,6 +201,29 @@ class _StudentPageState extends State<StudentPage> {
     }
   }
 
+  List<Map<String, dynamic>> _landlordsData = [];
+
+  Future<void> _loadLandlordData() async {
+    QuerySnapshot landlordSnapshot =
+        await FirebaseFirestore.instance.collection('Landlords').get();
+
+    List<Map<String, dynamic>> landlordsData = [];
+
+    for (QueryDocumentSnapshot documentSnapshot in landlordSnapshot.docs) {
+      Map<String, dynamic> landlordData =
+          documentSnapshot.data() as Map<String, dynamic>;
+      landlordsData.add(landlordData);
+    }
+
+    setState(() {
+      _landlordsData = landlordsData;
+    });
+  }
+
+  Future<void> _handleRefresh() async {
+    await _loadLandlordData();
+  }
+
   @override
   Widget build(BuildContext context) {
     double buttonWidth =
@@ -210,6 +234,17 @@ class _StudentPageState extends State<StudentPage> {
           title: Text('Hello ${_userData?['name'] ?? 'Student'}'),
           centerTitle: true,
           backgroundColor: Colors.blue,
+          actions: [
+            IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SearchView()),
+                );
+              },
+            ),
+          ],
         ),
         bottomNavigationBar: BottomNavigationBar(
             type: BottomNavigationBarType.fixed,

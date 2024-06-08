@@ -3,6 +3,7 @@
 import 'package:api_com/UpdatedApp/LandlordPages/AccountDetails.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/Notification.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/Home.dart';
+import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -71,9 +72,9 @@ class _LandlordPageState extends State<LandlordPage> {
             TextButton(
               child: Text('Yes'),
               onPressed: () async {
+                Navigator.of(context).pop();
                 await FirebaseAuth.instance.signOut();
-                Navigator.pushReplacementNamed(
-                    context, '/login'); // navigate to login page
+                Navigator.pushReplacementNamed(context, '/startPage');
               },
             ),
           ],
@@ -115,12 +116,12 @@ class _LandlordPageState extends State<LandlordPage> {
                 },
                 child: Text('okay'),
                 style: ButtonStyle(
-                    shape: MaterialStatePropertyAll(RoundedRectangleBorder(
+                    shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5))),
-                    foregroundColor: MaterialStatePropertyAll(Colors.white),
-                    backgroundColor: MaterialStatePropertyAll(Colors.blue),
+                    foregroundColor: WidgetStatePropertyAll(Colors.white),
+                    backgroundColor: WidgetStatePropertyAll(Colors.blue),
                     minimumSize:
-                        MaterialStatePropertyAll(Size(double.infinity, 50))),
+                        WidgetStatePropertyAll(Size(double.infinity, 50))),
               ),
             ],
           ),
@@ -142,9 +143,9 @@ class _LandlordPageState extends State<LandlordPage> {
         },
       );
       String landlordUserId = _user.uid;
-      String helpCenterId = '3MdElZpzxgbOFJMqgkt32NnQ4UQ2';
+      String helpCenterId = 'dWKl2xV0gggWQyQycWm52lS3Hpk1';
       await FirebaseFirestore.instance
-          .collection('Landlords')
+          .collection('Help Team')
           .doc(helpCenterId)
           .collection('studentHelpMessage')
           .doc(landlordUserId)
@@ -155,11 +156,10 @@ class _LandlordPageState extends State<LandlordPage> {
         'accomodationName': _userData?['accomodationName'],
         'profile': _userData?['profilePicture'],
       });
-      sendEmail(
-          'accomatehelpcenter@gmail.com', // Student's email
-          'Reported Issue',
+      sendEmail('accomatehelpcenter@gmail.com', 'Reported Issue',
           'Goodday Accomate help center officer,\nYou have a there is an issue reported by ${_userData?['accomodationName']} landlord.Please try by all means to assist our user.\n\n\n\n\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
 
+      Navigator.of(context).pop();
       showDialog(
           context: context,
           barrierDismissible: false,
@@ -177,17 +177,16 @@ class _LandlordPageState extends State<LandlordPage> {
 
                         Navigator.of(context).pop();
                         messageController.text = '';
+                        Navigator.pushReplacementNamed(
+                            context, '/landlordPage');
                       },
                       child: Text('Done'),
                       style: ButtonStyle(
-                          shape: MaterialStatePropertyAll(
-                              RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5))),
-                          foregroundColor:
-                              MaterialStatePropertyAll(Colors.white),
-                          backgroundColor:
-                              MaterialStatePropertyAll(Colors.green),
-                          minimumSize: MaterialStatePropertyAll(
+                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5))),
+                          foregroundColor: WidgetStatePropertyAll(Colors.white),
+                          backgroundColor: WidgetStatePropertyAll(Colors.green),
+                          minimumSize: WidgetStatePropertyAll(
                               Size(double.infinity, 50)))),
                 ],
               ));

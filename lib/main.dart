@@ -23,9 +23,6 @@ void main() async {
     messagingSenderId: '1088298291155',
     appId: '1:1088298291155:android:61a70167a445cb5f61a926',
   ));
-  HttpClient()
-    ..badCertificateCallback =
-        (X509Certificate cert, String host, int port) => true;
   runApp(
     MyApp(),
   );
@@ -52,8 +49,8 @@ class MyApp extends StatelessWidget {
               isLandlord: false,
             ),
         '/CreateAccountPage': (context) => RegistrationOption(),
+        '/startPage': (context) => StartPage(),
       },
     );
   }
 }
-//n

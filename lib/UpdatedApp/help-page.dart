@@ -14,7 +14,7 @@ class HelpPage extends StatefulWidget {
 class _HelpPageState extends State<HelpPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  void initState() async{
+  void initState() async {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
 
@@ -29,10 +29,8 @@ class _HelpPageState extends State<HelpPage>
 
   late User _user;
 
-
   Future<void> _loadStudentHelpIssues() async {
     try {
-      // Assuming there is a specific landlord ID (replace 'your_landlord_id' with the actual ID)
       String helpCenterUserId = _user.uid;
 
       QuerySnapshot registrationSnapshot = await FirebaseFirestore.instance
@@ -137,6 +135,7 @@ class _HelpPageState extends State<HelpPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.blue[100],
       appBar: AppBar(
         title: Text('Help Center'),
         centerTitle: true,

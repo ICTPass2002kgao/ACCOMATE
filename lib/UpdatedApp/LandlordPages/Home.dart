@@ -3,39 +3,55 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({Key? key}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage> {
+  late User _user;
   bool isLoading = true;
   List<Map<String, dynamic>> _studentApplications = [];
+
   @override
   void initState() {
     super.initState();
-    // _user = FirebaseAuth.instance.currentUser!;
+    _user = FirebaseAuth.instance.currentUser!;
     _loadUserData();
+    loadData();
   }
 
-  late User _user;
-  Map<String, dynamic>? _userData; // Make _userData nullable
-
+  Map<String, dynamic>? _userData;
   Future<void> _loadUserData() async {
-    DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
-        .collection('Landlords')
-        .doc(_user.uid)
-        .get();
-    setState(() {
-      _userData = userDataSnapshot.data() as Map<String, dynamic>?;
-      isLoading = false;
-    });
-    // After loading landlord data, load student applications
-    await _loadStudentApplications();
+    try {
+      _user = FirebaseAuth.instance.currentUser!;
+      if (_user.uid.isNotEmpty) {
+        DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
+            .collection('Landlords')
+            .doc(_user.uid)
+            .get();
+        setState(() {
+          _userData = userDataSnapshot.data() as Map<String, dynamic>?;
+          isLoading = false;
+        });
+        // After loading landlord data, load student applications
+        await _loadStudentApplications();
+      } else {
+        print('User UID is empty');
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   Future<void> _loadStudentApplications() async {
@@ -64,96 +80,173 @@ class _HomePageState extends State<HomePage>
     }
   }
 
+  Future<void> loadData() async {
+    // Simulate loading data
+    await Future.delayed(Duration(seconds: 3));
+
+    // Set isLoading to false when data is loaded
+    setState(() {
+      isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Container(
-      height: double.infinity,
-      color: Colors.blue[100],
-      child: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Applied Students',
-                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold)),
-              Table(
-                border: TableBorder.all(),
-                children: [
-                  // Table header
-                  TableRow(
+      body: Container(
+        height: double.infinity,
+        color: Colors.blue[100],
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: SingleChildScrollView(
+            child: isLoading
+                ? Center(
+                    child: Container(
+                        width: 100,
+                        height: 100,
+                        child: Center(
+                            child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Center(child: Text("Loading...")),
+                            Center(
+                                child: LinearProgressIndicator(
+                                    color: Colors.blue)),
+                          ],
+                        ))))
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TableCell(
-                        child: Center(
-                            child: Text('Name',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
-                      ),
-                      TableCell(
-                        child: Center(
-                            child: Text('Surname',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
-                      ),
-                      TableCell(
-                        child: Center(
-                            child: Text('Gender',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
-                      ),
-                      TableCell(
-                        child: Center(
-                            child: Text('Cell No',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
-                      ),
-                      TableCell(
-                        child: Center(
-                            child: Text('Email Address',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Applied Students',
+                            style: TextStyle(
+                              fontSize: 23,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Table(
+                            border: TableBorder.all(),
+                            children: [
+                              TableRow(
+                                children: [
+                                  TableCell(
+                                    child: Center(
+                                      child: Text(
+                                        'Name',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Center(
+                                      child: Text(
+                                        'Surname',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Center(
+                                      child: Text(
+                                        'Gender',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Center(
+                                      child: Text(
+                                        'Cell No',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  TableCell(
+                                    child: Center(
+                                      child: Text(
+                                        'Application Date & time',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              // Table rows for student applications
+                              for (int index = 0;
+                                  index < _studentApplications.length;
+                                  index++)
+                                TableRow(
+                                  children: [
+                                    TableCell(
+                                      child: Center(
+                                        child: Text(
+                                          _studentApplications[index]['name'] ??
+                                              'null',
+                                        ),
+                                      ),
+                                    ),
+                                    TableCell(
+                                      child: Center(
+                                        child: Text(
+                                          _studentApplications[index]
+                                                  ['surname'] ??
+                                              'null',
+                                        ),
+                                      ),
+                                    ),
+                                    TableCell(
+                                      child: Center(
+                                        child: Text(
+                                          _studentApplications[index]
+                                                  ['gender'] ??
+                                              'null',
+                                        ),
+                                      ),
+                                    ),
+                                    TableCell(
+                                      child: Center(
+                                        child: Text(
+                                          _studentApplications[index]
+                                                  ['contactDetails'] ??
+                                              'null',
+                                        ),
+                                      ),
+                                    ),
+                                    TableCell(
+                                      child: Center(
+                                        child: Text(
+                                            DateFormat('yyyy-MM-dd HH:mm')
+                                                .format(
+                                                    _studentApplications[index]
+                                                            ['appliedDate']
+                                                        .toDate())),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  // Table rows for student applications
-                  for (int index = 0;
-                      index < _studentApplications.length;
-                      index++)
-                    TableRow(
-                      children: [
-                        TableCell(
-                          child: Center(
-                              child: Text(_studentApplications[index]['name'] ??
-                                  'null')),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text(_studentApplications[index]
-                                      ['surname'] ??
-                                  'null')),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text(_studentApplications[index]
-                                      ['gender'] ??
-                                  'null')),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text(_studentApplications[index]
-                                      ['contactDetails'] ??
-                                  'null')),
-                        ),
-                        TableCell(
-                          child: Center(
-                              child: Text(_studentApplications[index]
-                                      ['email'] ??
-                                  'null')),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ],
           ),
         ),
       ),
-    ));
+    );
   }
 }

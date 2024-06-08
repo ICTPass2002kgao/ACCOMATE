@@ -88,4 +88,5 @@ dependencies {
      
         implementation 'com.android.support:multidex:1.0.3'
         apply plugin: 'com.google.gms.google-services'
+        implementation "com.google.firebase:firebase-messaging:22.0.0"
 }

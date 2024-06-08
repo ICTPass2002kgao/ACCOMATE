@@ -1,12 +1,12 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:api_com/UpdatedApp/StudentPages/ViewApplicationResponses.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class NotificationPage extends StatefulWidget {
-  const NotificationPage({super.key});
+  const NotificationPage({Key? key}) : super(key: key);
 
   @override
   State<NotificationPage> createState() => _NotificationPageState();
@@ -14,18 +14,13 @@ class NotificationPage extends StatefulWidget {
 
 class _NotificationPageState extends State<NotificationPage>
     with SingleTickerProviderStateMixin {
+  late User _user;
+  Map<String, dynamic>? _userData;
   List<Map<String, dynamic>> _studentApplications = [];
 
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
   bool isLoading = true;
-  Future<void> loadData() async {
-    // Simulate loading data
-    await Future.delayed(Duration(seconds: 4));
-
-    // Set isLoading to false when data is loaded
-    setState(() {
-      isLoading = false;
-    });
-  }
 
   @override
   void initState() {
@@ -35,9 +30,6 @@ class _NotificationPageState extends State<NotificationPage>
     loadData();
   }
 
-  late User _user;
-  Map<String, dynamic>? _userData; // Make _userData nullable
-
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
         .collection('Students')
@@ -45,15 +37,12 @@ class _NotificationPageState extends State<NotificationPage>
         .get();
     setState(() {
       _userData = userDataSnapshot.data() as Map<String, dynamic>?;
-      isLoading = false;
     });
-    // After loading landlord data, load student applications
     await _loadStudentApplications();
   }
 
   Future<void> _loadStudentApplications() async {
     try {
-      // Assuming there is a specific landlord ID (replace 'your_landlord_id' with the actual ID)
       String studentUserId = _userData?['userId'] ?? '';
 
       QuerySnapshot applicationsSnapshot = await FirebaseFirestore.instance
@@ -73,96 +62,133 @@ class _NotificationPageState extends State<NotificationPage>
 
       setState(() {
         _studentApplications = studentApplications;
+        isLoading = false;
       });
     } catch (e) {
       print('Error loading student applications: $e');
     }
   }
 
-  bool isTileClicked = false;
-  Set<int> clickedTiles = Set<int>();
-  int getUnclickedApplicationsCount() {
-    // Calculate the number of unclicked applications
-    return _studentApplications.where((application) => !isTileClicked).length;
+  Future<void> _handleRefresh() async {
+    await _loadStudentApplications();
+    _refreshController.refreshCompleted();
+  }
+
+  Future<void> loadData() async {
+    // Simulate loading data
+    await Future.delayed(Duration(seconds: 3));
+
+    // Set isLoading to false when data is loaded
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-              semanticsLabel: 'Loading...',
-              semanticsValue: 'Loading...',
-            ))
-          : Flexible(
-              child: Container(
-                height: double.infinity,
-                color: Colors.blue[100],
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+      backgroundColor: Colors.blue[100],
+      body: SmartRefresher(
+        controller: _refreshController,
+        onRefresh: _handleRefresh,
+        header: WaterDropMaterialHeader(
+          backgroundColor: Colors.blue,
+        ),
+        child: SingleChildScrollView(
+          child: isLoading
+              ? Center(
+                  child: Container(
+                      width: 100,
+                      height: 100,
+                      child: Center(
+                          child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Center(child: Text("Loading...")),
+                          Center(
+                              child:
+                                  LinearProgressIndicator(color: Colors.blue)),
+                        ],
+                      ))))
+              : Padding(
+                  padding: const EdgeInsets.only(left: 12.0, right: 12),
                   child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Notifications',
-                          style: TextStyle(
-                              fontSize: 25, fontWeight: FontWeight.bold),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Notifications',
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
                         ),
-                        for (int index = 0;
-                            index < _studentApplications.length;
-                            index++)
-                          if (_studentApplications[index]['status'] == true)
-                            Container(
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.blue)),
-                              child: Column(
-                                children: [
-                                  ListTile(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              ViewApplicationResponses(
-                                            studentApplicationData:
-                                                _studentApplications[index],
-                                          ),
+                      ),
+                      for (int index = 0;
+                          index < _studentApplications.length;
+                          index++)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 5.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.blue),
+                            ),
+                            child: Column(
+                              children: [
+                                ListTile(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ViewApplicationResponses(
+                                          studentApplicationData:
+                                              _studentApplications[index],
                                         ),
-                                      );
-                                      setState(() {
-                                        // Toggle the clicked state of the tile
-                                        if (clickedTiles.contains(index)) {
-                                          clickedTiles.remove(index);
-                                        } else {
-                                          clickedTiles.add(index);
-                                        }
-                                      });
-                                    },
-                                    title: Text(
-                                      '${_studentApplications[index]['accomodationName']}',
-                                      style: TextStyle(
-                                        fontWeight: clickedTiles.contains(index)
-                                            ? FontWeight.normal
-                                            : FontWeight.bold,
                                       ),
+                                    );
+                                  },
+                                  title: Text(
+                                    '${_studentApplications[index]['accomodationName']}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    subtitle: Text(
-                                      '${_studentApplications[index]['landlordMessage']} Your application was successfully accepted',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    trailing:
-                                        Icon(Icons.arrow_forward_ios_rounded),
-                                  )
-                                ],
-                              ),
-                            )
-                      ]),
+                                  ),
+                                  subtitle: Text(
+                                    _studentApplications[index]['status'] ==
+                                            true
+                                        ? 'Hi ${_userData?['name'] ?? ''}, your application from ${_studentApplications[index]['accomodationName']} was successfully approved'
+                                        : 'Hi ${_userData?['name'] ?? ''}, your application from ${_studentApplications[index]['accomodationName']} was Unsuccessful',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  trailing: Column(
+                                    children: [
+                                      Text(DateFormat('yyyy-MM-dd HH:mm')
+                                          .format(_studentApplications[index]
+                                                  ['feedbackDate']
+                                              .toDate())),
+                                      Icon(
+                                        Icons.arrow_forward_ios_rounded,
+                                        color: Colors.blue,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 5,
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
+        ),
+      ),
     );
   }
 }

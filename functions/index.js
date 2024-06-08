@@ -43,14 +43,16 @@ exports.sendEmail = functions.https.onCall(async (data) => {
   }
 });
 
-
-// Function for sending notifications to landlords using FCM
 exports.sendNotification = functions.https.onRequest(async (req, res) => {
-  // Retrieve title, body, and token from the request body
+  
+  if (req.method !== "POST") {
+    return res.status(405).send("Method Not Allowed");
+  }
+ 
   const { title, body, token } = req.body;
 
   if (!title || !body || !token) {
-    return res.status(400).send('Missing parameters');
+    return res.status(400).send("Missing parameters");
   }
 
   const message = {
@@ -63,9 +65,10 @@ exports.sendNotification = functions.https.onRequest(async (req, res) => {
 
   try {
     await admin.messaging().send(message);
-    return res.status(200).send('Notification sent successfully');
+    console.log(`Notification sent to token: ${token}`);
+    return res.status(200).send("Notification sent successfully");
   } catch (error) {
-    console.error('Error sending notification:', error);
-    return res.status(500).send('Error sending notification');
+    console.error("Error sending notification:", error);
+    return res.status(500).send("Error sending notification");
   }
 });
