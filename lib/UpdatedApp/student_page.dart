@@ -48,7 +48,7 @@ class _StudentPageState extends State<StudentPage> {
             TextButton(
               child: Text('No'),
               onPressed: () {
-                setState(() {});
+                Navigator.of(context).pop();
               },
             ),
             TextButton(

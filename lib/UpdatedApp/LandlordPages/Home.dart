@@ -93,9 +93,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor:Colors.blue[100],
       body: Container(
-        height: double.infinity,
-        color: Colors.blue[100],
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: SingleChildScrollView(
@@ -115,135 +114,137 @@ class _HomePageState extends State<HomePage> {
                                     color: Colors.blue)),
                           ],
                         ))))
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Applied Students',
-                            style: TextStyle(
-                              fontSize: 23,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Table(
-                            border: TableBorder.all(),
-                            children: [
-                              TableRow(
-                                children: [
-                                  TableCell(
-                                    child: Center(
-                                      child: Text(
-                                        'Name',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  TableCell(
-                                    child: Center(
-                                      child: Text(
-                                        'Surname',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  TableCell(
-                                    child: Center(
-                                      child: Text(
-                                        'Gender',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  TableCell(
-                                    child: Center(
-                                      child: Text(
-                                        'Cell No',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  TableCell(
-                                    child: Center(
-                                      child: Text(
-                                        'Application Date & time',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                : SingleChildScrollView(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Applied Students',
+                              style: TextStyle(
+                                fontSize: 23,
+                                fontWeight: FontWeight.bold,
                               ),
-                              // Table rows for student applications
-                              for (int index = 0;
-                                  index < _studentApplications.length;
-                                  index++)
+                            ),
+                            Table(
+                              border: TableBorder.all(),
+                              children: [
                                 TableRow(
                                   children: [
                                     TableCell(
                                       child: Center(
                                         child: Text(
-                                          _studentApplications[index]['name'] ??
-                                              'null',
+                                          'Name',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
                                     TableCell(
                                       child: Center(
                                         child: Text(
-                                          _studentApplications[index]
-                                                  ['surname'] ??
-                                              'null',
+                                          'Surname',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
                                     TableCell(
                                       child: Center(
                                         child: Text(
-                                          _studentApplications[index]
-                                                  ['gender'] ??
-                                              'null',
+                                          'Gender',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
                                     TableCell(
                                       child: Center(
                                         child: Text(
-                                          _studentApplications[index]
-                                                  ['contactDetails'] ??
-                                              'null',
+                                          'Cell No',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
                                     TableCell(
                                       child: Center(
                                         child: Text(
-                                            DateFormat('yyyy-MM-dd HH:mm')
-                                                .format(
-                                                    _studentApplications[index]
-                                                            ['appliedDate']
-                                                        .toDate())),
+                                          'Application Date & time',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                                // Table rows for student applications
+                                for (int index = 0;
+                                    index < _studentApplications.length;
+                                    index++)
+                                  TableRow(
+                                    children: [
+                                      TableCell(
+                                        child: Center(
+                                          child: Text(
+                                            _studentApplications[index]['name'] ??
+                                                'null',
+                                          ),
+                                        ),
+                                      ),
+                                      TableCell(
+                                        child: Center(
+                                          child: Text(
+                                            _studentApplications[index]
+                                                    ['surname'] ??
+                                                'null',
+                                          ),
+                                        ),
+                                      ),
+                                      TableCell(
+                                        child: Center(
+                                          child: Text(
+                                            _studentApplications[index]
+                                                    ['gender'] ??
+                                                'null',
+                                          ),
+                                        ),
+                                      ),
+                                      TableCell(
+                                        child: Center(
+                                          child: Text(
+                                            _studentApplications[index]
+                                                    ['contactDetails'] ??
+                                                'null',
+                                          ),
+                                        ),
+                                      ),
+                                      TableCell(
+                                        child: Center(
+                                          child: Text(
+                                              DateFormat('yyyy-MM-dd HH:mm')
+                                                  .format(
+                                                      _studentApplications[index]
+                                                              ['appliedDate']
+                                                          .toDate())),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                ),
           ),
         ),
       ),

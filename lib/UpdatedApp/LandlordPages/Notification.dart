@@ -112,72 +112,74 @@ class _NotificationsState extends State<Notifications>
                     ))))
             : Padding(
                 padding: const EdgeInsets.only(left: 10, right: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Notifications',
-                      style:
-                          TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    for (int index = 0;
-                        index < _studentApplications.length;
-                        index++)
-                      if (_studentApplications[index]['applicationReviewed'] ==
-                          false)
-                        Container(
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: Colors.blue)),
-                          child: ListTile(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ViewApplicantDetails(
-                                    studentApplicationData:
-                                        _studentApplications[index],
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Notifications',
+                        style:
+                            TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      for (int index = 0;
+                          index < _studentApplications.length;
+                          index++)
+                        if (_studentApplications[index]['applicationReviewed'] ==
+                            false)
+                          Container(
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.blue)),
+                            child: ListTile(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ViewApplicantDetails(
+                                      studentApplicationData:
+                                          _studentApplications[index],
+                                    ),
                                   ),
+                                );
+                              },
+                              title: Text(
+                                '${_studentApplications[index]['name'] ?? ''} ${_studentApplications[index]['surname'] ?? ''}',
+                                style: TextStyle(
+                                  fontWeight: _studentApplications[index]
+                                              ['applicationReviewed'] ==
+                                          true
+                                      ? FontWeight.normal
+                                      : FontWeight.bold,
                                 ),
-                              );
-                            },
-                            title: Text(
-                              '${_studentApplications[index]['name'] ?? ''} ${_studentApplications[index]['surname'] ?? ''}',
-                              style: TextStyle(
-                                fontWeight: _studentApplications[index]
-                                            ['applicationReviewed'] ==
-                                        true
-                                    ? FontWeight.normal
-                                    : FontWeight.bold,
+                              ),
+                              subtitle: Text(
+                                'You have a new application from ${_studentApplications[index]['name'] ?? ''}',
+                                style: TextStyle(
+                                  fontWeight: _studentApplications[index]
+                                              ['applicationReviewed'] ==
+                                          true
+                                      ? FontWeight.normal
+                                      : FontWeight.bold,
+                                ),
+                              ),
+                              trailing: Row(
+                                children: [
+                                  Text(DateFormat('yyyy-MM-dd HH:mm').format(
+                                      _studentApplications[index]['appliedDate']
+                                          .toDate())),
+                                  Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    color: Colors.blue,
+                                  ),
+                                ],
                               ),
                             ),
-                            subtitle: Text(
-                              'You have a new application from ${_studentApplications[index]['name'] ?? ''}',
-                              style: TextStyle(
-                                fontWeight: _studentApplications[index]
-                                            ['applicationReviewed'] ==
-                                        true
-                                    ? FontWeight.normal
-                                    : FontWeight.bold,
-                              ),
-                            ),
-                            trailing: Row(
-                              children: [
-                                Text(DateFormat('yyyy-MM-dd HH:mm').format(
-                                    _studentApplications[index]['appliedDate']
-                                        .toDate())),
-                                Icon(
-                                  Icons.arrow_forward_ios_rounded,
-                                  color: Colors.blue,
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                  ],
+                          )
+                    ],
+                  ),
                 ),
               ),
       ),

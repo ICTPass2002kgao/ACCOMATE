@@ -1,8 +1,7 @@
 // ignore_for_file: unnecessary_const, prefer_const_constructors, avoid_unnecessary_containers, sort_child_properties_last, prefer_const_literals_to_create_immutables, sized_box_for_whitespace, avoid_print, use_build_context_synchronously, unrelated_type_equality_checks
 
 import 'package:api_com/UpdatedApp/CreateAnAccount.dart';
-import 'package:api_com/forgot_password.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:api_com/forgot_password.dart'; 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -127,12 +126,20 @@ class _LoginPageState extends State<LoginPage> {
         password: txtPassword.text,
       );
 
-      if (widget.userRole == 'Student') {
+      if (widget.userRole == 'Student' && _auth.currentUser !=null) {
         Navigator.pushReplacementNamed(context, '/studentPage');
-      } else if (widget.userRole == 'Landlord') {
+      } else if (widget.userRole == 'Landlord' && _auth.currentUser !=null) {
         Navigator.pushReplacementNamed(context, '/landlordPage');
-      } else if (widget.userRole == 'Admin') {
+      } else if (widget.userRole == 'Admin'  && _auth.currentUser !=null) {
+
         Navigator.pushReplacementNamed(context, '/adminPage');
+      }else{
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        showCloseIcon: true,
+        content: Text('Something went wrong! Please retry logging in'),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 3),
+      ));
       }
 
       await Future.delayed(Duration(seconds: 2));
@@ -177,22 +184,7 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
         backgroundColor: Colors.blue[100],
-        body: isLoading
-            ? Center(
-                child: Container(
-                    width: 100,
-                    height: 100,
-                    child: Center(
-                        child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Center(child: Text("Loading...")),
-                        Center(
-                            child: LinearProgressIndicator(color: Colors.blue)),
-                      ],
-                    ))))
-            : MediaQuery.of(context).size.width < 768
+        body:  MediaQuery.of(context).size.width < 768
                 ? Container(
                     height: double.infinity,
                     color: Colors.blue[100],

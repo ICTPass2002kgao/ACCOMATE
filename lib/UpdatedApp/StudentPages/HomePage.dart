@@ -4,7 +4,6 @@ import 'package:api_com/UpdatedApp/accomodation_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class HomePage extends StatefulWidget {
@@ -63,118 +62,127 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        color: Colors.blue[100],
-        child: Column(
-          children: [
-            Row(children: [
+      backgroundColor: Colors.blue[100],
+      body: SingleChildScrollView(
+        child: SmartRefresher(
+          controller: _refreshController,
+          onRefresh: _handleRefresh,
+           header: WaterDropMaterialHeader(
+                          backgroundColor: Colors.blue,
+                        ),
+          child: Column(
+            children: [
+              Row(children: [
+                Expanded(
+                  child: TabBar(
+                    labelColor: Colors.blue,
+                    indicatorColor: Colors.blue,
+                    controller: _tabController,
+                    tabs: [
+                      Tab(
+                        iconMargin: const EdgeInsets.only(bottom: 1.0),
+                        text: 'Accommodations',
+                        icon: Icon(Icons.location_city, color: Colors.blue),
+                      ),
+                      Tab(
+                        iconMargin: const EdgeInsets.only(bottom: 1.0),
+                        text: 'Houses',
+                        icon: Icon(Icons.home_work, color: Colors.blue),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                    onPressed: () {},
+                    icon: Column(
+                      children: [
+                        PopupMenuButton<String>(
+                          color: Colors.blue[50],
+                          onSelected: (value) {
+                            
+                          },
+                          itemBuilder: (BuildContext context) {
+                            return [
+                              PopupMenuItem<String>(
+                                value: "Half Year",
+                                child: Text("Six months residences"),
+                              ),
+                              PopupMenuItem<String>(
+                                value: "Full Year",
+                                child: Text("Ten months residences"),
+                              ),
+                            ];
+                          },
+                          icon: Icon(Icons.sort, color: Colors.blue),
+                        ),
+                        Text(
+                          'Sort',
+                          style: TextStyle(),
+                        )
+                      ],
+                    ))
+              ]),
               Expanded(
-                child: TabBar(
-                  labelColor: Colors.blue,
-                  indicatorColor: Colors.blue,
-                  controller: _tabController,
-                  tabs: [
-                    Tab(
-                      iconMargin: const EdgeInsets.only(bottom: 1.0),
-                      text: 'Accommodations',
-                      icon: Icon(Icons.location_city, color: Colors.blue),
-                    ),
-                    Tab(
-                      iconMargin: const EdgeInsets.only(bottom: 1.0),
-                      text: 'Houses',
-                      icon: Icon(Icons.home_work, color: Colors.blue),
-                    ),
-                  ],
+                child: FutureBuilder(
+                  future: _fetchData,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                          child: Container(
+                              width: 100,
+                              height: 100,
+                              child: Center(
+                                  child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Center(child: Text("Loading...")),
+                                  Center(
+                                      child: LinearProgressIndicator(
+                                          color: Colors.blue)),
+                                ],
+                              ))));
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error loading data'));
+                    } else {
+                      return SmartRefresher(
+                        controller: _refreshController,
+                        onRefresh: _handleRefresh,
+                        header: WaterDropMaterialHeader(
+                          backgroundColor: Colors.blue,
+                        ),
+                        child: isLoading
+                            ? Center(
+                                child: Container(
+                                    width: 100,
+                                    height: 100,
+                                    child: Center(
+                                        child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Center(child: Text("Loading...")),
+                                        Center(
+                                            child: LinearProgressIndicator(
+                                                color: Colors.blue)),
+                                      ],
+                                    ))))
+                            : TabBarView(
+                                physics: NeverScrollableScrollPhysics(),
+                                controller: _tabController,
+                                children: [
+                                  _buildAccommodationList(false),
+                                  _buildAccommodationList(true),
+                                ],
+                              ),
+                      );
+                    }
+                  },
                 ),
               ),
-              IconButton(
-                  onPressed: () {},
-                  icon: Column(
-                    children: [
-                      PopupMenuButton<String>(
-                        color: Colors.blue[50],
-                        onSelected: (value) {},
-                        itemBuilder: (BuildContext context) {
-                          return [
-                            PopupMenuItem<String>(
-                              value: "Six months",
-                              child: Text("Six months residences"),
-                            ),
-                            PopupMenuItem<String>(
-                              value: "Ten months",
-                              child: Text("Ten months"),
-                            ),
-                          ];
-                        },
-                        icon: Icon(Icons.sort, color: Colors.blue),
-                      ),
-                      Text(
-                        'Sort',
-                        style: TextStyle(),
-                      )
-                    ],
-                  ))
-            ]),
-            Expanded(
-              child: FutureBuilder(
-                future: _fetchData,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                        child: Container(
-                            width: 100,
-                            height: 100,
-                            child: Center(
-                                child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Center(child: Text("Loading...")),
-                                Center(
-                                    child: LinearProgressIndicator(
-                                        color: Colors.blue)),
-                              ],
-                            ))));
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error loading data'));
-                  } else {
-                    return SmartRefresher(
-                      controller: _refreshController,
-                      onRefresh: _handleRefresh,
-                      header: WaterDropMaterialHeader(
-                        backgroundColor: Colors.blue,
-                      ),
-                      child: isLoading
-                          ? Center(
-                              child: Container(
-                                  width: 100,
-                                  height: 100,
-                                  child: Center(
-                                      child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Center(child: Text("Loading...")),
-                                      Center(
-                                          child: LinearProgressIndicator(
-                                              color: Colors.blue)),
-                                    ],
-                                  ))))
-                          : TabBarView(
-                              physics: NeverScrollableScrollPhysics(),
-                              controller: _tabController,
-                              children: [
-                                _buildAccommodationList(false),
-                                _buildAccommodationList(true),
-                              ],
-                            ),
-                    );
-                  }
-                },
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -192,13 +200,13 @@ class _HomePageState extends State<HomePage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (filteredList
-              .any((landlord) => landlord['transport availability'] == true))
+              .any((landlord) => landlord['isNsfasAccredited'] == true))
             _buildAccommodationSection(
-                'Transport', filteredList, true, isHouse),
+                'Nsfas Accredited', filteredList, false, isHouse),
           if (filteredList
-              .any((landlord) => landlord['transport availability'] == false))
+              .any((landlord) => landlord['isNsfasAccredited'] == true))
             _buildAccommodationSection(
-                'Non-Transport', filteredList, false, isHouse),
+                'Not Nsfas Accredited', filteredList, true, isHouse),
         ],
       ),
     );
@@ -207,13 +215,13 @@ class _HomePageState extends State<HomePage>
   Widget _buildAccommodationSection(
       String title,
       List<Map<String, dynamic>> list,
-      bool transportAvailability,
+      bool accrediationAvailability,
       bool isHouse) {
     String fullTitle = '$title ${isHouse ? 'Houses' : 'Accommodation'}';
 
     List<Map<String, dynamic>> sectionList = list
         .where((landlord) =>
-            landlord['transport availability'] == transportAvailability)
+            landlord['isNsfasAccredited'] == accrediationAvailability)
         .toList();
 
     return Column(
