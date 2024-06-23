@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:switcher_button/switcher_button.dart';
 
 class LandlordPage extends StatefulWidget {
   const LandlordPage({super.key});
@@ -531,8 +532,50 @@ class _LandlordPageState extends State<LandlordPage> {
                             actions: [
                               TextButton.icon(
                                   onPressed: () {
-                                    Navigator.pop(context);
-                                    _sendHelpMessage();
+                                    Navigator.pop(context);messageController.text.isEmpty &&
+                                            messageController.text.length < 10
+                                        ? showDialog(
+                                            context: context,
+                                            barrierDismissible: false,
+                                            builder: (BuildContext context) =>
+                                                AlertDialog(
+                                                  title: Text(
+                                                    'Error',
+                                                    style:
+                                                        TextStyle(fontSize: 15),
+                                                  ),
+                                                  content: Text(
+                                                      'Sorry, your issue cannot be resolved'),
+                                                  actions: <Widget>[
+                                                    TextButton(
+                                                        onPressed: () async {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                        },
+                                                        child: Text('Okay'),
+                                                        style: ButtonStyle(
+                                                            shape: WidgetStatePropertyAll(
+                                                                RoundedRectangleBorder(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            5))),
+                                                            foregroundColor:
+                                                                MaterialStatePropertyAll(
+                                                                    Colors
+                                                                        .white),
+                                                            backgroundColor:
+                                                                MaterialStatePropertyAll(
+                                                                    Colors
+                                                                        .green),
+                                                            minimumSize:
+                                                                MaterialStatePropertyAll(
+                                                                    Size(
+                                                                        double
+                                                                            .infinity,
+                                                                        50)))),
+                                                  ],
+                                                ))
+                                        : _sendHelpMessage();
                                   },
                                   icon: Icon(
                                     Icons.send,
@@ -559,6 +602,22 @@ class _LandlordPageState extends State<LandlordPage> {
                       _showLogoutConfirmationDialog(context);
                     });
                   },
+                  textColor: Colors.white,
+                ),
+                ListTile(
+                  leading: Icon(Icons.disc_full, color: Colors.white),
+                  title: Row(
+                    children: [
+                      Text('Space available'),
+                      SwitcherButton(
+    value: true,
+    onChange: (value) {
+      print(value);
+    },
+  ) 
+                    ],
+                  ),
+                 
                   textColor: Colors.white,
                 )
               ],

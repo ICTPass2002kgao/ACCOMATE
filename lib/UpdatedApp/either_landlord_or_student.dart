@@ -11,8 +11,9 @@ import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
 
 class StudentOrLandlord extends StatefulWidget {
-  const StudentOrLandlord({super.key, required this.isLandlord});
+  const StudentOrLandlord({super.key, required this.isLandlord, required this.guest});
   final bool isLandlord;
+  final bool guest;
 
   @override
   State<StudentOrLandlord> createState() => _StudentOrLandlordState();
@@ -56,24 +57,11 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
     });
     emailController.addListener(() {
       // Get the current text
-      String nameText = emailController.text;
-
-      // If the last character is a space, remove it
+      String nameText = emailController.text; 
       if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
         emailController.text = nameText.trim();
         emailController.selection = TextSelection.fromPosition(
             TextPosition(offset: emailController.text.length));
-      }
-    });
-    accomodationName.addListener(() {
-      // Get the current text
-      String nameText = accomodationName.text;
-
-      // If the last character is a space, remove it
-      if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
-        accomodationName.text = nameText.trim();
-        accomodationName.selection = TextSelection.fromPosition(
-            TextPosition(offset: accomodationName.text.length));
       }
     });
     passwordController.addListener(() {
@@ -95,7 +83,6 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
     surnameController.dispose();
     emailController.dispose();
     passwordController.dispose();
-    accomodationName.dispose();
     super.dispose();
   }
 
@@ -244,6 +231,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                                   password: passwordController.text,
                                   contactDetails: phoneNumber,
                                   isLandlord: widget.isLandlord,
+                                  isGuest:widget.guest
                                 ))));
                   },
                   style: ButtonStyle(
@@ -562,6 +550,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                         SizedBox(height: 20.0),
                         TextButton(
                           onPressed: () async {
+
                             checkStudentValues();
                           },
                           child: Text(

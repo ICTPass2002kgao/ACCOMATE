@@ -118,8 +118,8 @@ class _NotificationsState extends State<Notifications>
                     children: [
                       Text(
                         'Notifications',
-                        style:
-                            TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 25, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(
                         height: 10,
@@ -127,7 +127,8 @@ class _NotificationsState extends State<Notifications>
                       for (int index = 0;
                           index < _studentApplications.length;
                           index++)
-                        if (_studentApplications[index]['applicationReviewed'] ==
+                        if (_studentApplications[index]
+                                ['applicationReviewed'] ==
                             false)
                           Container(
                             decoration: BoxDecoration(
@@ -155,26 +156,28 @@ class _NotificationsState extends State<Notifications>
                                       : FontWeight.bold,
                                 ),
                               ),
-                              subtitle: Text(
-                                'You have a new application from ${_studentApplications[index]['name'] ?? ''}',
-                                style: TextStyle(
-                                  fontWeight: _studentApplications[index]
-                                              ['applicationReviewed'] ==
-                                          true
-                                      ? FontWeight.normal
-                                      : FontWeight.bold,
-                                ),
-                              ),
-                              trailing: Row(
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(DateFormat('yyyy-MM-dd HH:mm').format(
-                                      _studentApplications[index]['appliedDate']
-                                          .toDate())),
-                                  Icon(
-                                    Icons.arrow_forward_ios_rounded,
-                                    color: Colors.blue,
+                                  Text(
+                                    'You have a new application from ${_studentApplications[index]['surname'] ?? ''} ${_studentApplications[index]['name'] ?? ''}',
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                  Text(
+                                    DateFormat('yyyy-MM-dd HH:mm').format(
+                                        _studentApplications[index]
+                                                ['appliedDate']
+                                            .toDate()),
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.w400),
                                   ),
                                 ],
+                              ),
+                              trailing: Icon(
+                                Icons.arrow_right,
+                                size: 40,
+                                color: Colors.blue,
                               ),
                             ),
                           )

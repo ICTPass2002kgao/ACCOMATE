@@ -13,14 +13,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late User _user;
+  late User? _user;
   bool isLoading = true;
   List<Map<String, dynamic>> _studentApplications = [];
 
   @override
   void initState() {
     super.initState();
-    _user = FirebaseAuth.instance.currentUser!;
+    _user = FirebaseAuth.instance.currentUser;
     _loadUserData();
     loadData();
   }
@@ -28,24 +28,17 @@ class _HomePageState extends State<HomePage> {
   Map<String, dynamic>? _userData;
   Future<void> _loadUserData() async {
     try {
-      _user = FirebaseAuth.instance.currentUser!;
-      if (_user.uid.isNotEmpty) {
+  
         DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
             .collection('Landlords')
-            .doc(_user.uid)
+            .doc(_user?.uid)
             .get();
         setState(() {
           _userData = userDataSnapshot.data() as Map<String, dynamic>?;
           isLoading = false;
         });
-        // After loading landlord data, load student applications
         await _loadStudentApplications();
-      } else {
-        print('User UID is empty');
-        setState(() {
-          isLoading = false;
-        });
-      }
+     
     } catch (e) {
       print('Error loading user data: $e');
       setState(() {
@@ -176,7 +169,7 @@ class _HomePageState extends State<HomePage> {
                                     TableCell(
                                       child: Center(
                                         child: Text(
-                                          'Application Date & time',
+                                          'Date & time',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                           ),

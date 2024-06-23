@@ -9,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class StudentPage extends StatefulWidget {
   const StudentPage({super.key});
@@ -70,7 +71,8 @@ class _StudentPageState extends State<StudentPage> {
   @override
   void initState() {
     super.initState();
-    _user = FirebaseAuth.instance.currentUser!;
+    _user = FirebaseAuth.instance.currentUser;
+    loadData();
     _loadUserData();
   }
 
@@ -162,7 +164,7 @@ class _StudentPageState extends State<StudentPage> {
       sendEmail(
           'accomatehelpcenter@gmail.com', // help center's email
           'Reported Issue',
-          'Goodday Accomate help center officer,\nYou have a there is an issue reported by ${_userData?['surname'] ?? ''} ${_userData?['name'] ?? ''}.Please try by all means to assist our user.\n\n\n\n\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
+          'Goodday Accomate help center officer,\nYou have a there is an issue reported by ${_userData?['surname'] ?? ''} ${_userData?['name'] ?? ''}. \nUser\'s Issue:\n${messageController.text}\n\n\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
 
       showDialog(
           context: context,
@@ -177,8 +179,6 @@ class _StudentPageState extends State<StudentPage> {
                 actions: <Widget>[
                   TextButton(
                       onPressed: () async {
-                        // Close the dialog
-
                         Navigator.of(context).pop();
                         messageController.text = '';
                         Navigator.pushReplacementNamed(context, '/studentPage');
@@ -199,6 +199,11 @@ class _StudentPageState extends State<StudentPage> {
     } catch (e) {
       print(e);
     }
+  }
+
+  Future<void> loadData() async {
+    await Future.delayed(Duration(seconds: 2));
+    _loadUserData();
   }
 
   List<Map<String, dynamic>> _landlordsData = [];
@@ -222,8 +227,11 @@ class _StudentPageState extends State<StudentPage> {
 
   Future<void> _handleRefresh() async {
     await _loadLandlordData();
+    await _loadUserData();
+    _refreshController.refreshCompleted();
   }
 
+  RefreshController _refreshController = RefreshController();
   @override
   Widget build(BuildContext context) {
     double buttonWidth =
@@ -231,7 +239,7 @@ class _StudentPageState extends State<StudentPage> {
     return Scaffold(
         appBar: AppBar(
           foregroundColor: Colors.white,
-          title: Text('Hello ${_userData?['name'] ?? 'Student'}'),
+          title: Text('Welcome ${_userData?['name'] ?? 'there!'}'),
           centerTitle: true,
           backgroundColor: Colors.blue,
           actions: [
@@ -616,7 +624,50 @@ class _StudentPageState extends State<StudentPage> {
                               TextButton.icon(
                                   onPressed: () {
                                     Navigator.pop(context);
-                                    _sendHelpMessage();
+                                    messageController.text.isEmpty &&
+                                            messageController.text.length < 10
+                                        ? showDialog(
+                                            context: context,
+                                            barrierDismissible: false,
+                                            builder: (BuildContext context) =>
+                                                AlertDialog(
+                                                  title: Text(
+                                                    'Error',
+                                                    style:
+                                                        TextStyle(fontSize: 15),
+                                                  ),
+                                                  content: Text(
+                                                      'The your issue cannot be resolved'),
+                                                  actions: <Widget>[
+                                                    TextButton(
+                                                        onPressed: () async {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                        },
+                                                        child: Text('Okay'),
+                                                        style: ButtonStyle(
+                                                            shape: MaterialStatePropertyAll(
+                                                                RoundedRectangleBorder(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            5))),
+                                                            foregroundColor:
+                                                                MaterialStatePropertyAll(
+                                                                    Colors
+                                                                        .white),
+                                                            backgroundColor:
+                                                                MaterialStatePropertyAll(
+                                                                    Colors
+                                                                        .green),
+                                                            minimumSize:
+                                                                MaterialStatePropertyAll(
+                                                                    Size(
+                                                                        double
+                                                                            .infinity,
+                                                                        50)))),
+                                                  ],
+                                                ))
+                                        : _sendHelpMessage();
                                   },
                                   icon: Icon(
                                     Icons.send,
@@ -636,10 +687,16 @@ class _StudentPageState extends State<StudentPage> {
                 ),
                 ListTile(
                   leading: Icon(Icons.logout_outlined, color: Colors.white),
-                  title: Text('Logout'),
+                  title: Text(_user?.uid != null ? 'Logout' : 'Go to login'),
                   onTap: () {
                     Navigator.of(context).pop();
-                    _showLogoutConfirmationDialog(context);
+                    _user?.uid != null
+                        ? _showLogoutConfirmationDialog(context)
+                        : Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => LoginPage(
+                                    userRole: 'Student', guest: false)));
                   },
                   textColor: Colors.white,
                 )
@@ -648,7 +705,13 @@ class _StudentPageState extends State<StudentPage> {
           ),
           backgroundColor: Colors.blue,
         ),
-        body: _buildBody());
+        body: SmartRefresher(
+            controller: _refreshController,
+            onRefresh: _handleRefresh,
+            header: WaterDropMaterialHeader(
+              backgroundColor: Colors.blue,
+            ),
+            child: _buildBody()));
   }
 
   Widget _buildBody() {

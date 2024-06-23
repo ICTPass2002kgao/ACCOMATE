@@ -14,7 +14,7 @@ class NotificationPage extends StatefulWidget {
 
 class _NotificationPageState extends State<NotificationPage>
     with SingleTickerProviderStateMixin {
-  late User _user;
+  late User? _user;
   Map<String, dynamic>? _userData;
   List<Map<String, dynamic>> _studentApplications = [];
 
@@ -25,7 +25,7 @@ class _NotificationPageState extends State<NotificationPage>
   @override
   void initState() {
     super.initState();
-    _user = FirebaseAuth.instance.currentUser!;
+    _user = FirebaseAuth.instance.currentUser;
     _loadUserData();
     loadData();
   }
@@ -33,7 +33,7 @@ class _NotificationPageState extends State<NotificationPage>
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
         .collection('Students')
-        .doc(_user.uid)
+        .doc(_user?.uid)
         .get();
     setState(() {
       _userData = userDataSnapshot.data() as Map<String, dynamic>?;
@@ -75,10 +75,7 @@ class _NotificationPageState extends State<NotificationPage>
   }
 
   Future<void> loadData() async {
-    // Simulate loading data
-    await Future.delayed(Duration(seconds: 3));
-
-    // Set isLoading to false when data is loaded
+    await Future.delayed(Duration(seconds: 2));
     setState(() {
       isLoading = false;
     });
@@ -135,48 +132,62 @@ class _NotificationPageState extends State<NotificationPage>
                             ),
                             child: Column(
                               children: [
-                                ListTile(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            ViewApplicationResponses(
-                                          studentApplicationData:
-                                              _studentApplications[index],
+                                _studentApplications.isEmpty
+                                    ? Center(
+                                        child: Text(
+                                        'No Notification',
+                                        style: TextStyle(
+                                          fontSize: 25,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ))
+                                    : ListTile(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ViewApplicationResponses(
+                                                studentApplicationData:
+                                                    _studentApplications[index],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        title: Text(
+                                          '${_studentApplications[index]['accomodationName']}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        subtitle: Column(
+                                          children: [
+                                            Text(
+                                              _studentApplications[index]
+                                                          ['status'] ==
+                                                      true
+                                                  ? 'Hi ${_userData?['name'] ?? ''}, your application from ${_studentApplications[index]['accomodationName']} was successfully approved'
+                                                  : 'Hi ${_userData?['name'] ?? ''}, we regret to inform you that your application from ${_studentApplications[index]['accomodationName']} was Unsuccessful',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            Text(
+                                              DateFormat('yyyy-MM-dd HH:mm')
+                                                  .format(_studentApplications[
+                                                          index]['feedbackDate']
+                                                      .toDate()),
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.w400),
+                                            ),
+                                          ],
+                                        ),
+                                        trailing: Icon(
+                                          Icons.arrow_forward_ios_rounded,
+                                          color: Colors.blue,
                                         ),
                                       ),
-                                    );
-                                  },
-                                  title: Text(
-                                    '${_studentApplications[index]['accomodationName']}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    _studentApplications[index]['status'] ==
-                                            true
-                                        ? 'Hi ${_userData?['name'] ?? ''}, your application from ${_studentApplications[index]['accomodationName']} was successfully approved'
-                                        : 'Hi ${_userData?['name'] ?? ''}, your application from ${_studentApplications[index]['accomodationName']} was Unsuccessful',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  trailing: Column(
-                                    children: [
-                                      Text(DateFormat('yyyy-MM-dd HH:mm')
-                                          .format(_studentApplications[index]
-                                                  ['feedbackDate']
-                                              .toDate())),
-                                      Icon(
-                                        Icons.arrow_forward_ios_rounded,
-                                        color: Colors.blue,
-                                      ),
-                                    ],
-                                  ),
-                                ),
                                 SizedBox(
                                   height: 5,
                                 )

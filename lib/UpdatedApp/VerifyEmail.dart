@@ -1,4 +1,4 @@
- //ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously
+//ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously
 
 import 'dart:convert';
 import 'dart:math';
@@ -21,6 +21,7 @@ class CodeVerificationPage extends StatefulWidget {
   final String contactDetails;
   final bool isLandlord;
   final String verificationCode;
+  final bool isGuest;
 
   const CodeVerificationPage({
     super.key,
@@ -33,6 +34,7 @@ class CodeVerificationPage extends StatefulWidget {
     required this.gender,
     required this.university,
     required this.contactDetails,
+    required this.isGuest,
   });
 
   @override
@@ -47,11 +49,10 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
   @override
   void initState() {
     super.initState();
-    checkDeviceDate(context);
   }
 
   Future<void> checkStudentValues() async {
-    try { 
+    try {
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -59,7 +60,7 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
           return Center(child: CircularProgressIndicator(color: Colors.blue));
         },
       );
- 
+
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: widget.email,
@@ -94,12 +95,14 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
           widget.gender == 'Male'
               ? 'Hello Mr ${widget.surname},\nYour account has been registered successfully. Please proceed to login.\n\nBest Regards,\nYours Accomate'
               : 'Hello Mrs ${widget.surname},\nYour account has been registered successfully. Please proceed to login.\n\nBest Regards,\nYours Accomate');
-       
 
       Navigator.pop(context);
+      if (widget.isGuest == true) {
+        Navigator.pushReplacementNamed(context, '/applyAccomodation');
+      }
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => LoginPage(userRole: 'Student')),
+        MaterialPageRoute(builder: (context) => LoginPage(userRole: 'Student', guest: false,)),
       );
     } on FirebaseException catch (e) {
       Navigator.pop(context);
@@ -131,8 +134,7 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
 
   Future<void> sendEmail(
       String recipientEmail, String subject, String body) async {
-    final smtpServer = gmail('accomate33@gmail.com',
-        'your_app_password_here'); 
+    final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
     final message = Message()
       ..from = Address('accomate33@gmail.com', 'Accomate Team')
       ..recipients.add(recipientEmail)
@@ -285,16 +287,17 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
                   ),
                 ),
                 Text(
-                  'Hi, please note that we have sent a verification email to ${maskEmail(widget.email)}.',
+                  'Hi ${widget.name}, please note that we have sent a verification email to ${maskEmail(widget.email)}.',
                   style: TextStyle(fontSize: 16, color: Colors.black),
                 ),
                 SizedBox(height: 10),
                 GestureDetector(
                   onTap: () {
                     Navigator.of(context).pop();
+                    Navigator.of(context).pop();
                   },
                   child: Text(
-                    'Not your Email?',
+                    'Change Email?',
                     style: TextStyle(
                       decorationThickness: 0.5,
                       decorationColor: Colors.blue,

@@ -13,13 +13,13 @@ class AccountDetails extends StatefulWidget {
 }
 
 class _AccountDetailsState extends State<AccountDetails> {
-  late User _user;
+  late User? _user;
   Map<String, dynamic>? _userData; // Make _userData nullable
 
   @override
   void initState() {
     super.initState();
-    _user = FirebaseAuth.instance.currentUser!;
+    _user = FirebaseAuth.instance.currentUser;
     _loadUserData();
     loadData();
   }
@@ -27,7 +27,7 @@ class _AccountDetailsState extends State<AccountDetails> {
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
         .collection('Landlords')
-        .doc(_user.uid)
+        .doc(_user?.uid)
         .get();
     setState(() {
       _userData = userDataSnapshot.data() as Map<String, dynamic>?;

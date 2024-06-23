@@ -10,7 +10,6 @@ class AccomodationApproval extends StatefulWidget {
   const AccomodationApproval({
     Key? key,
     required this.landlordData,
-    // required this.imageUrls,
   });
 
   @override
@@ -178,7 +177,7 @@ class AccomodationApprovalState extends State<AccomodationApproval> {
                       },
                       itemCount: widget.landlordData['displayedImages'].length,
                       pagination:
-                          SwiperPagination(builder: SwiperPagination.fraction),
+                          SwiperPagination(builder: SwiperPagination.dots),
                       control: SwiperControl(
                           size: 20,
                           color: Colors.blue,
@@ -366,6 +365,7 @@ class AccomodationApprovalState extends State<AccomodationApproval> {
                           builder: (context) => Container(
                             height: 250,
                             child: AlertDialog(
+                              backgroundColor: Colors.blue[50],
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(5),
                               ),

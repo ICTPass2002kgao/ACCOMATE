@@ -35,7 +35,7 @@ class _RegistrationOptionState extends State<RegistrationOption> {
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => StudentOrLandlord(isLandlord: isLandlord)));
+            builder: (context) => StudentOrLandlord(isLandlord: isLandlord, guest: false,)));
   }
 
   @override

@@ -63,127 +63,92 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.blue[100],
-      body: SingleChildScrollView(
-        child: SmartRefresher(
-          controller: _refreshController,
-          onRefresh: _handleRefresh,
-           header: WaterDropMaterialHeader(
-                          backgroundColor: Colors.blue,
-                        ),
-          child: Column(
-            children: [
-              Row(children: [
-                Expanded(
-                  child: TabBar(
-                    labelColor: Colors.blue,
-                    indicatorColor: Colors.blue,
-                    controller: _tabController,
-                    tabs: [
-                      Tab(
-                        iconMargin: const EdgeInsets.only(bottom: 1.0),
-                        text: 'Accommodations',
-                        icon: Icon(Icons.location_city, color: Colors.blue),
-                      ),
-                      Tab(
-                        iconMargin: const EdgeInsets.only(bottom: 1.0),
-                        text: 'Houses',
-                        icon: Icon(Icons.home_work, color: Colors.blue),
-                      ),
-                    ],
+      body: Column(
+        children: [
+          Row(children: [
+            Expanded(
+              child: TabBar(
+                labelColor: Colors.blue,
+                indicatorColor: Colors.blue,
+                controller: _tabController,
+                tabs: [
+                  Tab(
+                    iconMargin: const EdgeInsets.only(bottom: 1.0),
+                    text: 'Accommodations',
+                    icon: Icon(Icons.location_city, color: Colors.blue),
                   ),
-                ),
-                IconButton(
-                    onPressed: () {},
-                    icon: Column(
-                      children: [
-                        PopupMenuButton<String>(
-                          color: Colors.blue[50],
-                          onSelected: (value) {
-                            
-                          },
-                          itemBuilder: (BuildContext context) {
-                            return [
-                              PopupMenuItem<String>(
-                                value: "Half Year",
-                                child: Text("Six months residences"),
-                              ),
-                              PopupMenuItem<String>(
-                                value: "Full Year",
-                                child: Text("Ten months residences"),
-                              ),
-                            ];
-                          },
-                          icon: Icon(Icons.sort, color: Colors.blue),
-                        ),
-                        Text(
-                          'Sort',
-                          style: TextStyle(),
-                        )
-                      ],
-                    ))
-              ]),
-              Expanded(
-                child: FutureBuilder(
-                  future: _fetchData,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
-                          child: Container(
-                              width: 100,
-                              height: 100,
-                              child: Center(
-                                  child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Center(child: Text("Loading...")),
-                                  Center(
-                                      child: LinearProgressIndicator(
-                                          color: Colors.blue)),
-                                ],
-                              ))));
-                    } else if (snapshot.hasError) {
-                      return Center(child: Text('Error loading data'));
-                    } else {
-                      return SmartRefresher(
-                        controller: _refreshController,
-                        onRefresh: _handleRefresh,
-                        header: WaterDropMaterialHeader(
-                          backgroundColor: Colors.blue,
-                        ),
-                        child: isLoading
-                            ? Center(
-                                child: Container(
-                                    width: 100,
-                                    height: 100,
-                                    child: Center(
-                                        child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Center(child: Text("Loading...")),
-                                        Center(
-                                            child: LinearProgressIndicator(
-                                                color: Colors.blue)),
-                                      ],
-                                    ))))
-                            : TabBarView(
-                                physics: NeverScrollableScrollPhysics(),
-                                controller: _tabController,
-                                children: [
-                                  _buildAccommodationList(false),
-                                  _buildAccommodationList(true),
-                                ],
-                              ),
-                      );
-                    }
-                  },
-                ),
+                  Tab(
+                    iconMargin: const EdgeInsets.only(bottom: 1.0),
+                    text: 'Houses',
+                    icon: Icon(Icons.home_work, color: Colors.blue),
+                  ),
+                ],
               ),
-            ],
+            ),
+            IconButton(
+                onPressed: () {},
+                icon: Column(
+                  children: [
+                    PopupMenuButton<String>(
+                      color: Colors.blue[50],
+                      onSelected: (value) {},
+                      itemBuilder: (BuildContext context) {
+                        return [
+                          PopupMenuItem<String>(
+                            value: "Half Year",
+                            child: Text("Six months residences"),
+                          ),
+                          PopupMenuItem<String>(
+                            value: "Full Year",
+                            child: Text("Ten months residences"),
+                          ),
+                        ];
+                      },
+                      icon: Icon(Icons.sort, color: Colors.blue),
+                    ),
+                    Text(
+                      'Sort',
+                      style: TextStyle(),
+                    )
+                  ],
+                ))
+          ]),
+          Expanded(
+            child: FutureBuilder(
+              future: _fetchData,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                      child: Container(
+                          width: 100,
+                          height: 100,
+                          child: Center(
+                              child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Center(child: Text("Loading...")),
+                              Center(
+                                  child: LinearProgressIndicator(
+                                      color: Colors.blue)),
+                            ],
+                          ))));
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error loading data'));
+                } else {
+                  return TabBarView(
+                    physics: NeverScrollableScrollPhysics(),
+                    controller: _tabController,
+                    children: [
+                      _buildAccommodationList(false),
+                      _buildAccommodationList(true),
+                    ],
+                  );
+                }
+              },
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

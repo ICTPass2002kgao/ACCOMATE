@@ -16,7 +16,7 @@ class PersonalPage extends StatefulWidget {
 }
 
 class _PersonalPageState extends State<PersonalPage> {
-  late User _user;
+  late User? _user;
   Map<String, dynamic>? _userData;
 
   TextEditingController emailController = TextEditingController();
@@ -27,7 +27,7 @@ class _PersonalPageState extends State<PersonalPage> {
   @override
   void initState() {
     super.initState();
-    _user = FirebaseAuth.instance.currentUser!;
+    _user = FirebaseAuth.instance.currentUser;
     _loadUserData();
     loadData();
   }
@@ -36,7 +36,7 @@ class _PersonalPageState extends State<PersonalPage> {
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
         .collection('Students')
-        .doc(_user.uid)
+        .doc(_user?.uid)
         .get();
 
     // if (userDataSnapshot.exists) {
@@ -188,12 +188,8 @@ class _PersonalPageState extends State<PersonalPage> {
                     otpControllers.map((controller) => controller.text).join();
                 if (enteredCode == verificationCode) {
                   try {
-                    AuthCredential credential = EmailAuthProvider.credential(
-                        email: _user.email!, password: 'password');
-                    await _user.reauthenticateWithCredential(credential);
-
-                    await _user.sendEmailVerification();
-                    await _user.verifyBeforeUpdateEmail(emailController.text);
+                    await _user?.sendEmailVerification();
+                    await _user?.verifyBeforeUpdateEmail(emailController.text);
                     print(
                         "Email updated successfully to ${emailController.text}");
                   } catch (e) {
@@ -302,7 +298,7 @@ class _PersonalPageState extends State<PersonalPage> {
                                       decoration: InputDecoration(
                                           border: OutlineInputBorder(),
                                           labelText:
-                                              "${_userData?['email'] ?? ''}"),
+                                              "${_userData?['email'] ?? 'NaN'}"),
                                     ),
                                   ),
                                   SizedBox(height: 10),
@@ -314,7 +310,7 @@ class _PersonalPageState extends State<PersonalPage> {
                                       decoration: InputDecoration(
                                           border: OutlineInputBorder(),
                                           hintText:
-                                              "${_userData?['name'] ?? ''}"),
+                                              "${_userData?['name'] ?? 'NaN'}"),
                                     ),
                                   ),
                                   SizedBox(
@@ -328,7 +324,7 @@ class _PersonalPageState extends State<PersonalPage> {
                                       decoration: InputDecoration(
                                           border: OutlineInputBorder(),
                                           hintText:
-                                              "${_userData?['surname'] ?? ''}"),
+                                              "${_userData?['surname'] ?? 'NaN'}"),
                                     ),
                                   ),
                                   SizedBox(
@@ -342,27 +338,28 @@ class _PersonalPageState extends State<PersonalPage> {
                                       decoration: InputDecoration(
                                           border: OutlineInputBorder(),
                                           hintText:
-                                              "${_userData?['university'] ?? ''}"),
+                                              "${_userData?['university'] ?? 'NaN'}"),
                                     ),
                                   ),
                                   SizedBox(
                                     height: 10,
                                   ),
-                                  Container(
-                                    child: TextField(
-                                      maxLines: 1,
-                                      readOnly: true,
-                                      controller: nameController,
-                                      decoration: InputDecoration(
-                                          border: OutlineInputBorder(),
-                                          hintText: DateFormat(
-                                                  'yyyy-MM-dd HH:mm')
-                                              .format(
-                                                  _userData?['registeredDate']
-                                                          .toDate() ??
-                                                      'Loading')),
+                                  if (_user?.uid != null)
+                                    Container(
+                                      child: TextField(
+                                        maxLines: 1,
+                                        readOnly: true,
+                                        controller: nameController,
+                                        decoration: InputDecoration(
+                                            border: OutlineInputBorder(),
+                                            hintText: DateFormat(
+                                                    'yyyy-MM-dd HH:mm')
+                                                .format(
+                                                    _userData?['registeredDate']
+                                                            .toDate() ??
+                                                        'NaN')),
+                                      ),
                                     ),
-                                  ),
                                   SizedBox(
                                     height: 10,
                                   ),

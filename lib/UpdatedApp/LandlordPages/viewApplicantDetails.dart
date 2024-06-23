@@ -384,7 +384,6 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                         ),
                         ElevatedButton.icon(
                           onPressed: () {
-                            Navigator.of(context).pop();
                             _saveApplicationResponse();
                           },
                           icon: Icon(

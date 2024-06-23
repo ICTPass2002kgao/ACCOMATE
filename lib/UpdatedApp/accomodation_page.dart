@@ -1,6 +1,9 @@
 // ignore_for_file: prefer_const_constructors, dead_code, prefer_const_literals_to_create_immutables, sort_child_properties_last, avoid_unnecessary_containers, unnecessary_string_interpolations, sized_box_for_whitespace, use_build_context_synchronously, avoid_print, unrelated_type_equality_checks
 
 import 'package:api_com/UpdatedApp/Apply-Accomodation.dart';
+import 'package:api_com/UpdatedApp/either_landlord_or_student.dart';
+import 'package:api_com/UpdatedApp/login_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_swiper_view/flutter_swiper_view.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -26,18 +29,21 @@ class _AccomodationPageState extends State<AccomodationPage> {
     }
   }
 
+  late User? _user;
+  @override
+  void initState() {
+    super.initState();
+    _user = FirebaseAuth.instance.currentUser;
+
+    loadData();
+  }
+
   bool isLoading = true;
   Future<void> loadData() async {
     await Future.delayed(Duration(seconds: 3));
     setState(() {
       isLoading = false;
     });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    loadData();
   }
 
   @override
@@ -259,16 +265,111 @@ class _AccomodationPageState extends State<AccomodationPage> {
                           padding: const EdgeInsets.only(left: 16, right: 16),
                           child: ElevatedButton(
                             onPressed: () async {
-                              widget.landlordData['isFull'] == true
-                                  ? _fullAccomodation(context)
-                                  : Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ApplyAccomodation(
-                                          landlordData: widget.landlordData,
+                              if (_user?.uid == null) {
+                                widget.landlordData['isFull'] == true
+                                    ? _fullAccomodation(context)
+                                    : showDialog(
+                                        context: context,
+                                        builder: (context) => Container(
+                                          height: 250,
+                                          child: AlertDialog(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(5),
+                                            ),
+                                            title: Text(
+                                              'Guest User',
+                                              style: TextStyle(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                            content: Container(
+                                              height: 200,
+                                              child: Column(
+                                                children: [
+                                                  ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            40),
+                                                    child: Container(
+                                                        color: Colors.red[400],
+                                                        width: 80,
+                                                        height: 80,
+                                                        child: Center(
+                                                          child: Text(
+                                                            'x',
+                                                            style: TextStyle(
+                                                                fontSize: 40,
+                                                                color: Colors
+                                                                    .white),
+                                                          ),
+                                                        )),
+                                                  ),
+                                                  SizedBox(height: 20),
+                                                  Text(
+                                                    'To apply for this Residence you need to sign in with an existing account otherwise you can sign up.',
+                                                    style:
+                                                        TextStyle(fontSize: 16),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () async {
+                                                  Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              StudentOrLandlord(
+                                                                  isLandlord:
+                                                                      false,
+                                                                  guest:
+                                                                      true)));
+                                                },
+                                                child: Text('Sign-up'),
+                                              ),
+                                              TextButton(
+                                                  onPressed: () async {
+                                                    Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                LoginPage(
+                                                                    userRole:
+                                                                        'Student',
+                                                                    guest:
+                                                                        true)));
+                                                  },
+                                                  child: Text('Sign-in'),
+                                                  style: ButtonStyle(
+                                                    shape: WidgetStatePropertyAll(
+                                                        RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        5))),
+                                                    foregroundColor:
+                                                        WidgetStatePropertyAll(
+                                                            Colors.white),
+                                                    backgroundColor:
+                                                        WidgetStatePropertyAll(
+                                                            Colors.blue),
+                                                  )),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    );
+                                      );
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ApplyAccomodation(
+                                      landlordData: widget.landlordData,
+                                    ),
+                                  ),
+                                );
+                              }
                             },
                             child: Text('Apply Accommodation'),
                             style: ButtonStyle(

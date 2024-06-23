@@ -49,10 +49,27 @@ class _SearchViewState extends State<SearchView> {
           stream: FirebaseFirestore.instance
               .collection('Landlords')
               .orderBy('accomodationName')
+              // .where('accomodationStatus', isEqualTo: true)
               .startAt([searchName]).endAt([searchName + "\uf8ff"]).snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-              return Text('Something went wrong');
+              return Column(
+                children: [
+                  Center(
+                    child: Lottie.network(
+                      'https://lottie.host/63272c20-431d-45d1-ade1-401d93fd8a81/4MIrc3WqN4.json', // Replace this with the path to your animation JSON file
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.fill,
+                    ),
+                  ),
+                  Center(
+                      child: Text(
+                    'One Moment',
+                    style: TextStyle(fontSize: 24),
+                  ))
+                ],
+              );
             }
 
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -108,38 +125,47 @@ class _SearchViewState extends State<SearchView> {
                   itemBuilder: (context, index) {
                     var data = snapshot.data!.docs[index];
                     var landlordData = data.data() as Map<String, dynamic>;
-                    return SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                            bottom: 5.0, left: 10, right: 10, top: 5),
-                        child: Container(
-                          decoration: BoxDecoration(
-                              border: Border.all(color: Colors.blue)),
-                          child: ListTile(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => AccomodationPage(
-                                        landlordData: landlordData)),
-                              );
-                            },
-                            trailing: Icon(Icons.arrow_forward_rounded),
-                            leading: CircleAvatar(
-                              radius: 24,
-                              backgroundImage:
-                                  NetworkImage(data['profilePicture']),
+                    return landlordData['accomodationStatus'] == true
+                        ? SingleChildScrollView(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                  bottom: 5.0, left: 10, right: 10, top: 5),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.blue)),
+                                child: Column(
+                                  children: [
+                                    ListTile(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  AccomodationPage(
+                                                      landlordData:
+                                                          landlordData)),
+                                        );
+                                      },
+                                      trailing:
+                                          Icon(Icons.arrow_forward_rounded),
+                                      leading: CircleAvatar(
+                                        radius: 24,
+                                        backgroundImage: NetworkImage(
+                                            data['profilePicture']),
+                                      ),
+                                      title: Text(data['accomodationName']),
+                                      subtitle: Text(
+                                        data['email'],
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            title: Text(data['accomodationName']),
-                            subtitle: Text(
-                              data['email'],
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
+                          )
+                        : Container();
                   }),
             );
           }),

@@ -341,6 +341,7 @@ class _OffersPageState extends State<OffersPage> {
                             context,
                             MaterialPageRoute(
                                 builder: ((context) => LoginPage(
+                                  guest: false,
                                       userRole: 'Landlord',
                                     ))));
                       },

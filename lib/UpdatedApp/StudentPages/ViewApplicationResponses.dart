@@ -210,7 +210,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                         widget.studentApplicationData[
                                                     'status'] ==
                                                 true
-                                            ? 'Accepted'
+                                            ? 'Approved'
                                             : 'Rejected',
                                         style: TextStyle(
                                             color:
@@ -250,7 +250,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                       child: Column(
                                         children: [
                                           Text(
-                                            'Hi, ${_userData?['name'] ?? 'N/A'} Your Application have been rejected due to the following reasons:\n${widget.studentApplicationData['landlordMessage']}',
+                                            'Hi, ${_userData?['surnname'] ?? 'N/A'} ${_userData?['name'] ?? 'N/A'}, we regret to inform you that your Application have been rejected due to the following reasons:\n${widget.studentApplicationData['landlordMessage']}',
                                           )
                                         ],
                                       )),
@@ -269,7 +269,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                             height: 10,
                                           ),
                                           Text(
-                                            'Hi, ${_userData?['name'] ?? ''} Your application have been approved you have 3 days limited for you to register otherwise your application will be considered as failed.',
+                                            'Hi, ${_userData?['surname'] ?? 'N/A'} ${_userData?['name'] ?? ''} Your application have been approved you have 3 days limited for you to register otherwise your application will be considered as failed.',
                                             maxLines: 100,
                                           ),
                                         ],

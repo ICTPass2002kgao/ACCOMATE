@@ -1,5 +1,7 @@
 import 'package:api_com/UpdatedApp/CreateAnAccount.dart';
 import 'package:api_com/UpdatedApp/login_page.dart';
+import 'package:api_com/UpdatedApp/student_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_swiper_view/flutter_swiper_view.dart';
@@ -20,7 +22,13 @@ class _StartPageState extends State<StartPage>
 
   int currentImage = 0;
   String selectedRole = '';
-  List<String> gender = ['Landlord', 'Student', 'Admin', 'Create new Account'];
+  List<String> gender = [
+    'Landlord',
+    'Student',
+    'Guest',
+    'Admin',
+    'Create new Account'
+  ];
 
   @override
   bool get wantKeepAlive => true;
@@ -45,7 +53,9 @@ class _StartPageState extends State<StartPage>
 
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) => SystemNavigator.pop(),
+      onPopInvokedWithResult: (didPop, result) {
+        SystemNavigator.pop();
+      },
       child: Scaffold(
         backgroundColor: Colors.blue[100],
         appBar: AppBar(
@@ -113,7 +123,7 @@ class _StartPageState extends State<StartPage>
                                   ),
                                   value: paramRole,
                                   groupValue: selectedRole,
-                                  onChanged: (value) {
+                                  onChanged: (value) async {
                                     setState(() {
                                       selectedRole = value!;
                                     });
@@ -124,11 +134,16 @@ class _StartPageState extends State<StartPage>
                                           MaterialPageRoute(
                                               builder: (context) =>
                                                   RegistrationOption()));
+                                    } else if (selectedRole == 'Guest') {
+                                      await FirebaseAuth.instance.signOut();
+                                      Navigator.pushReplacementNamed(
+                                          context, '/studentPage');
                                     } else {
                                       Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) => LoginPage(
+                                                  guest: false,
                                                   userRole: selectedRole)));
                                     }
                                   },

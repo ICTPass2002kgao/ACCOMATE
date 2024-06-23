@@ -1,15 +1,16 @@
-import 'package:api_com/UpdatedApp/login_page.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
-  const ForgotPasswordPage({super.key});
+  const ForgotPasswordPage({super.key,});
 
   @override
   State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  
   TextEditingController txtEmail = TextEditingController();
 
   late FirebaseAuth _auth;
@@ -54,7 +55,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 Navigator.of(context).pop();
                 Navigator.of(context).pop();
               },
-              child: Text('Proceed to Login'),
+              child: Text('Okay'),
               style: ButtonStyle(
                 shape: WidgetStateProperty.all(
                   RoundedRectangleBorder(

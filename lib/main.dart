@@ -1,8 +1,10 @@
 // ignore_for_file: prefer_const_constructors
 import 'dart:io';
 
+import 'package:api_com/UpdatedApp/Apply-Accomodation.dart';
 import 'package:api_com/UpdatedApp/CreateAnAccount.dart';
 import 'package:api_com/UpdatedApp/LandlordPage.dart';
+import 'package:api_com/UpdatedApp/accomodation_page.dart';
 import 'package:api_com/UpdatedApp/admin-page.dart';
 import 'package:api_com/UpdatedApp/either_landlord_or_student.dart';
 import 'package:api_com/UpdatedApp/help-page.dart';
@@ -40,6 +42,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => LoginPage(
               userRole: '',
+              guest: false,
             ),
         '/landlordPage': (context) => LandlordPage(),
         '/studentPage': (context) => StudentPage(),
@@ -47,6 +50,7 @@ class MyApp extends StatelessWidget {
         '/helpCenter': (context) => HelpPage(),
         '/studentRegistration': (context) => StudentOrLandlord(
               isLandlord: false,
+              guest: false,
             ),
         '/CreateAccountPage': (context) => RegistrationOption(),
         '/startPage': (context) => StartPage(),

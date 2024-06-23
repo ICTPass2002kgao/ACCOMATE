@@ -34,7 +34,7 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
     "Second Semester",
     "Full Year"
   ];
-  late User _user;
+  late User? _user;
 
   Map<String, dynamic>? _userData;
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
@@ -42,7 +42,7 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
   @override
   void initState() {
     super.initState();
-    _user = FirebaseAuth.instance.currentUser!;
+    _user = FirebaseAuth.instance.currentUser;
     _loadUserData();
     _initializeFirebaseMessaging();
   }
@@ -85,7 +85,7 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
         .collection('Students')
-        .doc(_user.uid)
+        .doc(_user?.uid)
         .get();
     setState(() {
       _userData = userDataSnapshot.data() as Map<String, dynamic>?;
@@ -290,15 +290,6 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
         return;
       }
 
-      await FirebaseFirestore.instance
-          .collection('Students')
-          .doc(studentUserId)
-          .update({
-        'roomType': selectedRoomsType,
-        'fieldOfStudy': yearOfStudy,
-        'periodOfStudy': periodOfStudy,
-      });
-
       DateTime now = DateTime.now();
       Timestamp appliedDate = Timestamp.fromDate(now);
       await FirebaseFirestore.instance
@@ -314,15 +305,16 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
         'contactDetails': _userData?['contactDetails'] ?? '',
         'gender': _userData?['gender'] ?? '',
         'userId': _userData?['userId'] ?? '',
-        'roomType': _userData?['roomType'] ?? '',
-        'fieldOfStudy': _userData?['fieldOfStudy'] ?? '',
+        'roomType': selectedRoomsType,
+        'fieldOfStudy': yearOfStudy,
+        'periodOfStudy': periodOfStudy,
         'applicationReviewed': false,
         'appliedDate': appliedDate,
       });
       sendEmail(
         widget.landlordData['email'] ?? '',
         'Application Received',
-        'Hi ${widget.landlordData['accomodationName'] ?? ''} landlord, \nYou have a new application from a student at ${_userData?['university']}.\nBest Regards\nYour Accomate Team',
+        'Hi ${widget.landlordData['accomodationName'] ?? ''} landlord, \nYou have a new application from a student at ${_userData?['university']}.\nName & Surname:${_userData?['name']} ${_userData?['surname']} \nBest Regards\nYour Accomate Team',
       );
 
       await sendEmail(
@@ -352,7 +344,7 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
       appBar: AppBar(
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
-        title: Text('Apply Accomodtion'),
+        title: Text('Apply Accomodation'),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
