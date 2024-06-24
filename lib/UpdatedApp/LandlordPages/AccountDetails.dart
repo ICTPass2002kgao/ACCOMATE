@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_swiper_view/flutter_swiper_view.dart';
+import 'package:switcher_button/switcher_button.dart';
 
 class AccountDetails extends StatefulWidget {
   const AccountDetails({super.key});
@@ -43,6 +44,7 @@ class _AccountDetailsState extends State<AccountDetails> {
     });
   }
 
+  bool isFull = false;
   @override
   Widget build(BuildContext context) {
     double buttonWidth =
@@ -173,6 +175,132 @@ class _AccountDetailsState extends State<AccountDetails> {
                                       ?[university] ??
                                   false)
                                 Text('$university'),
+                            SizedBox(height: 5),
+                            Container(
+                              width: buttonWidth,
+                              child: ExpansionTile(
+                                backgroundColor: Colors.blue[50],
+                                title: Text('Residence is full?'),
+                                children: [
+                                  Row(
+                                    children: [
+                                      Radio(
+                                        activeColor: Colors.green,
+                                        fillColor: WidgetStatePropertyAll(
+                                            Colors.green),
+                                        value: false,
+                                        groupValue: isFull,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            isFull = value!;
+                                          });
+                                        },
+                                      ),
+                                      Text('No'),
+                                    ],
+                                  ),
+                                  SizedBox(width: 16),
+                                  Row(
+                                    children: [
+                                      Radio(
+                                        activeColor: Colors.red,
+                                        fillColor:
+                                            WidgetStatePropertyAll(Colors.red),
+                                        value: true,
+                                        groupValue: isFull,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            isFull = value!;
+                                          });
+                                        },
+                                      ),
+                                      Text('Yes'),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            isFull == true
+                                ? TextButton(
+                                    onPressed: () async {
+                                      showDialog<void>(
+                                        context: context,
+                                        barrierDismissible:
+                                            false, // user must tap button for close
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            backgroundColor: Colors.blue[100],
+                                            title: Text('Space Availability',
+                                                style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
+                                            content: SingleChildScrollView(
+                                              child: ListBody(
+                                                children: <Widget>[
+                                                  Row(
+                                                    children: [
+                                                      Icon(
+                                                          Icons
+                                                              .warning_outlined,
+                                                          color: Color.fromARGB(
+                                                              255,
+                                                              167,
+                                                              156,
+                                                              60),
+                                                          size: 40),
+                                                      SizedBox(width: 10),
+                                                      Expanded(
+                                                          child: Text(
+                                                              'By updating this status, your residence will be considered as full and there will no longer be any applications from the students')),
+                                                    ],
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                child: Text('No'),
+                                                onPressed: () {
+                                                  setState(() {});
+                                                  Navigator.of(context)
+                                                      .pop(); // Close the dialog
+                                                },
+                                              ),
+                                              TextButton(
+                                                child: Text('Yes'),
+                                                onPressed: () async {
+                                                  Navigator.of(context).pop();
+
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection('Landlords')
+                                                      .doc(_user?.uid)
+                                                      .update({
+                                                    'isFull': true,
+                                                  });
+                                                },
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    },
+                                    child: Text('Update'),
+                                    style: ButtonStyle(
+                                        shape: WidgetStatePropertyAll(
+                                            RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(5))),
+                                        backgroundColor:
+                                            WidgetStatePropertyAll(Colors.blue),
+                                        foregroundColor: WidgetStatePropertyAll(
+                                            Colors.white),
+                                        minimumSize: WidgetStatePropertyAll(
+                                            Size(double.infinity, 50))),
+                                  )
+                                : Container(),
                             SizedBox(height: 5),
                             ExpansionTile(
                               title: Text('More details',

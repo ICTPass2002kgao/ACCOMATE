@@ -59,7 +59,8 @@ class _AccomodationPageState extends State<AccomodationPage> {
           style: TextStyle(color: Colors.white, fontSize: 18),
         ),
         centerTitle: true,
-        backgroundColor: Colors.blue,
+        backgroundColor:
+            widget.landlordData['isFull'] == true ? Colors.red : Colors.blue,
       ),
       body: isLoading
           ? Center(
@@ -76,317 +77,365 @@ class _AccomodationPageState extends State<AccomodationPage> {
                           child: LinearProgressIndicator(color: Colors.blue)),
                     ],
                   ))))
-          : Container(
-              height: double.infinity,
-              color: Colors.blue[100],
-              child: SingleChildScrollView(
-                physics: AlwaysScrollableScrollPhysics(),
-                child: Center(
-                  child: Container(
-                    width: buttonWidth,
-                    child: Column(
-                      children: [
-                        Container(
-                          height: 300,
-                          child: Swiper(
-                            itemBuilder: (BuildContext context, int index) {
-                              return Image.network(
-                                widget.landlordData['displayedImages'][index],
-                                fit: BoxFit.cover,
-                              );
-                            },
-                            itemCount:
-                                widget.landlordData['displayedImages'].length,
-                            pagination: SwiperPagination(
-                                margin: EdgeInsets.all(5),
-                                builder: SwiperPagination.rect),
-                            control: SwiperControl(
-                                size: 20,
-                                color: Colors.blue,
-                                iconNext: Icons.navigate_next_outlined,
-                                iconPrevious: Icons.navigate_before_rounded),
-                            autoplay: false,
+          : SafeArea(
+              child: Container(
+                height: double.infinity,
+                color: Colors.blue[100],
+                child: SingleChildScrollView(
+                  physics: AlwaysScrollableScrollPhysics(),
+                  child: Center(
+                    child: Container(
+                      width: buttonWidth,
+                      child: Column(
+                        children: [
+                          Container(
+                            height: 300,
+                            child: Swiper(
+                              itemBuilder: (BuildContext context, int index) {
+                                return Image.network(
+                                  widget.landlordData['displayedImages'][index],
+                                  fit: BoxFit.cover,
+                                );
+                              },
+                              itemCount:
+                                  widget.landlordData['displayedImages'].length,
+                              pagination: SwiperPagination(
+                                  margin: EdgeInsets.all(5),
+                                  builder: SwiperPagination.rect),
+                              control: SwiperControl(
+                                  size: 20,
+                                  color: Colors.blue,
+                                  iconNext: Icons.navigate_next_outlined,
+                                  iconPrevious: Icons.navigate_before_rounded),
+                              autoplay: false,
+                            ),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 16.0, right: 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text('Address: ',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  Expanded(
-                                    child: GestureDetector(
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(left: 16.0, right: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text('Address: ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          String address =
+                                              widget.landlordData['location'] ??
+                                                  '';
+                                          Uri googleMapsUrl = Uri.parse(
+                                              'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}');
+                                          _launchURL(googleMapsUrl);
+                                        },
+                                        child: Text(
+                                          "\n${widget.landlordData['location'] ?? 'Loading...'}",
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Colors.blue,
+                                            decoration:
+                                                TextDecoration.underline,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 5),
+                                Row(
+                                  children: [
+                                    Text('Distance to campus: ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    Text(widget.landlordData['distance'] ??
+                                        'Loading...'),
+                                    Icon(Icons.location_on_outlined, size: 13),
+                                  ],
+                                ),
+                                SizedBox(height: 5),
+                                Text('For more information contact us via:'),
+                                SizedBox(height: 5),
+                                Row(
+                                  children: [
+                                    Text('Email: ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    GestureDetector(
                                       onTap: () {
-                                        String address =
-                                            widget.landlordData['location'] ??
-                                                '';
-                                        Uri googleMapsUrl = Uri.parse(
-                                            'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}');
-                                        _launchURL(googleMapsUrl);
+                                        String email =
+                                            widget.landlordData['email'] ?? '';
+                                        Uri mailtoUrl =
+                                            Uri(scheme: 'mailto', path: email);
+                                        _launchURL(mailtoUrl);
                                       },
                                       child: Text(
-                                        "\n${widget.landlordData['location'] ?? 'Loading...'}",
-                                        maxLines: 3,
-                                        overflow: TextOverflow.ellipsis,
+                                        widget.landlordData['email'] ?? '',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.clip,
                                         style: TextStyle(
                                           color: Colors.blue,
                                           decoration: TextDecoration.underline,
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 5),
-                              Row(
-                                children: [
-                                  Text('Distance to campus: ',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  Text(widget.landlordData['distance'] ??
-                                      'Loading...'),
-                                  Icon(Icons.location_on_outlined, size: 13),
-                                ],
-                              ),
-                              SizedBox(height: 5),
-                              Text('For more information contact us via:'),
-                              SizedBox(height: 5),
-                              Row(
-                                children: [
-                                  Text('Email: ',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  GestureDetector(
-                                    onTap: () {
-                                      String email =
-                                          widget.landlordData['email'] ?? '';
-                                      Uri mailtoUrl =
-                                          Uri(scheme: 'mailto', path: email);
-                                      _launchURL(mailtoUrl);
-                                    },
-                                    child: Text(
-                                      widget.landlordData['email'] ?? '',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.clip,
-                                      style: TextStyle(
-                                        color: Colors.blue,
-                                        decoration: TextDecoration.underline,
+                                  ],
+                                ),
+                                SizedBox(height: 5),
+                                Row(
+                                  children: [
+                                    Text('Contact: ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    GestureDetector(
+                                      onTap: () {
+                                        String phone = widget.landlordData[
+                                                'contactDetails'] ??
+                                            '';
+                                        Uri telUrl =
+                                            Uri(scheme: 'tel', path: phone);
+                                        _launchURL(telUrl);
+                                      },
+                                      child: Text(
+                                        widget.landlordData['contactDetails'] ??
+                                            '',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.clip,
+                                        style: TextStyle(
+                                          color: Colors.blue,
+                                          decoration: TextDecoration.underline,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 5),
-                              Row(
-                                children: [
-                                  Text('Contact: ',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  GestureDetector(
-                                    onTap: () {
-                                      String phone = widget
-                                              .landlordData['contactDetails'] ??
-                                          '';
-                                      Uri telUrl =
-                                          Uri(scheme: 'tel', path: phone);
-                                      _launchURL(telUrl);
-                                    },
-                                    child: Text(
-                                      widget.landlordData['contactDetails'] ??
-                                          '',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.clip,
-                                      style: TextStyle(
-                                        color: Colors.blue,
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Text('Accommodated institutions',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                              SizedBox(height: 5),
-                              for (String university in widget
-                                  .landlordData['selectedUniversity'].keys)
-                                if (widget.landlordData['selectedUniversity']
-                                        ?[university] ??
-                                    false)
-                                  Text('$university'),
-                              SizedBox(height: 5),
-                              ExpansionTile(
-                                title: Text('More details',
+                                  ],
+                                ),
+                                Text('Accommodated institutions',
                                     style:
                                         TextStyle(fontWeight: FontWeight.bold)),
-                                children: [
-                                  ListTile(
-                                    title: Text('Offered amities',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                  ),
-                                  for (String offers in widget
-                                      .landlordData['selectedOffers'].keys)
-                                    if (widget.landlordData['selectedOffers']
-                                            ?[offers] ??
-                                        false)
-                                      ListTile(
-                                        title: Text(offers),
-                                      ),
-                                  SizedBox(height: 5),
-                                  ListTile(
-                                    title: Text('Payment Methods',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                  ),
-                                  for (String paymentMethods in widget
-                                      .landlordData['selectedPaymentsMethods']
-                                      .keys)
-                                    if (widget.landlordData[
-                                                'selectedPaymentsMethods']
-                                            ?[paymentMethods] ??
-                                        false)
-                                      ListTile(
-                                        title: Text(paymentMethods),
-                                      ),
-                                ],
-                              )
-                            ],
+                                SizedBox(height: 5),
+                                for (String university in widget
+                                    .landlordData['selectedUniversity'].keys)
+                                  if (widget.landlordData['selectedUniversity']
+                                          ?[university] ??
+                                      false)
+                                    Text('$university'),
+                                SizedBox(height: 5),
+                                Text('Accomodate Period Allowed: ',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                Text(
+                                  widget.landlordData['Duration'] ==
+                                              "Half Year" &&
+                                          widget.landlordData['Duration'] ==
+                                              "Half Year"
+                                      ? 'Both 6 months and full year'
+                                      : 'Full year Only',
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: 5),
+                                Row(
+                                  children: [
+                                    widget.landlordData['isFull'] == true
+                                        ? Text(
+                                            'Accomodation is full due to space',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.red),
+                                          )
+                                        : Text(
+                                            'Apply as soon as possible to secure your space',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.green),
+                                          ),
+                                    widget.landlordData['isFull'] == true
+                                        ? Icon(
+                                            Icons.sentiment_very_dissatisfied,
+                                            color: Colors.red,
+                                          )
+                                        : Icon(
+                                            Icons
+                                                .sentiment_very_satisfied_outlined,
+                                            color: Colors.green,
+                                          )
+                                  ],
+                                ),
+                                SizedBox(height: 5),
+                                ExpansionTile(
+                                  title: Text('More details',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  children: [
+                                    ListTile(
+                                      title: Text('Offered amities',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                    ),
+                                    for (String offers in widget
+                                        .landlordData['selectedOffers'].keys)
+                                      if (widget.landlordData['selectedOffers']
+                                              ?[offers] ??
+                                          false)
+                                        ListTile(
+                                          title: Text(offers),
+                                        ),
+                                    SizedBox(height: 5),
+                                    ListTile(
+                                      title: Text('Payment Methods',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                    ),
+                                    for (String paymentMethods in widget
+                                        .landlordData['selectedPaymentsMethods']
+                                        .keys)
+                                      if (widget.landlordData[
+                                                  'selectedPaymentsMethods']
+                                              ?[paymentMethods] ??
+                                          false)
+                                        ListTile(
+                                          title: Text(paymentMethods),
+                                        ),
+                                  ],
+                                )
+                              ],
+                            ),
                           ),
-                        ),
-                        SizedBox(
-                          height: 5,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 16, right: 16),
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              if (_user?.uid == null) {
-                                widget.landlordData['isFull'] == true
-                                    ? _fullAccomodation(context)
-                                    : showDialog(
-                                        context: context,
-                                        builder: (context) => Container(
-                                          height: 250,
-                                          child: AlertDialog(
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(5),
-                                            ),
-                                            title: Text(
-                                              'Guest User',
-                                              style: TextStyle(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                            content: Container(
-                                              height: 200,
-                                              child: Column(
-                                                children: [
-                                                  ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            40),
-                                                    child: Container(
-                                                        color: Colors.red[400],
-                                                        width: 80,
-                                                        height: 80,
-                                                        child: Center(
-                                                          child: Text(
-                                                            'x',
-                                                            style: TextStyle(
-                                                                fontSize: 40,
-                                                                color: Colors
-                                                                    .white),
-                                                          ),
-                                                        )),
-                                                  ),
-                                                  SizedBox(height: 20),
-                                                  Text(
-                                                    'To apply for this Residence you need to sign in with an existing account otherwise you can sign up.',
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
-                                                ],
+                          SizedBox(
+                            height: 5,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 16, right: 16),
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                if (_user?.uid == null) {
+                                  widget.landlordData['isFull'] == true
+                                      ? _fullAccomodation(context)
+                                      : showDialog(
+                                          context: context,
+                                          builder: (context) => Container(
+                                            height: 250,
+                                            child: AlertDialog(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(5),
                                               ),
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () async {
-                                                  Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              StudentOrLandlord(
-                                                                  isLandlord:
-                                                                      false,
-                                                                  guest:
-                                                                      true)));
-                                                },
-                                                child: Text('Sign-up'),
+                                              title: Text(
+                                                'Guest User',
+                                                style: TextStyle(
+                                                    fontSize: 15,
+                                                    fontWeight:
+                                                        FontWeight.bold),
                                               ),
-                                              TextButton(
+                                              content: Container(
+                                                height: 200,
+                                                child: Column(
+                                                  children: [
+                                                    ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              40),
+                                                      child: Container(
+                                                          color:
+                                                              Colors.red[400],
+                                                          width: 80,
+                                                          height: 80,
+                                                          child: Center(
+                                                            child: Text(
+                                                              'x',
+                                                              style: TextStyle(
+                                                                  fontSize: 40,
+                                                                  color: Colors
+                                                                      .white),
+                                                            ),
+                                                          )),
+                                                    ),
+                                                    SizedBox(height: 20),
+                                                    Text(
+                                                      'To apply for this Residence you need to sign in with an existing account otherwise you can sign up.',
+                                                      style: TextStyle(
+                                                          fontSize: 16),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              actions: [
+                                                TextButton(
                                                   onPressed: () async {
                                                     Navigator.push(
                                                         context,
                                                         MaterialPageRoute(
                                                             builder: (context) =>
-                                                                LoginPage(
-                                                                    userRole:
-                                                                        'Student',
+                                                                StudentOrLandlord(
+                                                                    isLandlord:
+                                                                        false,
                                                                     guest:
                                                                         true)));
                                                   },
-                                                  child: Text('Sign-in'),
-                                                  style: ButtonStyle(
-                                                    shape: WidgetStatePropertyAll(
-                                                        RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        5))),
-                                                    foregroundColor:
-                                                        WidgetStatePropertyAll(
-                                                            Colors.white),
-                                                    backgroundColor:
-                                                        WidgetStatePropertyAll(
-                                                            Colors.blue),
-                                                  )),
-                                            ],
+                                                  child: Text('Sign-up'),
+                                                ),
+                                                TextButton(
+                                                    onPressed: () async {
+                                                      Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  LoginPage(
+                                                                      userRole:
+                                                                          'Student',
+                                                                      guest:
+                                                                          true)));
+                                                    },
+                                                    child: Text('Sign-in'),
+                                                    style: ButtonStyle(
+                                                      shape: WidgetStatePropertyAll(
+                                                          RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          5))),
+                                                      foregroundColor:
+                                                          WidgetStatePropertyAll(
+                                                              Colors.white),
+                                                      backgroundColor:
+                                                          WidgetStatePropertyAll(
+                                                              Colors.blue),
+                                                    )),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      );
-                              } else {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ApplyAccomodation(
-                                      landlordData: widget.landlordData,
+                                        );
+                                } else {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ApplyAccomodation(
+                                        landlordData: widget.landlordData,
+                                      ),
                                     ),
-                                  ),
-                                );
-                              }
-                            },
-                            child: Text('Apply Accommodation'),
-                            style: ButtonStyle(
-                                shape: WidgetStatePropertyAll(
-                                    RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(5))),
-                                backgroundColor:
-                                    WidgetStatePropertyAll(Colors.blue),
-                                foregroundColor:
-                                    WidgetStatePropertyAll(Colors.white),
-                                minimumSize: WidgetStatePropertyAll(
-                                    Size(buttonWidth, 50))),
+                                  );
+                                }
+                              },
+                              child: Text('Apply Accommodation'),
+                              style: ButtonStyle(
+                                  shape: WidgetStatePropertyAll(
+                                      RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(5))),
+                                  backgroundColor:
+                                      WidgetStatePropertyAll(Colors.blue),
+                                  foregroundColor:
+                                      WidgetStatePropertyAll(Colors.white),
+                                  minimumSize: WidgetStatePropertyAll(
+                                      Size(buttonWidth, 50))),
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 50),
-                      ],
+                          SizedBox(height: 50),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -426,7 +475,7 @@ void _fullAccomodation(BuildContext context) {
               ),
               SizedBox(height: 20),
               Text(
-                'Please not that the Accomodation is full try looking for another accommodations',
+                'Please note that the residence is full try looking for another residence',
                 style: TextStyle(fontSize: 16),
               ),
             ],

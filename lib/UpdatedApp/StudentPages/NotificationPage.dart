@@ -163,6 +163,7 @@ class _NotificationPageState extends State<NotificationPage>
                                           ),
                                         ),
                                         subtitle: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               _studentApplications[index]

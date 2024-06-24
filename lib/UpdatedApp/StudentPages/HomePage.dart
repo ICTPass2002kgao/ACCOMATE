@@ -21,6 +21,8 @@ class _HomePageState extends State<HomePage>
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
+  String selectedDuration = "Both";
+
   @override
   void initState() {
     super.initState();
@@ -85,33 +87,40 @@ class _HomePageState extends State<HomePage>
                 ],
               ),
             ),
-            IconButton(
-                onPressed: () {},
-                icon: Column(
-                  children: [
-                    PopupMenuButton<String>(
-                      color: Colors.blue[50],
-                      onSelected: (value) {},
-                      itemBuilder: (BuildContext context) {
-                        return [
-                          PopupMenuItem<String>(
-                            value: "Half Year",
-                            child: Text("Six months residences"),
-                          ),
-                          PopupMenuItem<String>(
-                            value: "Full Year",
-                            child: Text("Ten months residences"),
-                          ),
-                        ];
-                      },
-                      icon: Icon(Icons.sort, color: Colors.blue),
-                    ),
-                    Text(
-                      'Sort',
-                      style: TextStyle(),
-                    )
-                  ],
-                ))
+            Column(
+              children: [
+                PopupMenuButton<String>(
+                  color: Colors.blue[50],
+                  onSelected: (value) {
+                    _handleRefresh();
+                    setState(() {
+                      selectedDuration = value;
+                    });
+                  },
+                  itemBuilder: (BuildContext context) {
+                    return [
+                      PopupMenuItem<String>(
+                        value: "Half Year",
+                        child: Text("Six months residences"),
+                      ),
+                      PopupMenuItem<String>(
+                        value: "Full Year",
+                        child: Text("Ten months residences"),
+                      ),
+                      PopupMenuItem<String>(
+                        value: "Both",
+                        child: Text("All Residences"),
+                      ),
+                    ];
+                  },
+                  icon: Icon(Icons.sort, color: Colors.blue),
+                ),
+                Text(
+                  'Sort',
+                  style: TextStyle(),
+                )
+              ],
+            )
           ]),
           Expanded(
             child: FutureBuilder(
@@ -154,11 +163,20 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildAccommodationList(bool isHouse) {
-    List<Map<String, dynamic>> filteredList = _landlordsData
-        .where((landlord) =>
-            landlord['accomodationType'] == isHouse &&
-            landlord['accomodationStatus'] == true)
-        .toList();
+    List<Map<String, dynamic>> filteredList = _landlordsData.where((landlord) {
+      if (selectedDuration == "Half Year") {
+        return landlord['accomodationType'] == isHouse &&
+            landlord['accomodationStatus'] == true &&
+            landlord['Duration'] == "Half Year";
+      } else if (selectedDuration == "Full Year") {
+        return landlord['accomodationType'] == isHouse &&
+            landlord['accomodationStatus'] == true &&
+            landlord['Duration'] == "Full Year";
+      } else {
+        return landlord['accomodationType'] == isHouse &&
+            landlord['accomodationStatus'] == true;
+      }
+    }).toList();
 
     return SingleChildScrollView(
       child: Column(
@@ -259,7 +277,7 @@ Widget buildLandlordCard(Map<String, dynamic> landlordData) {
               SizedBox(height: 5.0),
               Row(
                 children: [
-                  Expanded(
+                  Flexible(
                     child: Text(
                       ' ${landlordData['accomodationName'] ?? 'N/A'}',
                       overflow: TextOverflow.ellipsis,
@@ -304,6 +322,11 @@ Widget buildLandlordCard(Map<String, dynamic> landlordData) {
                         ? Colors.green
                         : Colors.red),
               ),
+              Text(landlordData['Duration'] == "Half Year"
+                  ? 'Six Months Allowed'
+                  : landlordData['Duration'] == "Full Year"
+                      ? 'Full Year Only'
+                      : 'All Students Allowed'),
             ],
           ),
         ),

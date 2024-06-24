@@ -25,7 +25,8 @@ class _SearchViewState extends State<SearchView> {
           child: TextField(
             onChanged: (value) {
               setState(() {
-                searchName = value;
+                searchName = value
+                    .toLowerCase(); // Convert the search input to lowercase
               });
             },
             decoration: InputDecoration(
@@ -50,7 +51,7 @@ class _SearchViewState extends State<SearchView> {
               .collection('Landlords')
               .orderBy('accomodationName')
               // .where('accomodationStatus', isEqualTo: true)
-              .startAt([searchName]).endAt([searchName + "\uf8ff"]).snapshots(),
+              .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Column(
@@ -118,12 +119,20 @@ class _SearchViewState extends State<SearchView> {
                 ),
               );
             }
+
+            var filteredDocs = snapshot.data!.docs.where((doc) {
+              var data = doc.data() as Map<String, dynamic>;
+              var accomodationName =
+                  data['accomodationName']?.toLowerCase() ?? '';
+              return accomodationName.contains(searchName);
+            }).toList();
+
             return Container(
               color: Colors.blue[100],
               child: ListView.builder(
-                  itemCount: snapshot.data!.docs.length,
+                  itemCount: filteredDocs.length,
                   itemBuilder: (context, index) {
-                    var data = snapshot.data!.docs[index];
+                    var data = filteredDocs[index];
                     var landlordData = data.data() as Map<String, dynamic>;
                     return landlordData['accomodationStatus'] == true
                         ? SingleChildScrollView(
@@ -153,7 +162,17 @@ class _SearchViewState extends State<SearchView> {
                                         backgroundImage: NetworkImage(
                                             data['profilePicture']),
                                       ),
-                                      title: Text(data['accomodationName']),
+                                      title: RichText(
+                                        text: TextSpan(
+                                          children: highlightOccurrences(
+                                              data['accomodationName'],
+                                              searchName),
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ),
                                       subtitle: Text(
                                         data['email'],
                                         maxLines: 1,
@@ -171,4 +190,51 @@ class _SearchViewState extends State<SearchView> {
           }),
     );
   }
+
+  List<TextSpan> highlightOccurrences(String source, String query) {
+    if (query.isEmpty) {
+      return [TextSpan(text: source)];
+    }
+
+    var matches = <Match>[];
+    String lowerSource = source.toLowerCase();
+    String lowerQuery = query.toLowerCase();
+
+    int start = 0;
+    while (start < lowerSource.length) {
+      final match = lowerSource.indexOf(lowerQuery, start);
+      if (match == -1) break;
+      matches.add(Match(start: match, end: match + lowerQuery.length));
+      start = match + lowerQuery.length;
+    }
+
+    if (matches.isEmpty) {
+      return [TextSpan(text: source)];
+    }
+
+    var spans = <TextSpan>[];
+    int lastMatchEnd = 0;
+    for (var match in matches) {
+      if (lastMatchEnd < match.start) {
+        spans.add(TextSpan(text: source.substring(lastMatchEnd, match.start)));
+      }
+      spans.add(TextSpan(
+          text: source.substring(match.start, match.end),
+          style: TextStyle(fontWeight: FontWeight.bold)));
+      lastMatchEnd = match.end;
+    }
+
+    if (lastMatchEnd < source.length) {
+      spans.add(TextSpan(text: source.substring(lastMatchEnd)));
+    }
+
+    return spans;
+  }
+}
+
+class Match {
+  final int start;
+  final int end;
+
+  Match({required this.start, required this.end});
 }

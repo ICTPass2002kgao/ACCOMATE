@@ -23,22 +23,23 @@ class _LandlordPageState extends State<LandlordPage> {
   @override
   void initState() {
     super.initState();
-    _user = FirebaseAuth.instance.currentUser!;
+    _user = FirebaseAuth.instance.currentUser;
     _loadUserData();
   }
 
-  late User _user;
+  late User? _user;
   Map<String, dynamic>? _userData;
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
         .collection('Landlords')
-        .doc(_user.uid)
+        .doc(_user?.uid)
         .get();
     setState(() {
       _userData = userDataSnapshot.data() as Map<String, dynamic>?;
     });
   }
 
+  bool isFull = false;
   Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
     return showDialog<void>(
       context: context,
@@ -143,7 +144,7 @@ class _LandlordPageState extends State<LandlordPage> {
           );
         },
       );
-      String landlordUserId = _user.uid;
+      String? landlordUserId = _user?.uid;
       String helpCenterId = 'dWKl2xV0gggWQyQycWm52lS3Hpk1';
       await FirebaseFirestore.instance
           .collection('Help Team')
@@ -532,7 +533,8 @@ class _LandlordPageState extends State<LandlordPage> {
                             actions: [
                               TextButton.icon(
                                   onPressed: () {
-                                    Navigator.pop(context);messageController.text.isEmpty &&
+                                    Navigator.pop(context);
+                                    messageController.text.isEmpty &&
                                             messageController.text.length < 10
                                         ? showDialog(
                                             context: context,
@@ -604,22 +606,6 @@ class _LandlordPageState extends State<LandlordPage> {
                   },
                   textColor: Colors.white,
                 ),
-                ListTile(
-                  leading: Icon(Icons.disc_full, color: Colors.white),
-                  title: Row(
-                    children: [
-                      Text('Space available'),
-                      SwitcherButton(
-    value: true,
-    onChange: (value) {
-      print(value);
-    },
-  ) 
-                    ],
-                  ),
-                 
-                  textColor: Colors.white,
-                )
               ],
             )),
         body: _buildBody());

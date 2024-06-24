@@ -97,9 +97,9 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
               : 'Hello Mrs ${widget.surname},\nYour account has been registered successfully. Please proceed to login.\n\nBest Regards,\nYours Accomate');
 
       Navigator.pop(context);
-      if (widget.isGuest == true) {
-        Navigator.pushReplacementNamed(context, '/applyAccomodation');
-      }
+      if (widget.isGuest == true) 
+        Navigator.pushReplacementNamed(context, '/studentPage');
+      
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => LoginPage(userRole: 'Student', guest: false,)),
