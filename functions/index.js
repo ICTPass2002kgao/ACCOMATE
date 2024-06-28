@@ -72,3 +72,73 @@ exports.sendNotification = functions.https.onRequest(async (req, res) => {
     return res.status(500).send("Error sending notification");
   }
 });
+
+
+//payments  
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const axios = require('axios');
+
+const app = express();
+app.use(cors({ origin: true }));
+app.use(bodyParser.json());
+
+// PayFast credentials
+const merchantId = 'YOUR_MERCHANT_ID';
+const merchantKey = 'YOUR_MERCHANT_KEY';
+const passphrase = 'YOUR_PASSPHRASE';
+
+// Route to generate token URL
+app.post('/generate-token-url', (req, res) => {
+  const { amount, item_name, return_url, cancel_url, notify_url } = req.body;
+
+  const data = {
+    merchant_id: merchantId,
+    merchant_key: merchantKey,
+    amount: amount,
+    item_name: item_name,
+    return_url: return_url,
+    cancel_url: cancel_url,
+    notify_url: notify_url,
+    payment_type: 'CC', // Specify credit card payment type
+  };
+
+  // Sort and encode data for PayFast
+  const queryString = Object.keys(data)
+    .sort()
+    .map(key => `${key}=${encodeURIComponent(data[key])}`)
+    .join('&');
+
+  const signature = require('crypto').createHash('md5').update(queryString + '&passphrase=' + passphrase).digest('hex');
+
+  const tokenUrl = `https://www.payfast.co.za/eng/process?${queryString}&signature=${signature}`;
+
+  res.send({ url: tokenUrl });
+});
+
+// Route to handle recurring payment
+app.post('/recurring-payment', async (req, res) => {
+  const { token, amount } = req.body;
+
+  try {
+    const response = await axios.post('https://api.payfast.co.za/subscriptions', {
+      token: token,
+      amount: amount,
+      frequency: 3, // Monthly
+      cycles: 0, // Indefinite
+    }, {
+      auth: {
+        username: merchantId,
+        password: passphrase,
+      },
+    });
+
+    res.send(response.data);
+  } catch (error) {
+    res.status(500).send(error.response.data);
+  }
+});
+
+exports.api = functions.https.onRequest(app);
+
