@@ -193,8 +193,8 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
           emailController.text, // Student's email
           'Verification Code',
           selectedGender == 'Male'
-              ? 'Hello Mr ${surnameController.text},\nWe are aware that you are trying to register your account with accomate\nHere  is your verification code:  $verificationCode\n\n\n\n\n\n\n\nBest Regards\nYours Accomate'
-              : 'Hello Mrs ${surnameController.text},\nWe are aware that you are trying to register your account with accomate\nHere  is your verification code: $verificationCode\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
+              ? 'Hello Mr ${surnameController.text},\nWe are aware that you are trying to register your account with Accomate\nHere  is your verification code:  $verificationCode\n\n\n\n\n\n\n\nBest Regards\nYours Accomate'
+              : 'Hello Mrs ${surnameController.text},\nWe are aware that you are trying to register your account with Accomate\nHere  is your verification code: $verificationCode\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
 
       setState(() {
         Navigator.of(context).pop();

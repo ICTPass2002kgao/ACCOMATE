@@ -1,10 +1,17 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, deprecated_member_use, curly_braces_in_flow_control_structures
 
+import 'dart:io';
+
+import 'package:api_com/UpdatedApp/StudentPages/ViewContract.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
+import 'package:path/path.dart';
 
 class ViewApplicationResponses extends StatefulWidget {
   final Map<String, dynamic> studentApplicationData;
@@ -19,95 +26,312 @@ class ViewApplicationResponses extends StatefulWidget {
 class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
   TextEditingController messageController = TextEditingController();
 
-  // String _pdfDownloadSignedContractURL = '';
-  // String _pdfSignedContractPath = '';
-  // bool isFileChosen = false;
-  // File? pdfSignedContractFile;
-  // Future<void> _pickSignedContract(BuildContext context) async {
-  //   try {
-  //     FilePickerResult? result = await FilePicker.platform.pickFiles(
-  //       type: FileType.custom,
-  //       allowedExtensions: ['pdf'],
-  //     );
+  String _pdfContractPath = '';
+  File? pdfContractFile;
+  Future<void> _pickSignedContract(BuildContext context) async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: [
+          'pdf',
+        ],
+      );
+      if (result != null) {
+        pdfContractFile = File(result.files.single.path!);
+        setState(() {
+          _pdfContractPath = pdfContractFile!.path;
+        });
+      }
+    } catch (e) {
+      _showErrorDialog(e.toString(), context);
+    }
+  }
+void _appliedStudent(BuildContext context,String message,String title) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Container(
+        height: 250,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          backgroundColor: Colors.blue[50],
+          title: Text(
+            title,
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
+          content: Container(
+            height: 200,
+            child: Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(75),
+                  child: Container(
+                    color: const Color.fromRGBO(239, 83, 80, 1),
+                    width: 100,
+                    height: 100,
+                    child: Icon(Icons.cancel_outlined,
+                        color: Colors.white, size: 35),
+                  ),
+                ),
+                SizedBox(height: 20),
+                Text(message,
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                print('email sent successfully');
+              },
+              style: ButtonStyle(
+                shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5))),
+                foregroundColor: WidgetStatePropertyAll(Colors.white),
+                backgroundColor: WidgetStatePropertyAll(Colors.red[300]),
+              ),
+              child: Text('Okay'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-  //     if (result != null) {
-  //       pdfSignedContractFile = File(result.files.single.path!);
-  //       setState(() {
-  //         _pdfSignedContractPath = pdfSignedContractFile!.path;
-  //         isFileChosen = true; // Set the flag to true when a file is chosen
-  //       });
-  //     } else {
-  //       // No file chosen
-  //       setState(() {
-  //         isFileChosen = false;
-  //       });
-  //     }
-  //   } catch (e) {
-  //     _showErrorDialog(e.toString(), context);
-  //   }
-  // }
+  Future<void> _uploadSignedContract(BuildContext context) async {
 
-  // Future<String?> _uploadSignedContact(
-  //     File pdfFile, BuildContext context) async {
-  //   try {
-  //     String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-  //     firebase_storage.Reference reference = firebase_storage
-  //         .FirebaseStorage.instance
-  //         .ref('signedContracts')
-  //         .child('$fileName.pdf');
+    if (pdfContractFile == null) {
+      _showErrorDialog('No contract file selected.', context);
+      return;
+    }
 
-  //     await reference.putFile(pdfFile);
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(
+            color: Colors.blue,
+          ),
+        );
+      },
+    );
 
-  //     return await reference.getDownloadURL();
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text(e.toString()),
-  //       ),
-  //     );
-  //     return null;
-  //   }
-  // }
+    String landlordUserId = widget.studentApplicationData['userId'] ?? '';
+    String studentUserId = _userData?['userId'] ?? '';
+ 
+      DocumentSnapshot applicationSnapshot = await FirebaseFirestore.instance
+          .collection('Landlords')
+          .doc(landlordUserId)
+          .collection('signedContracts')
+          .doc(studentUserId)
+          .get();
 
-  // void _showErrorDialog(String errorMessage, BuildContext context) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       shape: RoundedRectangleBorder(
-  //         borderRadius: BorderRadius.circular(5),
-  //       ),
-  //       title: Text(
-  //         'Error Occurred',
-  //         style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-  //       ),
-  //       content: Text(
-  //         errorMessage,
-  //         style: TextStyle(fontSize: 16),
-  //       ),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () {
-  //             Navigator.of(context).pop();
-  //           },
-  //           child: Text('OK'),
-  //           style: ButtonStyle(
-  //             shape: MaterialStateProperty.all(RoundedRectangleBorder(
-  //               borderRadius: BorderRadius.circular(5),
-  //             )),
-  //             foregroundColor: MaterialStateProperty.all(Colors.white),
-  //             backgroundColor: MaterialStateProperty.all(Colors.blue),
-  //             minimumSize: MaterialStateProperty.all(Size(double.infinity, 50)),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
+      if (applicationSnapshot.exists) {
+        Navigator.of(context).pop();
+        _appliedStudent(context,'Please Note that you\'re already registered in this Residence and registration duplication can not be allowed.','Registration Duplication');
+
+        return;
+      }
+    DateTime now = DateTime.now();
+    Timestamp feedbackDate = Timestamp.fromDate(now);
+    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+    firebase_storage.Reference reference =
+        firebase_storage.FirebaseStorage.instance.ref('signedContracts').child(
+            '${_userData?['name'] ?? 'Nan'}\'s signed Contract($fileName).pdf');
+
+    await reference.putFile(pdfContractFile!);
+    String downloadCOntractUrl = await reference.getDownloadURL();
+    await FirebaseFirestore.instance
+        .collection('Landlords')
+        .doc(landlordUserId)
+        .collection('signedContracts')
+        .doc(studentUserId)
+        .set({
+      'name': _userData?['name'] ?? '',
+      'gender':_userData?['gender']??'',
+      'surname': _userData?['surname'] ?? '',
+      'userId': _userData?['userId'] ?? '',
+      'email': _userData?['email'] ?? '',
+      'registeredDate': feedbackDate,
+      'signedContract': downloadCOntractUrl,
+      'university':_userData?['university'] ?? '',
+      'contactDetails':_userData?['contactDetails'] ?? '', 
+        'roomType': _userData?['roomType'] ?? '',
+        'fieldOfStudy': _userData?['fieldOfStudy'] ?? '',
+        'periodOfStudy': _userData?['periodOfStudy'] ?? '',
+    });
+    await FirebaseFirestore.instance
+        .collection('Students')
+        .doc(studentUserId)
+        .collection('registeredResidence')
+        .doc(landlordUserId)
+        .set({
+      'accommodationName':
+          widget.studentApplicationData['accomodationName']  ,
+      'logo': widget.studentApplicationData['profilePicture'],
+      'userId': widget.studentApplicationData['userId']  ,
+      'email': widget.studentApplicationData['email']  ,
+      'registeredDate': feedbackDate,
+        'accomodationStatus': false, 
+        'location': widget.studentApplicationData['location'] ?? '', 
+        'selectedOffers': widget.studentApplicationData['selectedOffers'] ?? '',
+        'selectedUniversity': widget.studentApplicationData['selectedUniversity'] ?? '',
+        'distance': widget.studentApplicationData['distance'] ?? '',
+        'selectedPaymentsMethods': widget.studentApplicationData['selectedPaymentsMethods'] ?? '',
+        'requireDeposit': widget.studentApplicationData['requireDeposit'] ?? '',
+        'contactDetails': widget.studentApplicationData['contactDetails'] ?? '',
+        'accomodationType': widget.studentApplicationData['accomodationType'] ?? '', 
+        'roomType': widget.studentApplicationData['roomType'] ?? '',
+        'displayedImages': widget.studentApplicationData['displayedImages'] ?? '',
+        'isNsfasAccredited': widget.studentApplicationData['isNsfasAccredited'] ?? '',
+        'isFull': false, 
+        'Duration': widget.studentApplicationData['Duration'] ?? '', 
+      
+    });
+                                
+await FirebaseFirestore.instance
+          .collection('Students')
+          .doc(_user.uid)
+          .update({
+            'isRegistered':true,
+            'registeredResidence':widget.studentApplicationData['accomodationName'] ?? ''
+      });
+    await sendEmail(
+      widget.studentApplicationData['email'] ?? '',
+      'Signed Contract',
+      'Hi ${widget.studentApplicationData['accomodationName'] ?? ''} , \nYou you have a new signed contract from ${_userData?['name'] ?? ''} ${_userData?['surname'] ?? ''}.\nBest Regards\nYour Accomate Team',
+    );
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        Future.delayed(Duration(seconds: 30), () {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+            Navigator.pushReplacementNamed(context, '/studentPage');
+          }
+        });
+
+        return Center(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: Colors.blue[50],
+            ),
+            height: 360,
+            width: 300,
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Center(
+                    child: Lottie.network(
+                      repeat: false,
+                      'https://lottie.host/7b0dcc73-3274-41ef-a3f3-5879cade8ffa/zCbLIAPAww.json',
+                      height: 250,
+                      width: 250,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Container(
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(50)),
+                            height: 100,
+                            width: 100,
+                            color: Colors.green,
+                            child: Center(
+                              child: Icon(
+                                Icons.done,
+                                size: 60,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Text(
+                    'Submitted successfully',
+                    style: TextStyle(
+                        decoration: TextDecoration.none,
+                        fontSize: 20,
+                        color: Colors.green),
+                  ),
+                  SizedBox(
+                    height: 5,
+                  ),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.of(context).pop();
+                        Navigator.pushReplacementNamed(context, '/studentPage');
+                      },
+                      child: Text('Done'),
+                      style: ButtonStyle(
+                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5))),
+                          backgroundColor: WidgetStatePropertyAll(Colors.blue),
+                          foregroundColor: WidgetStatePropertyAll(Colors.white),
+                          minimumSize: WidgetStatePropertyAll(Size(200, 50))),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showErrorDialog(String errorMessage, BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(5),
+        ),
+        title: Text(
+          'Error Occurred',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          errorMessage,
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('OK'),
+            style: ButtonStyle(
+              shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5),
+              )),
+              foregroundColor: MaterialStateProperty.all(Colors.white),
+              backgroundColor: MaterialStateProperty.all(Colors.blue),
+              minimumSize: MaterialStateProperty.all(Size(double.infinity, 50)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   late User _user;
 
   Map<String, dynamic>? _userData;
-  // Make _userData nullable
   @override
   void initState() {
     super.initState();
@@ -145,10 +369,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
 
   bool isLoading = true;
   Future<void> loadData() async {
-    // Simulate loading data
     await Future.delayed(Duration(seconds: 3));
-
-    // Set isLoading to false when data is loaded
     setState(() {
       isLoading = false;
     });
@@ -206,7 +427,6 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                               TableCell(
                                 child: Center(
                                     child: Text(
-                                        // ignore: unrelated_type_equality_checks
                                         widget.studentApplicationData[
                                                     'status'] ==
                                                 true
@@ -240,7 +460,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                 )),
                               ),
                             ],
-                          )
+                          ),
                         ]),
                         widget.studentApplicationData['status'] == false
                             ? Column(
@@ -250,7 +470,7 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                       child: Column(
                                         children: [
                                           Text(
-                                            'Hi, ${_userData?['surnname'] ?? 'N/A'} ${_userData?['name'] ?? 'N/A'}, we regret to inform you that your Application have been rejected due to the following reasons:\n${widget.studentApplicationData['landlordMessage']}',
+                                            'Hi, ${_userData?['surname'] ?? 'N/A'} ${_userData?['name'] ?? 'N/A'}, we regret to inform you that your application have been rejected due to the following reasons:\n*${widget.studentApplicationData['landlordMessage']}*',
                                           )
                                         ],
                                       )),
@@ -264,30 +484,44 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                   Container(
                                       width: buttonWidth,
                                       child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
+                                          Text(
+                                            'Hi, ${_userData?['surname'] ?? 'N/A'} ${_userData?['name'] ?? ''}, your application have been approved you have 3 days limited for you to register otherwise your application will be considered as failed, tap on *View Contract* button to download and sign ${widget.studentApplicationData['accomodationName']}\'s contract.',
+                                            maxLines: 100,
+                                          ),
                                           SizedBox(
                                             height: 10,
                                           ),
                                           Text(
-                                            'Hi, ${_userData?['surname'] ?? 'N/A'} ${_userData?['name'] ?? ''} Your application have been approved you have 3 days limited for you to register otherwise your application will be considered as failed.',
-                                            maxLines: 100,
+                                            'Instructions:',
+                                            style: TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold),
                                           ),
+                                          Text(
+                                            '${widget.studentApplicationData['landlordMessage']}',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.w500),
+                                          )
                                         ],
                                       )),
                                   SizedBox(
                                     height: 20,
                                   ),
-                                  ElevatedButton.icon(
+                                  ElevatedButton(
                                     onPressed: () {
-                                      Navigator.of(context).pop();
-                                      Navigator.pushReplacementNamed(
-                                          context, '/studentPage');
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ViewContract(
+                                                    studentApplicationData: widget
+                                                        .studentApplicationData,
+                                                  )));
                                     },
-                                    icon: Icon(
-                                      Icons.done,
-                                      color: Colors.white,
-                                    ),
-                                    label: Text('Back'),
+                                    child: Text('View Contract'),
                                     style: ButtonStyle(
                                         shape: MaterialStatePropertyAll(
                                             RoundedRectangleBorder(
@@ -295,10 +529,75 @@ class _ViewApplicationResponsesState extends State<ViewApplicationResponses> {
                                                     BorderRadius.circular(5))),
                                         foregroundColor:
                                             MaterialStatePropertyAll(
-                                                Colors.white),
+                                                Colors.blue),
                                         backgroundColor:
                                             MaterialStatePropertyAll(
-                                                Colors.blue[300]),
+                                                Colors.blue[50]),
+                                        minimumSize: MaterialStatePropertyAll(
+                                            Size(double.infinity, 50))),
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Container(
+                                    color: Colors.blue[50],
+                                    width: buttonWidth,
+                                    height: 50,
+                                    child: Row(
+                                      children: [
+                                        TextButton.icon(
+                                          onPressed: () {
+                                            _userData?['isRegistered']==false?
+                                            _pickSignedContract(context):_appliedStudent(context,'Please be aware that you can not register in more than one residence.','');
+                                          },
+                                          icon: Icon(
+                                              Icons
+                                                  .add_photo_alternate_outlined,
+                                              color: Colors.blue),
+                                          label: Text(
+                                            'Upload Contract',
+                                            style: TextStyle(fontSize: 18),
+                                          ),
+                                          style: ButtonStyle(
+                                              shape: WidgetStatePropertyAll(
+                                                  RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              5))),
+                                              foregroundColor:
+                                                  WidgetStatePropertyAll(
+                                                      Colors.blue),
+                                              backgroundColor:
+                                                  WidgetStatePropertyAll(
+                                                      Colors.white),
+                                              minimumSize:
+                                                  WidgetStatePropertyAll(
+                                                      Size(130, 50))),
+                                        ),
+                                        SizedBox(width: 5),
+                                        Text(basename(_pdfContractPath))
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: 10),
+                                  ElevatedButton.icon(
+                                    icon: Icon(Icons.send),
+                                    onPressed: ()  {
+      
+                                      _uploadSignedContract(context);
+                                    },
+                                    label: Text('Submit'),
+                                    style: ButtonStyle(
+                                        shape: MaterialStatePropertyAll(
+                                            RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(5))),
+                                        foregroundColor:
+                                            MaterialStatePropertyAll(
+                                                Colors.blue[50]),
+                                        backgroundColor:
+                                            MaterialStatePropertyAll(
+                                                Colors.green),
                                         minimumSize: MaterialStatePropertyAll(
                                             Size(double.infinity, 50))),
                                   )

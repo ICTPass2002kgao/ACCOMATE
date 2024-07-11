@@ -3,14 +3,14 @@ import 'dart:io';
 
 import 'package:api_com/UpdatedApp/Apply-Accomodation.dart';
 import 'package:api_com/UpdatedApp/CreateAnAccount.dart';
-import 'package:api_com/UpdatedApp/LandlordPage.dart';
+import 'package:api_com/UpdatedApp/LandlordPages/LandlordPage.dart';
+import 'package:api_com/UpdatedApp/StudentPages/student_page.dart';
 import 'package:api_com/UpdatedApp/accomodation_page.dart';
 import 'package:api_com/UpdatedApp/admin-page.dart';
 import 'package:api_com/UpdatedApp/either_landlord_or_student.dart';
 import 'package:api_com/UpdatedApp/help-page.dart';
 import 'package:api_com/UpdatedApp/initial_page.dart';
-import 'package:api_com/UpdatedApp/login_page.dart';
-import 'package:api_com/UpdatedApp/student_page.dart';
+import 'package:api_com/UpdatedApp/login_page.dart'; 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 

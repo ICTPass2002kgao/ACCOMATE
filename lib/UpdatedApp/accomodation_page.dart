@@ -116,6 +116,12 @@ class _AccomodationPageState extends State<AccomodationPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Text(
+                                    widget.landlordData['accomodationName'] ??
+                                        '',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18)),
                                 Row(
                                   children: [
                                     Text('Address: ',
@@ -263,6 +269,32 @@ class _AccomodationPageState extends State<AccomodationPage> {
                                             color: Colors.green,
                                           )
                                   ],
+                                ),
+                                Text(
+                                  widget.landlordData['requireDeposit'] == true
+                                      ? 'Requires Deposit fee for registration.'
+                                      : 'Residence is free to apply and register',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: widget.landlordData[
+                                                  'requireDeposit'] ==
+                                              true
+                                          ? Colors.yellow[700]
+                                          : Colors.green[400]),
+                                ),
+                                SizedBox(height: 5),
+                                Text(
+                                  widget.landlordData['isNsfasAccredited'] ==
+                                          true
+                                      ? 'NSFAS ACCREDITED'
+                                      : 'NOT ACCREDITED BY NSFAS',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: widget.landlordData[
+                                                  'isNsfasAccredited'] ==
+                                              false
+                                          ? Colors.red
+                                          : Colors.green[400]),
                                 ),
                                 SizedBox(height: 5),
                                 ExpansionTile(

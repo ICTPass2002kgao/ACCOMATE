@@ -1,8 +1,12 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
+import 'package:api_com/UpdatedApp/LandlordPages/DetailsForRegisteredStudent.dart';
+import 'package:api_com/UpdatedApp/LandlordPages/viewApplicantDetails.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:data_table_2/data_table_2.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:icon_badge/icon_badge.dart';
 import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
@@ -28,17 +32,15 @@ class _HomePageState extends State<HomePage> {
   Map<String, dynamic>? _userData;
   Future<void> _loadUserData() async {
     try {
-  
-        DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
-            .collection('Landlords')
-            .doc(_user?.uid)
-            .get();
-        setState(() {
-          _userData = userDataSnapshot.data() as Map<String, dynamic>?;
-          isLoading = false;
-        });
-        await _loadStudentApplications();
-     
+      DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
+          .collection('Landlords')
+          .doc(_user?.uid)
+          .get();
+      setState(() {
+        _userData = userDataSnapshot.data() as Map<String, dynamic>?;
+        isLoading = false;
+      });
+      await _loadStudentApplications();
     } catch (e) {
       print('Error loading user data: $e');
       setState(() {
@@ -74,173 +76,251 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> loadData() async {
-    // Simulate loading data
     await Future.delayed(Duration(seconds: 3));
 
-    // Set isLoading to false when data is loaded
     setState(() {
       isLoading = false;
     });
   }
 
+  void _viewStudent(Map<String, dynamic> student) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Detailsforregisteredstudent(
+          registeredStudents: student,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:Colors.blue[100],
-      body: Container(
-        child: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: SingleChildScrollView(
-            child: isLoading
-                ? Center(
-                    child: Container(
-                        width: 100,
-                        height: 100,
-                        child: Center(
-                            child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Center(child: Text("Loading...")),
-                            Center(
-                                child: LinearProgressIndicator(
-                                    color: Colors.blue)),
-                          ],
-                        ))))
-                : SingleChildScrollView(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Applied Students',
-                              style: TextStyle(
-                                fontSize: 23,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Table(
-                              border: TableBorder.all(),
-                              children: [
-                                TableRow(
-                                  children: [
-                                    TableCell(
-                                      child: Center(
-                                        child: Text(
-                                          'Name',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    TableCell(
-                                      child: Center(
-                                        child: Text(
-                                          'Surname',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    TableCell(
-                                      child: Center(
-                                        child: Text(
-                                          'Gender',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    TableCell(
-                                      child: Center(
-                                        child: Text(
-                                          'Cell No',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    TableCell(
-                                      child: Center(
-                                        child: Text(
-                                          'Date & time',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                // Table rows for student applications
-                                for (int index = 0;
-                                    index < _studentApplications.length;
-                                    index++)
-                                  TableRow(
-                                    children: [
-                                      TableCell(
-                                        child: Center(
-                                          child: Text(
-                                            _studentApplications[index]['name'] ??
-                                                'null',
-                                          ),
-                                        ),
-                                      ),
-                                      TableCell(
-                                        child: Center(
-                                          child: Text(
-                                            _studentApplications[index]
-                                                    ['surname'] ??
-                                                'null',
-                                          ),
-                                        ),
-                                      ),
-                                      TableCell(
-                                        child: Center(
-                                          child: Text(
-                                            _studentApplications[index]
-                                                    ['gender'] ??
-                                                'null',
-                                          ),
-                                        ),
-                                      ),
-                                      TableCell(
-                                        child: Center(
-                                          child: Text(
-                                            _studentApplications[index]
-                                                    ['contactDetails'] ??
-                                                'null',
-                                          ),
-                                        ),
-                                      ),
-                                      TableCell(
-                                        child: Center(
-                                          child: Text(
-                                              DateFormat('yyyy-MM-dd HH:mm')
-                                                  .format(
-                                                      _studentApplications[index]
-                                                              ['appliedDate']
-                                                          .toDate())),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                              ],
-                            ),
-                          ],
+      backgroundColor: Colors.blue[100],
+      body: !_studentApplications.isEmpty
+          ? StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('Landlords')
+                  .doc(_user?.uid)
+                  .collection('applications')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  List<Map<String, dynamic>> registeredStudents = snapshot
+                      .data!.docs
+                      .map((doc) => doc.data() as Map<String, dynamic>)
+                      .toList();
+
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconBadge(
+                        hideZero: true,
+                        maxCount: registeredStudents.length,
+                        badgeColor: Colors.blue,
+                        itemCount: registeredStudents.length,
+                        icon: Icon(Icons.people_sharp,
+                            size: 200, color: Colors.blue),
+                      ),
+                      Text(
+                        'Total number of students who are not did not get a feedback [${registeredStudents.length}]',
+                        style: TextStyle(
+                          fontSize: 24,
                         ),
-                      ],
-                    ),
-                ),
-          ),
-        ),
-      ),
+                      ),
+                      Expanded(
+                        child: DataTable2(
+                          headingRowColor: WidgetStatePropertyAll(Colors.grey),
+                          dataRowColor: WidgetStatePropertyAll(Colors.blue[50]),
+                          columnSpacing: 8,
+                          horizontalMargin: 10,
+                          minWidth: 600,
+                          border: TableBorder.all(
+                              style: BorderStyle.solid,
+                              width: 1,
+                              color: Color.fromARGB(255, 145, 204, 252)),
+                          columns: [
+                            DataColumn2(
+                              label: Text('Name'),
+                              size: ColumnSize.S,
+                            ),
+                            DataColumn(
+                              label: Text('Surname'),
+                            ),
+                            DataColumn(
+                              label: Text('Email'),
+                            ),
+                            DataColumn(
+                              label: Text('Phone Number'),
+                            ),
+                            DataColumn(
+                              label: Text('University'),
+                            ),
+                            DataColumn(
+                              label: Text('Gender'),
+                            ),
+                            DataColumn(
+                              label: Text('Application Date and Time'),
+                            ),
+                          ],
+                          rows: registeredStudents
+                              .map((student) => DataRow(cells: [
+                                    DataCell(onTap: () {
+                                      ViewApplicantDetails(
+                                        studentApplicationData: student,
+                                      );
+                                    }, Text(student['name'] ?? '')),
+                                    DataCell(onTap: () {
+                                      ViewApplicantDetails(
+                                        studentApplicationData: student,
+                                      );
+                                    }, Text(student['surname'] ?? '')),
+                                    DataCell(onTap: () {
+                                      ViewApplicantDetails(
+                                        studentApplicationData: student,
+                                      );
+                                    }, Text(student['email'] ?? '')),
+                                    DataCell(onTap: () {
+                                      ViewApplicantDetails(
+                                        studentApplicationData: student,
+                                      );
+                                    }, Text(student['contactDetails'] ?? '')),
+                                    DataCell(onTap: () {
+                                      ViewApplicantDetails(
+                                        studentApplicationData: student,
+                                      );
+                                    }, Text(student['university'] ?? '')),
+                                    DataCell(onTap: () {
+                                      ViewApplicantDetails(
+                                        studentApplicationData: student,
+                                      );
+                                    }, Text(student['gender'] ?? '')),
+                                    DataCell(onTap: () {
+                                      ViewApplicantDetails(
+                                        studentApplicationData: student,
+                                      );
+                                    },
+                                        Text(DateFormat('yyyy-MM-dd HH:mm')
+                                            .format(student['appliedDate']
+                                                    .toDate() ??
+                                                DateTime.now()))),
+                                  ]))
+                              .toList(),
+                        ),
+                      ),
+                    ],
+                  );
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                return Center(child: CircularProgressIndicator());
+              },
+            )
+          : StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('Landlords')
+                  .doc(_user?.uid)
+                  .collection('signedContracts')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  List<Map<String, dynamic>> registeredStudents = snapshot
+                      .data!.docs
+                      .map((doc) => doc.data() as Map<String, dynamic>)
+                      .toList();
+
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconBadge(
+                        hideZero: true,
+                        maxCount: registeredStudents.length,
+                        badgeColor: Colors.blue,
+                        itemCount: registeredStudents.length,
+                        icon: Icon(Icons.people_sharp,
+                            size: 200, color: Colors.blue),
+                      ),
+                      Text(
+                        'Total Number of Registered Students [${registeredStudents.length}]',
+                        style: TextStyle(
+                          fontSize: 24,
+                        ),
+                      ),
+                      Expanded(
+                        child: DataTable2(
+                          headingRowColor: WidgetStatePropertyAll(Colors.grey),
+                          dataRowColor: WidgetStatePropertyAll(Colors.blue[50]),
+                          columnSpacing: 8,
+                          horizontalMargin: 10,
+                          minWidth: 600,
+                          border: TableBorder.all(
+                              style: BorderStyle.solid,
+                              width: 1,
+                              color: Color.fromARGB(255, 145, 204, 252)),
+                          columns: [
+                            DataColumn2(
+                              label: Text('Name'),
+                              size: ColumnSize.S,
+                            ),
+                            DataColumn(
+                              label: Text('Surname'),
+                            ),
+                            DataColumn(
+                              label: Text('Email'),
+                            ),
+                            DataColumn(
+                              label: Text('Phone Number'),
+                            ),
+                            DataColumn(
+                              label: Text('University'),
+                            ),
+                            DataColumn(
+                              label: Text('Gender'),
+                            ),
+                            DataColumn(
+                              label: Text('Registered Date and Time'),
+                            ),
+                          ],
+                          rows: registeredStudents
+                              .map((student) => DataRow(cells: [
+                                    DataCell(onTap: () {
+                                      _viewStudent(student);
+                                    }, Text(student['name'] ?? '')),
+                                    DataCell(onTap: () {
+                                      _viewStudent(student);
+                                    }, Text(student['surname'] ?? '')),
+                                    DataCell(onTap: () {
+                                      _viewStudent(student);
+                                    }, Text(student['email'] ?? '')),
+                                    DataCell(onTap: () {
+                                      _viewStudent(student);
+                                    }, Text(student['contactDetails'] ?? '')),
+                                    DataCell(onTap: () {
+                                      _viewStudent(student);
+                                    }, Text(student['university'] ?? '')),
+                                    DataCell(onTap: () {
+                                      _viewStudent(student);
+                                    }, Text(student['gender'] ?? '')),
+                                    DataCell(onTap: () {
+                                      _viewStudent(student);
+                                    },
+                                        Text(DateFormat('yyyy-MM-dd HH:mm')
+                                            .format(student['registeredDate']
+                                                    .toDate() ??
+                                                DateTime.now()))),
+                                  ]))
+                              .toList(),
+                        ),
+                      ),
+                    ],
+                  );
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                return Center(child: CircularProgressIndicator());
+              },
+            ),
     );
   }
 }

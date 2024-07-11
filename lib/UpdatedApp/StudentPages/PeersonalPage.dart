@@ -379,12 +379,38 @@ class _PersonalPageState extends State<PersonalPage> {
                                                         .contains(
                                                             '@edu.vut.ac.za')
                                                 ? Colors.blue
-                                                : Colors.grey),
+                                                : Colors.grey),shape: WidgetStatePropertyAll(
+                                      RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(5))),
                                         foregroundColor: WidgetStatePropertyAll(
                                             Colors.white),
                                         minimumSize: WidgetStatePropertyAll(
                                             Size(double.infinity, 50))),
-                                  )
+                                  ),
+                                  
+                            SizedBox(
+                              height: 10,
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                await FirebaseAuth.instance.signOut();
+                Navigator.pushReplacementNamed(context, '/startPage');
+                              },
+                              child: Text('Sign-Out'),
+                              style: ButtonStyle(
+                                  shape: WidgetStatePropertyAll(
+                                      RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(5))),
+                                  foregroundColor:
+                                      WidgetStatePropertyAll(Colors.blue),
+                                  backgroundColor:
+                                      WidgetStatePropertyAll(Colors.blue[50]),
+                                  minimumSize: WidgetStatePropertyAll(
+                                      Size(double.infinity, 50))),
+                            ),
+                         
                                 ],
                               ),
                             ),
@@ -393,6 +419,7 @@ class _PersonalPageState extends State<PersonalPage> {
                       )
                     ],
                   ),
+                      
                 ],
               ),
       ),

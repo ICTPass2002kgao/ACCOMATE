@@ -5,6 +5,8 @@ import 'dart:math';
 
 import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:encrypt/encrypt.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
@@ -12,6 +14,24 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
+import 'package:encrypt/encrypt.dart' as encrypt;
+
+// class EncryptionUtil {
+//   static final _key = encrypt.Key.fromLength(32); // Generate a 32-byte key
+//   static final _iv =  IV.fromLength(16);   // Generate a 16-byte IV
+
+//   static String encrypt(String text) {
+//     final encrypter = Encrypter(AES(_key));
+//     final encrypted = encrypter.encrypt(text, iv: _iv);
+//     return encrypted.base64;
+//   }
+
+//   static String decrypt(String encryptedText) {
+//     final encrypter = Encrypter(AES(_key));
+//     final decrypted = encrypter.decrypt64(encryptedText, iv: _iv);
+//     return decrypted;
+//   }
+// }
 
 class OffersPage extends StatefulWidget {
   final String accomodationName;
@@ -21,13 +41,14 @@ class OffersPage extends StatefulWidget {
   final String contactDetails;
   final bool isLandlord;
   final String location;
-  final XFile? imageFile;
+  final XFile? residenceLogo;
+  final File? pdfContract;
 
   final Map<String, bool> selectedPaymentsMethods;
   const OffersPage({
     super.key,
     required this.selectedPaymentsMethods,
-    required this.imageFile,
+    required this.residenceLogo,
     required this.location,
     required this.password,
     required this.accomodationName,
@@ -35,6 +56,7 @@ class OffersPage extends StatefulWidget {
     required this.landlordEmail,
     required this.distance,
     required this.isLandlord,
+    this.pdfContract,
   });
 
   @override
@@ -42,6 +64,11 @@ class OffersPage extends StatefulWidget {
 }
 
 class _OffersPageState extends State<OffersPage> {
+  String accountHolderName = '';
+  String bankName = '';
+  String accountNumber = '';
+  String branchCode = '';
+
   Map<String, bool> selectedOffers = {
     'Uncapped/Unlimited Wifi': false,
     'Study room': false,
@@ -51,6 +78,7 @@ class _OffersPageState extends State<OffersPage> {
     'Gym': false,
     'Power backup': false,
     'Braai Stands': false,
+    'Transport to campus': false,
   };
   String _selectedDuration = '';
   List<String> _duration = ['Half Year', 'Full Year', 'Both'];
@@ -70,12 +98,12 @@ class _OffersPageState extends State<OffersPage> {
     'Half Year': false,
     'Full Year': false,
   };
-  bool usesTransport = true;
+  bool requireDeposit = true;
   bool isAccomodation = true;
   bool isNsfasAccredited = false;
   bool isFull = false;
-
-  Future<void> _showAddOffersDialog() async {
+  TextEditingController depositAmountController = TextEditingController();
+  Future<void> _showAddOffersDialog(BuildContext context) async {
     TextEditingController offerController = TextEditingController();
 
     return showDialog(
@@ -273,10 +301,20 @@ class _OffersPageState extends State<OffersPage> {
         password: widget.password,
       );
 
-      Reference storageReference = FirebaseStorage.instance.ref().child(
-          'Accommodation Images/${widget.accomodationName}(${DateTime.now().toString()})');
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      firebase_storage.Reference reference = firebase_storage
+          .FirebaseStorage.instance
+          .ref('Contracts')
+          .child('${widget.accomodationName}($fileName).pdf');
+
+      await reference.putFile(widget.pdfContract!);
+      String downloadContractUrl = await reference.getDownloadURL();
+      Reference storageReference = FirebaseStorage.instance
+          .ref('Residence Logos')
+          .child(
+              '${widget.accomodationName}(${DateTime.now().toString()})');
       UploadTask uploadTask =
-          storageReference.putFile(File(widget.imageFile!.path));
+          storageReference.putFile(File(widget.residenceLogo!.path));
       TaskSnapshot storageTaskSnapshot =
           await uploadTask.whenComplete(() => null);
       String downloadUrl = await storageTaskSnapshot.ref.getDownloadURL();
@@ -288,6 +326,42 @@ class _OffersPageState extends State<OffersPage> {
 
       DateTime now = DateTime.now();
       Timestamp registeredDate = Timestamp.fromDate(now);
+
+      // String encryptedAccountHolderName =
+      //     EncryptionUtil.encrypt(accountHolderName);
+      // String encryptedBankName = EncryptionUtil.encrypt(bankName);
+      // String encryptedAccountNumber = EncryptionUtil.encrypt(accountNumber);
+      // String encryptedBranchCode = EncryptionUtil.encrypt(branchCode);
+      // requireDeposit == true
+      //     ? await FirebaseFirestore.instance
+      //         .collection('Landlords')
+      //         .doc(userId)
+      //         .set({
+      //         'accomodationStatus': false,
+      //         'accomodationName': widget.accomodationName,
+      //         'location': widget.location,
+      //         'email': userEmail,
+      //         'selectedOffers': selectedOffers,
+      //         'selectedUniversity': selectedUniversity,
+      //         'distance': widget.distance,
+      //         'selectedPaymentsMethods': widget.selectedPaymentsMethods,
+      //         'requireDeposit': requireDeposit,
+      //         'contactDetails': widget.contactDetails,
+      //         'accomodationType': isAccomodation,
+      //         'profilePicture': downloadUrl,
+      //         'userId': userId,
+      //         'roomType': selectedRoomTypes,
+      //         'displayedImages': downloadUrls,
+      //         'isNsfasAccredited': isNsfasAccredited,
+      //         'isFull': false,
+      //         'registeredDate': registeredDate,
+      //         'Duration': _selectedDuration,
+      //         'contract': downloadContractUrl,
+      //         'accountHolderName': encryptedAccountHolderName,
+      //         'bankName': encryptedBankName,
+      //         'accountNumber': encryptedAccountNumber,
+      //         'branchCode': encryptedBranchCode,
+      //       }):
       await FirebaseFirestore.instance.collection('Landlords').doc(userId).set({
         'accomodationStatus': false,
         'accomodationName': widget.accomodationName,
@@ -297,10 +371,9 @@ class _OffersPageState extends State<OffersPage> {
         'selectedUniversity': selectedUniversity,
         'distance': widget.distance,
         'selectedPaymentsMethods': widget.selectedPaymentsMethods,
-        'transport availability': usesTransport,
+        'requireDeposit': requireDeposit,
         'contactDetails': widget.contactDetails,
         'accomodationType': isAccomodation,
-        'verificationCode': verificationCode,
         'profilePicture': downloadUrl,
         'userId': userId,
         'roomType': selectedRoomTypes,
@@ -309,6 +382,7 @@ class _OffersPageState extends State<OffersPage> {
         'isFull': false,
         'registeredDate': registeredDate,
         'Duration': _selectedDuration,
+        'contract': downloadContractUrl,
       });
 
       sendEmail('accomate33@gmail.com', 'Review Accommodation',
@@ -341,7 +415,7 @@ class _OffersPageState extends State<OffersPage> {
                             context,
                             MaterialPageRoute(
                                 builder: ((context) => LoginPage(
-                                  guest: false,
+                                      guest: false,
                                       userRole: 'Landlord',
                                     ))));
                       },
@@ -413,8 +487,10 @@ class _OffersPageState extends State<OffersPage> {
     for (var imagePath in imagePaths) {
       File file = File(imagePath);
 
-      Reference storageReference = FirebaseStorage.instance.ref().child(
-          '$accomodationName profile_images/${accomodationName} image(${DateTime.now().toString()})');
+      Reference storageReference = FirebaseStorage.instance
+          .ref('Residence Images')
+          .child(
+              '$accomodationName Images/${accomodationName} (${DateTime.now().toString()})');
       UploadTask uploadTask = storageReference.putFile(file);
       TaskSnapshot storageTaskSnapshot =
           await uploadTask.whenComplete(() => null);
@@ -426,6 +502,48 @@ class _OffersPageState extends State<OffersPage> {
     return downloadUrls;
   }
 
+// void _saveToPDF() async {
+//   final pdf = pw.Document();
+//   final image = pw.MemoryImage(widget.residenceLogo!);
+
+//   pdf.addPage(
+//     pw.Page(
+//       build: (pw.Context context) {
+//         return pw.Center(
+//           child: pw.Row(
+//             mainAxisAlignment: pw.MainAxisAlignment.center,
+//             children: [
+//               pw.Image(image,height: 100,width: 100),
+
+//              pw.Column(children: [
+//               pw.SizedBox(height: 20),
+//               pw.Text('Account Name: ${bankName}'),
+//               pw.Text('Account Number: ${accountNumber}'),
+//               pw.Text('Branch Code: ${branchCode}'),
+//               pw.Text('Reference: Your Email Address'), ]
+//              )
+//             ],
+//           ),
+//         );
+//       },
+//     ),
+//   );
+
+//   final output = await getTemporaryDirectory();
+//   final file = File("${output.path}/user_info.pdf");
+//   await file.writeAsBytes(await pdf.save());
+
+//   await _uploadToFirebase(file);
+// }
+
+// Future<void> _uploadToFirebase(File file) async {
+//   final storageRef = FirebaseStorage.instance.ref();
+//   final pdfRef = storageRef.child('user_pdfs/${basename(file.path)}');
+//   await pdfRef.putFile(file);
+
+//   final pdfUrl = await pdfRef.getDownloadURL();
+
+// }
   @override
   Widget build(BuildContext context) {
     double containerWidth =
@@ -482,44 +600,6 @@ class _OffersPageState extends State<OffersPage> {
                         ),
                       ),
                     ),
-                    ExpansionTile(
-                      title: Text(
-                        'Available Transport',
-                      ),
-                      children: [
-                        Row(
-                          children: [
-                            Radio(
-                              activeColor: Colors.blue,
-                              value: false,
-                              groupValue: usesTransport,
-                              onChanged: (value) {
-                                setState(() {
-                                  usesTransport = value!;
-                                });
-                              },
-                            ),
-                            Text('No'),
-                          ],
-                        ),
-                        SizedBox(width: 16),
-                        Row(
-                          children: [
-                            Radio(
-                              activeColor: Colors.blue,
-                              value: true,
-                              groupValue: usesTransport,
-                              onChanged: (value) {
-                                setState(() {
-                                  usesTransport = value!;
-                                });
-                              },
-                            ),
-                            Text('Yes'),
-                          ],
-                        ),
-                      ],
-                    ),
                     SizedBox(
                       height: 5,
                     ),
@@ -569,7 +649,7 @@ class _OffersPageState extends State<OffersPage> {
                           children: [
                             Radio(
                               activeColor: Colors.blue,
-                              value: false,
+                              value: true,
                               groupValue: isNsfasAccredited,
                               onChanged: (value) {
                                 setState(() {
@@ -585,7 +665,7 @@ class _OffersPageState extends State<OffersPage> {
                           children: [
                             Radio(
                               activeColor: Colors.blue,
-                              value: true,
+                              value: false,
                               groupValue: isNsfasAccredited,
                               onChanged: (value) {
                                 setState(() {
@@ -645,7 +725,7 @@ class _OffersPageState extends State<OffersPage> {
                     ),
                     ElevatedButton.icon(
                         onPressed: () {
-                          _showAddOffersDialog();
+                          _showAddOffersDialog(context);
                         },
                         icon: Icon(Icons.add),
                         label: Text('Others')),
@@ -673,8 +753,17 @@ class _OffersPageState extends State<OffersPage> {
                     SizedBox(
                       height: 5,
                     ),
+                    ElevatedButton.icon(
+                        onPressed: () {
+                          _showAddUniversityDialog();
+                        },
+                        icon: Icon(Icons.add),
+                        label: Text('Others')),
+                    SizedBox(
+                      height: 5,
+                    ),
                     ExpansionTile(
-                      title: Text('Accomodated Months',
+                      title: Text('Allowed accomodated Period',
                           style: TextStyle(color: Colors.black)),
                       children: _duration.map((parDuration) {
                         return RadioListTile<String>(
@@ -692,15 +781,54 @@ class _OffersPageState extends State<OffersPage> {
                     SizedBox(
                       height: 5,
                     ),
-                    ElevatedButton.icon(
-                        onPressed: () {
-                          _showAddUniversityDialog();
-                        },
-                        icon: Icon(Icons.add),
-                        label: Text('Others')),
-                    SizedBox(
-                      height: 5,
+                    ExpansionTile(
+                      title: Text(
+                        'Requires Deposit?',
+                      ),
+                      children: [
+                        Row(
+                          children: [
+                            Radio(
+                              activeColor: Colors.blue,
+                              value: false,
+                              groupValue: requireDeposit,
+                              onChanged: (value) {
+                                setState(() {
+                                  requireDeposit = value!;
+                                });
+                              },
+                            ),
+                            Text('No'),
+                          ],
+                        ),
+                        SizedBox(width: 16),
+                        Row(
+                          children: [
+                            Radio(
+                              activeColor: Colors.blue,
+                              value: true,
+                              groupValue: requireDeposit,
+                              onChanged: (value) {
+                                setState(() {
+                                  requireDeposit = value!;
+                                });
+                              },
+                            ),
+                            Text('Yes'),
+                          ],
+                        ),
+                      ],
                     ),
+                    if (requireDeposit == true)
+                      Column(
+                        children: [
+                          Text(
+                              '*Please note that the student will be signing the contract only their payment will be made in contact.*'),
+                          SizedBox(
+                            height: 10,
+                          ),
+                        ],
+                      ),
                     Container(
                       height: 55,
                       width: containerWidth,

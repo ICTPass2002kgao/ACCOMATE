@@ -6,7 +6,10 @@ import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class NotificationPage extends StatefulWidget {
-  const NotificationPage({Key? key}) : super(key: key);
+  final Function onNotificationOpened; // Added callback function
+
+  const NotificationPage({Key? key, required this.onNotificationOpened})
+      : super(key: key);
 
   @override
   State<NotificationPage> createState() => _NotificationPageState();
@@ -57,7 +60,10 @@ class _NotificationPageState extends State<NotificationPage>
           in applicationsSnapshot.docs) {
         Map<String, dynamic> applicationData =
             documentSnapshot.data() as Map<String, dynamic>;
-        studentApplications.add(applicationData);
+        studentApplications.add({
+          ...applicationData,
+          'documentId': documentSnapshot.id, // Save document ID
+        });
       }
 
       setState(() {
@@ -79,6 +85,25 @@ class _NotificationPageState extends State<NotificationPage>
     setState(() {
       isLoading = false;
     });
+  }
+
+  Future<void> _markNotificationAsRead(String documentId) async {
+    try {
+      String studentUserId = _userData?['userId'] ?? '';
+      for (int index = 0; index < _studentApplications.length; index++) {
+        await FirebaseFirestore.instance
+            .collection('Students')
+            .doc(studentUserId)
+            .collection('applicationsResponse')
+            .doc(_studentApplications[index]['userId'])
+            .update({'read': true});
+      }
+
+      widget.onNotificationOpened();
+      _loadStudentApplications();
+    } catch (e) {
+      print('Error marking notification as read: $e');
+    }
   }
 
   @override
@@ -143,6 +168,9 @@ class _NotificationPageState extends State<NotificationPage>
                                       ))
                                     : ListTile(
                                         onTap: () {
+                                          _markNotificationAsRead(
+                                              _studentApplications[index]
+                                                  ['documentId']);
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
@@ -159,11 +187,17 @@ class _NotificationPageState extends State<NotificationPage>
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
-                                            fontWeight: FontWeight.bold,
+                                            fontWeight:
+                                                _studentApplications[index]
+                                                            ['read'] ==
+                                                        true
+                                                    ? FontWeight.normal
+                                                    : FontWeight.w900,
                                           ),
                                         ),
                                         subtitle: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               _studentApplications[index]
@@ -173,6 +207,14 @@ class _NotificationPageState extends State<NotificationPage>
                                                   : 'Hi ${_userData?['name'] ?? ''}, we regret to inform you that your application from ${_studentApplications[index]['accomodationName']} was Unsuccessful',
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontWeight:
+                                                    _studentApplications[index]
+                                                                ['read'] ==
+                                                            true
+                                                        ? FontWeight.normal
+                                                        : FontWeight.w900,
+                                              ),
                                             ),
                                             Text(
                                               DateFormat('yyyy-MM-dd HH:mm')
@@ -180,13 +222,16 @@ class _NotificationPageState extends State<NotificationPage>
                                                           index]['feedbackDate']
                                                       .toDate()),
                                               style: TextStyle(
-                                                  fontWeight: FontWeight.w400),
+                                                  fontWeight:
+                                                      _studentApplications[
+                                                                      index]
+                                                                  ['read'] ==
+                                                              true
+                                                          ? FontWeight.normal
+                                                          : FontWeight.w500,
+                                                  fontSize: 14),
                                             ),
                                           ],
-                                        ),
-                                        trailing: Icon(
-                                          Icons.arrow_forward_ios_rounded,
-                                          color: Colors.blue,
                                         ),
                                       ),
                                 SizedBox(

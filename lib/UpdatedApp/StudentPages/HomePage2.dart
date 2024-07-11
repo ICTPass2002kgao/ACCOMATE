@@ -1,31 +1,55 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:api_com/UpdatedApp/accomodation_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+class Homepage2 extends StatefulWidget {
+  const Homepage2({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<Homepage2> createState() => _Homepage2State();
 }
 
-class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+class _Homepage2State extends State<Homepage2>
+    with SingleTickerProviderStateMixin {
+  List<Map<String, dynamic>> _landlordsData = [];
   late TabController _tabController;
-  RefreshController _refreshController = RefreshController(initialRefresh: false);
+  late Future<void> _fetchData;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _fetchData = _loadLandlordData();
+    loadData();
+  }
+
+  bool isLoading = true;
+  Future<void> loadData() async {
+    await Future.delayed(Duration(seconds: 2));
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Future<void> _loadLandlordData() async {
+    QuerySnapshot landlordSnapshot =
+        await FirebaseFirestore.instance.collection('Landlords').get();
+
+    List<Map<String, dynamic>> landlordsData = [];
+
+    for (QueryDocumentSnapshot documentSnapshot in landlordSnapshot.docs) {
+      Map<String, dynamic> landlordData =
+          documentSnapshot.data() as Map<String, dynamic>;
+      landlordsData.add(landlordData);
+    }
+
+    setState(() {
+      _landlordsData = landlordsData;
+    });
   }
 
   Future<void> _handleRefresh() async {
-    // Since we are using StreamBuilder, the data is automatically refreshed,
-    // so we can simply complete the refresh without any additional actions.
-    _refreshController.refreshCompleted();
+    await _loadLandlordData();
   }
 
   @override
@@ -52,8 +76,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             ],
           ),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('Landlords').snapshots(),
+            child: FutureBuilder(
+              future: _fetchData,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(
@@ -73,20 +97,15 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                           ))));
                 } else if (snapshot.hasError) {
                   return Center(child: Text('Error loading data'));
-                } else if (snapshot.hasData) {
-                  List<Map<String, dynamic>> landlordsData = snapshot.data!.docs
-                      .map((doc) => doc.data() as Map<String, dynamic>)
-                      .toList();
+                } else {
                   return TabBarView(
                     physics: NeverScrollableScrollPhysics(),
                     controller: _tabController,
                     children: [
-                      _buildAccommodationList(landlordsData, false),
-                      _buildAccommodationList(landlordsData, true),
+                      _buildAccommodationList(false),
+                      _buildAccommodationList(true)
                     ],
                   );
-                } else {
-                  return Center(child: Text('No data available'));
                 }
               },
             ),
@@ -96,19 +115,20 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  Widget _buildAccommodationList(List<Map<String, dynamic>> landlordsData, bool isHouse) {
-    List<Map<String, dynamic>> filteredList = landlordsData.where((landlord) {
-      return landlord['accomodationType'] == isHouse && landlord['accomodationStatus'] == true;
+  Widget _buildAccommodationList(bool isHouse) {
+    List<Map<String, dynamic>> filteredList = _landlordsData.where((landlord) {
+      return landlord['accomodationType'] == isHouse &&
+          landlord['accomodationStatus'] == true;
     }).toList();
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (filteredList.isNotEmpty)
-            _buildAccommodationSection('Nsfas Accredited', filteredList, true, isHouse),
-          if (filteredList.isNotEmpty)
-            _buildAccommodationSection('Not Nsfas Accredited', filteredList, false, isHouse),
+          _buildAccommodationSection(
+              'Nsfas Accredited', filteredList, true, isHouse),
+          _buildAccommodationSection(
+              'Not Nsfas Accredited', filteredList, false, isHouse),
         ],
       ),
     );
@@ -119,16 +139,19 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       List<Map<String, dynamic>> list,
       bool accrediationAvailability,
       bool isHouse) {
-    String fullTitle = '$title ${isHouse ? 'Houses' : 'Accommodations'}';
-
-    List<Map<String, dynamic>> sectionList = list
+    List<Map<String, dynamic>> filteredList = list
         .where((landlord) =>
-            landlord['isNsfasAccredited'] == accrediationAvailability &&
-            landlord['accomodationType'] == isHouse)
+            landlord['isNsfasAccredited'] == accrediationAvailability)
         .toList();
 
-    // If there is no residence available for that particular funding
-    if (sectionList.isEmpty) {
+    // if (filteredList.isEmpty) {
+    //   return Container(
+    //     height: 200,
+    //     color: Colors.red,
+    //     child: Center(child: Text('')),
+    //   );
+    // }
+    if (filteredList.isEmpty) {
       return SizedBox.shrink();
     }
 
@@ -138,7 +161,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         Padding(
           padding: const EdgeInsets.only(left: 10.0, top: 10.0),
           child: Text(
-            fullTitle,
+            '$title ${isHouse ? 'Houses' : 'Accommodations'}',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
@@ -147,7 +170,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           child: Row(
             children: [
               SizedBox(width: 10),
-              for (Map<String, dynamic> landlordData in sectionList)
+              for (Map<String, dynamic> landlordData in filteredList)
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -241,17 +264,19 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 ),
                 SizedBox(height: 5.0),
                 Text(
-                  landlordData['isNsfasAccredited'] == true ? 'Nsfas Accredited' : 'Not Nsfas accredited',
+                  landlordData['isNsfasAccredited'] == true
+                      ? 'Nsfas Accredited'
+                      : 'Not Nsfas accredited',
                   style: TextStyle(
                       color: landlordData['isNsfasAccredited'] == true
                           ? Colors.green
                           : Colors.red),
                 ),
                 Text(landlordData['Duration'] == "Half Year"
-                    ? 'Six Months Allowed'
+                    ? '6 Months students allowed'
                     : landlordData['Duration'] == "Full Year"
-                        ? 'Full Year Only'
-                        : 'All Students Allowed'),
+                        ? 'Only 10 months students'
+                        : 'All students Allowed including 6 months'),
               ],
             ),
           ),

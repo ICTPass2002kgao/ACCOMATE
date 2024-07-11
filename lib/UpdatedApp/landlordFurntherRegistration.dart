@@ -2,11 +2,13 @@
 
 import 'dart:io';
 import 'package:api_com/UpdatedApp/landlordoffersPage.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart';
 
 import 'package:permission_handler/permission_handler.dart';
 
@@ -81,8 +83,9 @@ class _LandlordFurtherRegistrationState
             context,
             MaterialPageRoute(
                 builder: ((context) => OffersPage(
+                      pdfContract: pdfContractFile,
                       selectedPaymentsMethods: selectedPaymentsMethods,
-                      imageFile: _imageFile,
+                      residenceLogo: _imageFile,
                       location: txtLiveLocation.text,
                       password: widget.password,
                       contactDetails: widget.contactDetails,
@@ -109,9 +112,6 @@ class _LandlordFurtherRegistrationState
     super.initState();
     requestLocationPermission();
   }
-
-  bool isFileChosen = false;
-  File? pdfContractFile;
 
   void _showErrorDialog(String errorMessage, BuildContext context) {
     showDialog(
@@ -203,6 +203,28 @@ class _LandlordFurtherRegistrationState
     setState(() {
       _imageFile = selectedImage;
     });
+  }
+
+  String _pdfContractPath = '';
+  File? pdfContractFile;
+  Future<void> _pickSignedContract(BuildContext context) async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+
+      if (result != null) {
+        pdfContractFile = File(result.files.single.path!);
+        setState(() {
+          _pdfContractPath = pdfContractFile!.path;
+        });
+      } else {
+        setState(() {});
+      }
+    } catch (e) {
+      _showErrorDialog(e.toString(), context);
+    }
   }
 
   @override
@@ -311,40 +333,11 @@ class _LandlordFurtherRegistrationState
                       ),
                     ),
                     SizedBox(height: 5),
-                    Tooltip(
-                      message:
-                          'This determines how ent should pay the accomodation',
-                      child: ExpansionTile(
-                        title: Text(
-                          'Students Payment Methods',
-                          style: TextStyle(
-                              color: selectedPaymentsMethods.isEmpty
-                                  ? Colors.red
-                                  : Colors.black),
-                        ),
-                        children:
-                            selectedPaymentsMethods.keys.map((paymentMethod) {
-                          return CheckboxListTile(
-                            title: Text(paymentMethod),
-                            value:
-                                selectedPaymentsMethods[paymentMethod] ?? false,
-                            onChanged: (value) {
-                              setState(() {
-                                selectedPaymentsMethods[paymentMethod] =
-                                    value ?? false;
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    SizedBox(height: 5),
                     TextButton.icon(
                       onPressed: () {
                         showDialog(
                           context: context,
-                          barrierDismissible:
-                              false, // Prevent user from dismissing the dialog
+                          barrierDismissible: false,
                           builder: (BuildContext context) {
                             return Center(
                               child: CircularProgressIndicator(),
@@ -381,7 +374,7 @@ class _LandlordFurtherRegistrationState
                             icon: Icon(Icons.add_photo_alternate_outlined,
                                 color: Colors.white),
                             label: Text(
-                              'Add Profile',
+                              'Add Logo',
                               style:
                                   TextStyle(color: Colors.white, fontSize: 18),
                             ),
@@ -410,6 +403,41 @@ class _LandlordFurtherRegistrationState
                         ],
                       ),
                     ),
+                    SizedBox(height: 5),
+                    Container(
+                      color: Colors.blue[50],
+                      width: buttonWidth,
+                      height: 50,
+                      child: Row(
+                        children: [
+                          TextButton.icon(
+                            onPressed: () {
+                              _pickSignedContract(context);
+                            },
+                            icon: Icon(Icons.add_photo_alternate_outlined,
+                                color: Colors.white),
+                            label: Text(
+                              'Upload Contract',
+                              style:
+                                  TextStyle(  fontSize: 18),
+                            ),
+                            style: ButtonStyle(
+                                shape: WidgetStatePropertyAll(
+                                    RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(5))),
+                                foregroundColor:
+                                    WidgetStatePropertyAll(Colors.blue),
+                                backgroundColor:
+                                    WidgetStatePropertyAll(Colors.white),
+                                minimumSize:
+                                    WidgetStatePropertyAll(Size(130, 50))),
+                          ),
+                          SizedBox(width: 5),
+                          Text(basename(_pdfContractPath))
+                        ],
+                      ),
+                    ), 
                     SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: () {

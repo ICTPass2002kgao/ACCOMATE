@@ -1,14 +1,18 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors, prefer_final_fields, sort_child_properties_last, use_function_type_syntax_for_parameters, use_build_context_synchronously, deprecated_member_use, avoid_print
 
+import 'package:api_com/UpdatedApp/StudentPages/ChatPage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/HomePage.dart';
+import 'package:api_com/UpdatedApp/StudentPages/HomePage2.dart';
 import 'package:api_com/UpdatedApp/StudentPages/NotificationPage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/PeersonalPage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/Search-Class.dart';
+import 'package:api_com/UpdatedApp/Terms&Conditions.dart';
 import 'package:api_com/UpdatedApp/login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:icon_badge/icon_badge.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class StudentPage extends StatefulWidget {
@@ -23,7 +27,7 @@ class _StudentPageState extends State<StudentPage> {
   Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // user must tap button for close
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -74,6 +78,8 @@ class _StudentPageState extends State<StudentPage> {
     _user = FirebaseAuth.instance.currentUser;
     loadData();
     _loadUserData();
+
+    _loadNotificationCount();
   }
 
   late User? _user;
@@ -225,6 +231,10 @@ class _StudentPageState extends State<StudentPage> {
     });
   }
 
+  void _onNotificationOpened() {
+    _loadNotificationCount();
+  }
+
   Future<void> _handleRefresh() async {
     await _loadLandlordData();
     await _loadUserData();
@@ -232,6 +242,20 @@ class _StudentPageState extends State<StudentPage> {
   }
 
   RefreshController _refreshController = RefreshController();
+
+  int _notificationCount = 0;
+  Future<void> _loadNotificationCount() async {
+    QuerySnapshot applicationsSnapshot = await FirebaseFirestore.instance
+        .collection('Students')
+        .doc(_user?.uid)
+        .collection('applicationsResponse')
+        .where('read', isEqualTo: false)
+        .get();
+    setState(() {
+      _notificationCount = applicationsSnapshot.docs.length;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     double buttonWidth =
@@ -274,19 +298,39 @@ class _StudentPageState extends State<StudentPage> {
                 ),
                 label: 'Home',
               ),
+              _notificationCount > 0
+                  ? BottomNavigationBarItem(
+                      icon: IconBadge(
+                        icon: Icon(
+                          Icons.notifications_active_outlined,
+                        ),
+                        itemCount: _notificationCount,
+                        badgeColor: Colors.red,
+                        itemColor: Colors.white,
+                      ),
+                      label: 'Notifications',
+                      backgroundColor: Colors.blue,
+                    )
+                  : BottomNavigationBarItem(
+                      backgroundColor: Colors.blue,
+                      icon: Icon(
+                        Icons.notifications_active_outlined,
+                      ),
+                      label: 'Notificationns',
+                    ),
               BottomNavigationBarItem(
                 backgroundColor: Colors.blue,
                 icon: Icon(
-                  Icons.notifications_active_outlined,
+                  Icons.mail_outline_outlined,
                 ),
-                label: 'Notifications',
+                label: 'Chat',
               ),
               BottomNavigationBarItem(
                 backgroundColor: Colors.blue,
                 icon: Icon(
                   Icons.person_outlined,
                 ),
-                label: 'Personal account',
+                label: 'Me',
               )
             ]),
         drawer: Drawer(
@@ -309,266 +353,7 @@ class _StudentPageState extends State<StudentPage> {
                   leading: Icon(Icons.policy_outlined, color: Colors.white),
                   title: Text('Terms & conditions'),
                   onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => StatefulBuilder(
-                        builder: (BuildContext context, StateSetter setState) {
-                          return Container(
-                            height: 500,
-                            child: AlertDialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              scrollable: true,
-                              actions: [
-                                OutlinedButton(
-                                  style: ButtonStyle(
-                                      backgroundColor:
-                                          MaterialStatePropertyAll(Colors.blue),
-                                      foregroundColor: MaterialStatePropertyAll(
-                                          Colors.white),
-                                      side: MaterialStatePropertyAll(
-                                          BorderSide(width: 2))),
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: Text('Okay'),
-                                )
-                              ],
-                              title: Text('Term & conditions',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20)),
-                              content: SingleChildScrollView(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('1.Acceptance of Terms',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18)),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'By accessing or using the Accomate Accommodation Services, including the Accomate mobile application and associated platforms (collectively referred to as "the App"), you agree to comply with and be bound by the following terms and conditions.'),
-                                    SizedBox(height: 10),
-                                    Text('2.Landlord Responsibilities',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18)),
-                                    SizedBox(height: 5),
-                                    Text('a.Accurate Information',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                      'Landlords must provide accurate and up-to-date information about the accommodation, including but not limited to rent, amenities, location, and availability.',
-                                    ),
-                                    SizedBox(height: 5),
-                                    Text('b.Media Content',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Any images, amities, or media content related to the accommodation must accurately represent the property.'),
-                                    SizedBox(height: 5),
-                                    Text('c.Compliance with Laws',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Landlords must comply with all relevant local, state, and national laws related to housing and accommodation.'),
-                                    SizedBox(height: 5),
-                                    Text('d.Timely Responses',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Landlords should respond to students applications in a timely manner, providing necessary information and documentation promptly.'),
-                                    SizedBox(height: 5),
-                                    Text('3.Students Responsibilities',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text('a.Accurate Information',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Students must provide accurate and truthful information in their account registration.'),
-                                    SizedBox(height: 5),
-                                    Text('b.Compliance with Rules',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Students must abide by the rules and guidelines set by the landlord for the accommodation.'),
-                                    SizedBox(height: 5),
-                                    Text('c.Respectful Communication',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Students should communicate respectfully with landlords and other stakeholders involved in the application process.'),
-                                    SizedBox(height: 5),
-                                    Text('d.In-App Communication',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        "Should student encounter any faulty/issue in the room or block, the student can share the issue in the application's chat page."),
-                                    SizedBox(height: 5),
-                                    Text('e.Privacy',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Students should be mindful of the privacy of others and handle personal information responsibly.'),
-                                    SizedBox(height: 5),
-                                    Text('4.Application Process',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text('a.Submission',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Students must submit their accommodation application through the Accomate platform, providing all required information.'),
-                                    SizedBox(height: 5),
-                                    Text('b.Fair Review',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Landlords should apply fair and non-discriminatory screening practices when considering students applications.'),
-                                    SizedBox(height: 5),
-                                    Text('c.POPI Act and Personal Information',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Landlords must comply with the POPI Act when collecting, processing, or storing Student personal information.'),
-                                    SizedBox(height: 5),
-                                    Text('d.Decision',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Landlords will make decisions based on the information provided by Students and communicate the outcome through the Accomate platform.'),
-                                    SizedBox(height: 5),
-                                    Text('e.Confirmation',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Successful Students should confirm their acceptance and adhere to the agreed-upon terms.'),
-                                    SizedBox(height: 5),
-                                    Text('5.Payments',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                      'In terms of Payments, Landlords should pay R21 per month for each student that will apply & register on their accommodation using the app',
-                                    ),
-                                    SizedBox(height: 5),
-                                    Text('6.POPI Act Compliance',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text('a.Consent',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'By using the App, students explicitly consent to the collection and processing of their personal information in compliance with the POPI Act.'),
-                                    SizedBox(height: 5),
-                                    Text('b.Data Security',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Accomate will implement reasonable measures to secure personal information in accordance with the POPI Act.'),
-                                    SizedBox(height: 5),
-                                    Text('c.Data Subject Rights',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Users have the right to access, correct, or delete their personal information as outlined in the POPI Act.'),
-                                    SizedBox(height: 5),
-                                    Text('7.Dispute Resolution',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text('a.Mediation',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        ' In the event of disputes between landlords and Students, Accomate may offer mediation services to resolve conflicts.'),
-                                    SizedBox(height: 5),
-                                    Text('b.Legal Recourse',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Users retain the right to seek legal recourse for matters not resolved through mediation.'),
-                                    SizedBox(height: 5),
-                                    Text('8.Termination of Service',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Accomate reserves the right to terminate or suspend services for users who violate these terms and conditions.'),
-                                    SizedBox(height: 5),
-                                    Text('9.Changes to Terms',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        )),
-                                    SizedBox(height: 5),
-                                    Text(
-                                        'Accomate reserves the right to modify these terms and conditions. Users will be notified of any changes, and continued use of the service constitutes acceptance of the modified terms.'),
-                                    SizedBox(height: 5),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    );
+                    TermsAndConditions();
                   },
                   textColor: Colors.white,
                 ),
@@ -719,11 +504,13 @@ class _StudentPageState extends State<StudentPage> {
       case 0:
         return HomePage();
       case 1:
-        return NotificationPage();
+        return NotificationPage(onNotificationOpened: _onNotificationOpened);
       case 2:
+        return Chatpage();
+      case 3:
         return PersonalPage();
       default:
-        return Container(); // Handle other cases if needed
+        return Container();
     }
   }
 }
