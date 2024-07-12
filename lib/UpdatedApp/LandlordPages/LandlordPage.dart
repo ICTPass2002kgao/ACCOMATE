@@ -1,11 +1,9 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, prefer_final_fields
 
-import 'package:api_com/UpdatedApp/LandlordPages/AccountDetails.dart';
-import 'package:api_com/UpdatedApp/LandlordPages/ChatPage.dart';
+import 'package:api_com/UpdatedApp/LandlordPages/AccountDetails.dart'; 
 import 'package:api_com/UpdatedApp/LandlordPages/Notification.dart';
-import 'package:api_com/UpdatedApp/LandlordPages/Home.dart';
-import 'package:api_com/UpdatedApp/LandlordPages/RegisteredStudents.dart';
-import 'package:api_com/UpdatedApp/Terms&Conditions.dart';
+import 'package:api_com/UpdatedApp/LandlordPages/Home.dart'; 
+import 'package:api_com/UpdatedApp/Accomate%20pages/Terms&Conditions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -21,9 +19,7 @@ class LandlordPage extends StatefulWidget {
 
 class _LandlordPageState extends State<LandlordPage> {
   TextEditingController messageController = TextEditingController();
-
-  List<Map<String, dynamic>> _registeredStudents = [];
-
+ 
   late User? _user;
   Map<String, dynamic>? _userData;
   @override
@@ -82,7 +78,7 @@ class _LandlordPageState extends State<LandlordPage> {
               onPressed: () async {
                 Navigator.of(context).pop();
                 await FirebaseAuth.instance.signOut();
-                Navigator.pushReplacementNamed(context, '/startPage');
+                Navigator.pushReplacementNamed(context, '/login');
               },
             ),
           ],
@@ -141,7 +137,7 @@ class _LandlordPageState extends State<LandlordPage> {
   Future<void> _sendHelpMessage() async {
     try {
       showDialog(
-        context: context, // Prevent user from dismissing the dialog
+        context: context, 
         builder: (BuildContext context) {
           return Center(
             child: CircularProgressIndicator(
@@ -209,9 +205,9 @@ class _LandlordPageState extends State<LandlordPage> {
     Notifications(
       onNotificationOpened: () {},
     ),
-    Chatpage(),
+    // Chatpage(),
     AccountDetails(),
-    RegisteredStudents()
+    // RegisteredStudents()
   ];
 
   int _notificationCount = 0;
@@ -231,36 +227,36 @@ class _LandlordPageState extends State<LandlordPage> {
     _loadNotificationCount();
   }
 
-  Future<void> _loadStudentContract() async {
-    try {
-      String landlordId = _userData?['userId'] ?? '';
-      if (landlordId.isEmpty) {
-        print('Landlord ID is empty');
-        return;
-      }
-      QuerySnapshot registeredSnapshot = await FirebaseFirestore.instance
-          .collection('Landlords')
-          .doc(landlordId)
-          .collection('signedContracts')
-          .get();
+  // Future<void> _loadStudentContract() async {
+  //   try {
+  //     String landlordId = _userData?['userId'] ?? '';
+  //     if (landlordId.isEmpty) {
+  //       print('Landlord ID is empty');
+  //       return;
+  //     }
+  //     QuerySnapshot registeredSnapshot = await FirebaseFirestore.instance
+  //         .collection('Landlords')
+  //         .doc(landlordId)
+  //         .collection('signedContracts')
+  //         .get();
 
-      List<Map<String, dynamic>> registeredStudents = [];
+  //     List<Map<String, dynamic>> registeredStudents = [];
 
-      for (QueryDocumentSnapshot documentSnapshot in registeredSnapshot.docs) {
-        Map<String, dynamic> registrationData =
-            documentSnapshot.data() as Map<String, dynamic>;
-        registeredStudents.add(registrationData);
-      }
+  //     for (QueryDocumentSnapshot documentSnapshot in registeredSnapshot.docs) {
+  //       Map<String, dynamic> registrationData =
+  //           documentSnapshot.data() as Map<String, dynamic>;
+  //       registeredStudents.add(registrationData);
+  //     }
 
-      setState(() {
-        _registeredStudents = registeredStudents;
-      });
+  //     setState(() {
+  //       _registeredStudents = registeredStudents;
+  //     });
 
-      print('Loaded registered students: $_registeredStudents');
-    } catch (e) {
-      print('Error loading student contracts: $e');
-    }
-  }
+  //     print('Loaded registered students: $_registeredStudents');
+  //   } catch (e) {
+  //     print('Error loading student contracts: $e');
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -434,11 +430,11 @@ class _LandlordPageState extends State<LandlordPage> {
       case 1:
         return Notifications(onNotificationOpened: _onNotificationOpened);
       case 2:
-        return Chatpage();
-      case 3:
+      //   return Chatpage();
+      // case 3:
         return AccountDetails();
-      case 4:
-        return RegisteredStudents();
+      // case 4:
+      //   return RegisteredStudents();
       default:
         return Container();
     }
@@ -519,12 +515,12 @@ class _LandlordPageState extends State<LandlordPage> {
                   ),
                   label: Text('Notifications'),
                 ),
-                _buildNavigationRailDestination(
-                    Icons.mail_outline_outlined, 'Chat'),
+                // _buildNavigationRailDestination(
+                //     Icons.mail_outline_outlined, 'Chat'),
                 _buildNavigationRailDestination(
                     Icons.person, 'Account Details'),
-                _buildNavigationRailDestination(
-                    Icons.people_outline, 'Registered Students'),
+                // _buildNavigationRailDestination(
+                //     Icons.people_outline, 'Registered Students'),
               ],
             ),
           ),
@@ -570,10 +566,10 @@ class _LandlordPageState extends State<LandlordPage> {
                     ),
                     label: 'Notifications',
                   ),
-            _buildBottomNavigatorBar('Chat', Icons.mail_outline_outlined),
+            // _buildBottomNavigatorBar('Chat', Icons.mail_outline_outlined),
             _buildBottomNavigatorBar('Me', Icons.person),
-            _buildBottomNavigatorBar(
-                'Registered Students', Icons.people_outline),
+            // _buildBottomNavigatorBar(
+            //     'Registered Students', Icons.people_outline),
           ],
           currentIndex: _currentIndex,
           onTap: (index) {

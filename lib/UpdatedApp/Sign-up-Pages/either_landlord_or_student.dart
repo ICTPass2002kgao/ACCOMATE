@@ -2,9 +2,9 @@
 
 import 'dart:math';
 
-import 'package:api_com/UpdatedApp/VerifyEmail.dart';
-import 'package:api_com/UpdatedApp/landlordFurntherRegistration.dart';
-import 'package:cloud_functions/cloud_functions.dart';
+import 'package:api_com/UpdatedApp/StudentPages/VerifyEmail.dart';
+import 'package:api_com/UpdatedApp/Sign-up-Pages/landlordFurntherRegistration.dart';
+// import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_intl_phone_field/flutter_intl_phone_field.dart';
 import 'package:mailer/mailer.dart';
@@ -32,31 +32,26 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
     super.initState();
 
     selectedUniversity = 'Vaal University of Technology';
-    // Listen to changes in the TextField
-    nameController.addListener(() {
-      // Get the current text
+  
+    nameController.addListener(() { 
       String nameText = nameController.text;
-
-      // If the last character is a space, remove it
+ 
       if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
         nameController.text = nameText.trim();
         nameController.selection = TextSelection.fromPosition(
             TextPosition(offset: nameController.text.length));
       }
     });
-    surnameController.addListener(() {
-      // Get the current text
+    surnameController.addListener(() { 
       String nameText = surnameController.text;
-
-      // If the last character is a space, remove it
+ 
       if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
         surnameController.text = nameText.trim();
         surnameController.selection = TextSelection.fromPosition(
             TextPosition(offset: surnameController.text.length));
       }
     });
-    emailController.addListener(() {
-      // Get the current text
+    emailController.addListener(() { 
       String nameText = emailController.text; 
       if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
         emailController.text = nameText.trim();
@@ -64,11 +59,9 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
             TextPosition(offset: emailController.text.length));
       }
     });
-    passwordController.addListener(() {
-      // Get the current text
+    passwordController.addListener(() { 
       String nameText = passwordController.text;
-
-      // If the last character is a space, remove it
+ 
       if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
         passwordController.text = nameText.trim();
         passwordController.selection = TextSelection.fromPosition(
@@ -193,8 +186,8 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
           emailController.text, // Student's email
           'Verification Code',
           selectedGender == 'Male'
-              ? 'Hello Mr ${surnameController.text},\nWe are aware that you are trying to register your account with Accomate\nHere  is your verification code:  $verificationCode\n\n\n\n\n\n\n\nBest Regards\nYours Accomate'
-              : 'Hello Mrs ${surnameController.text},\nWe are aware that you are trying to register your account with Accomate\nHere  is your verification code: $verificationCode\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
+              ? '''<p>Hello Mr ${surnameController.text}, <br/>We are aware that you are trying to register your account with Accomate <br/>Here  is your verification code:  $verificationCode <br/>Best Regards <br/>Yours Accomate</p>'''
+              : '''<p>Hello Mrs ${surnameController.text}, <br/>We are aware that you are trying to register your account with Accomate <br/>Here  is your verification code: $verificationCode <br/>Best Regards\nYours Accomate</p>''');
 
       setState(() {
         Navigator.of(context).pop();

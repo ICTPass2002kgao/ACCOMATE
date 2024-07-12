@@ -1,16 +1,16 @@
 // ignore_for_file: prefer_const_constructors
-import 'dart:io';
+// import 'dart:io';
 
-import 'package:api_com/UpdatedApp/Apply-Accomodation.dart';
-import 'package:api_com/UpdatedApp/CreateAnAccount.dart';
+// import 'package:api_com/UpdatedApp/Apply-Accomodation.dart'; 
 import 'package:api_com/UpdatedApp/LandlordPages/LandlordPage.dart';
+import 'package:api_com/UpdatedApp/Sign-Page/login_page.dart';
+import 'package:api_com/UpdatedApp/Sign-up-Pages/CreateAnAccount.dart';
 import 'package:api_com/UpdatedApp/StudentPages/student_page.dart';
-import 'package:api_com/UpdatedApp/accomodation_page.dart';
-import 'package:api_com/UpdatedApp/admin-page.dart';
-import 'package:api_com/UpdatedApp/either_landlord_or_student.dart';
-import 'package:api_com/UpdatedApp/help-page.dart';
-import 'package:api_com/UpdatedApp/initial_page.dart';
-import 'package:api_com/UpdatedApp/login_page.dart'; 
+// import 'package:api_com/UpdatedApp/accomodation_page.dart';
+import 'package:api_com/UpdatedApp/Accomate%20pages/admin-page.dart';
+import 'package:api_com/UpdatedApp/Sign-up-Pages/either_landlord_or_student.dart';
+import 'package:api_com/UpdatedApp/Accomate%20pages/help-page.dart'; 
+ 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -38,11 +38,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       themeMode: ThemeMode.light,
       debugShowCheckedModeBanner: false,
-      home: StartPage(),
+      home: LoginPage(),
       routes: {
         '/login': (context) => LoginPage(
-              userRole: '',
-              guest: false,
             ),
         '/landlordPage': (context) => LandlordPage(),
         '/studentPage': (context) => StudentPage(),
@@ -52,8 +50,7 @@ class MyApp extends StatelessWidget {
               isLandlord: false,
               guest: false,
             ),
-        '/CreateAccountPage': (context) => RegistrationOption(),
-        '/startPage': (context) => StartPage(),
+        '/CreateAccountPage': (context) => RegistrationOption(), 
       },
     );
   }

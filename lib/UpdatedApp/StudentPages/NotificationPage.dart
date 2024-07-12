@@ -62,7 +62,7 @@ class _NotificationPageState extends State<NotificationPage>
             documentSnapshot.data() as Map<String, dynamic>;
         studentApplications.add({
           ...applicationData,
-          'documentId': documentSnapshot.id, // Save document ID
+          'documentId': documentSnapshot.id,  
         });
       }
 

@@ -1,7 +1,7 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors, sort_child_properties_last,
 
 import 'dart:io';
-import 'package:api_com/UpdatedApp/landlordoffersPage.dart';
+import 'package:api_com/UpdatedApp/Sign-up-Pages/landlordoffersPage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
@@ -71,19 +71,15 @@ class _LandlordFurtherRegistrationState
   void checkLandlordDetails(context) {
     if (txtLiveLocation.text == '') {
       showError(context);
-    } else if (_imageFile == null) {
-      showError(context);
+    
     } else if (distanceController.text == '') {
-      showError(context);
-    } else if (selectedPaymentsMethods.isEmpty) {
       showError(context);
     } else {
       setState(() {
         Navigator.push(
             context,
             MaterialPageRoute(
-                builder: ((context) => OffersPage(
-                      pdfContract: pdfContractFile,
+                builder: ((context) => OffersPage( 
                       selectedPaymentsMethods: selectedPaymentsMethods,
                       residenceLogo: _imageFile,
                       location: txtLiveLocation.text,
@@ -205,27 +201,7 @@ class _LandlordFurtherRegistrationState
     });
   }
 
-  String _pdfContractPath = '';
-  File? pdfContractFile;
-  Future<void> _pickSignedContract(BuildContext context) async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf'],
-      );
-
-      if (result != null) {
-        pdfContractFile = File(result.files.single.path!);
-        setState(() {
-          _pdfContractPath = pdfContractFile!.path;
-        });
-      } else {
-        setState(() {});
-      }
-    } catch (e) {
-      _showErrorDialog(e.toString(), context);
-    }
-  }
+  // String _pdfContractPath = '';
 
   @override
   Widget build(BuildContext context) {
@@ -391,7 +367,7 @@ class _LandlordFurtherRegistrationState
                                     WidgetStatePropertyAll(Size(130, 50))),
                           ),
                           SizedBox(width: 5),
-                          if (_imageFile != null)
+                         _imageFile != null?
                             Image.file(
                               File(
                                 _imageFile!.path,
@@ -399,45 +375,10 @@ class _LandlordFurtherRegistrationState
                               fit: BoxFit.cover,
                               height: 45,
                               width: 50,
-                            ),
+                            ):Text('Optional'),
                         ],
                       ),
                     ),
-                    SizedBox(height: 5),
-                    Container(
-                      color: Colors.blue[50],
-                      width: buttonWidth,
-                      height: 50,
-                      child: Row(
-                        children: [
-                          TextButton.icon(
-                            onPressed: () {
-                              _pickSignedContract(context);
-                            },
-                            icon: Icon(Icons.add_photo_alternate_outlined,
-                                color: Colors.white),
-                            label: Text(
-                              'Upload Contract',
-                              style:
-                                  TextStyle(  fontSize: 18),
-                            ),
-                            style: ButtonStyle(
-                                shape: WidgetStatePropertyAll(
-                                    RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(5))),
-                                foregroundColor:
-                                    WidgetStatePropertyAll(Colors.blue),
-                                backgroundColor:
-                                    WidgetStatePropertyAll(Colors.white),
-                                minimumSize:
-                                    WidgetStatePropertyAll(Size(130, 50))),
-                          ),
-                          SizedBox(width: 5),
-                          Text(basename(_pdfContractPath))
-                        ],
-                      ),
-                    ), 
                     SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: () {

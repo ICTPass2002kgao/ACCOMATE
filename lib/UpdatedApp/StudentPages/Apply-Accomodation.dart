@@ -262,6 +262,14 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
   }
 
   Future<void> _saveApplicationDetails() async {
+    if (selectedRoomsType.isEmpty ||
+        periodOfStudy.isEmpty ||
+        yearOfStudy.isEmpty) {
+      _appliedStudent(
+          'Please make sure you have provided to required information',
+          "Missing Information");
+      return;
+    }
     try {
       showDialog(
         context: context,
@@ -324,13 +332,13 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
       sendEmail(
         widget.landlordData['email'] ?? '',
         'Application Received',
-        'Hi ${widget.landlordData['accomodationName'] ?? ''} landlord, \nYou have a new application from a student at ${_userData?['university']}.\nName & Surname:${_userData?['name']} ${_userData?['surname']} \nBest Regards\nYour Accomate Team',
+        '''<p>Hi ${widget.landlordData['accomodationName'] ?? ''} landlord, <br/>You have a new application from a student at ${_userData?['university']}.<br/>Name & Surname:${_userData?['name']} ${_userData?['surname']} <br/>Best Regards<br/>Your Accomate Team </p>''',
       );
 
       await sendEmail(
           _userData?['email'] ?? '',
           'Application sent successfully',
-          'Hi ${_userData?['name'] ?? ''} , \nYour application was sent successfully to ${widget.landlordData['accomodationName'] ?? ''}, You will get further communication soon.\n\nBest Regards\nYour Accomate Team');
+          '''<p>Hi ${_userData?['name'] ?? ''} , <br/>Your application was sent successfully to ${widget.landlordData['accomodationName'] ?? ''}, You will get further communication soon.<br/><br/>Best Regards<br/>Your Accomate Team</p> ''');
 
       String? fcmToken = await _firebaseMessaging.getToken();
       _sendNotification(
@@ -435,27 +443,27 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
                   );
                 }).toList(),
               ),
-              if (_userData?['isRegistered'] == false)
-                ElevatedButton(
-                  onPressed: selectedRoomsType.isEmpty ||
-                          periodOfStudy.isEmpty ||
-                          yearOfStudy.isEmpty
-                      ? null
-                      : () => _saveApplicationDetails(),
-                  child: Text('Submit Application'),
-                  style: ButtonStyle(
-                    shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5))),
-                    minimumSize: WidgetStatePropertyAll(Size(buttonWidth, 50)),
-                    foregroundColor: WidgetStateProperty.all(Colors.white),
-                    backgroundColor: WidgetStateProperty.all(
-                        selectedRoomsType.isEmpty ||
-                                periodOfStudy.isEmpty ||
-                                yearOfStudy.isEmpty
-                            ? Colors.grey
-                            : Colors.blue),
-                  ),
+              // if (_userData?['isRegistered'] == false)
+              ElevatedButton(
+                onPressed: selectedRoomsType.isEmpty ||
+                        periodOfStudy.isEmpty ||
+                        yearOfStudy.isEmpty
+                    ? null
+                    : () => _saveApplicationDetails(),
+                child: Text('Submit Application'),
+                style: ButtonStyle(
+                  shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5))),
+                  minimumSize: WidgetStatePropertyAll(Size(buttonWidth, 50)),
+                  foregroundColor: WidgetStateProperty.all(Colors.white),
+                  backgroundColor: WidgetStateProperty.all(
+                      selectedRoomsType.isEmpty ||
+                              periodOfStudy.isEmpty ||
+                              yearOfStudy.isEmpty
+                          ? Colors.grey
+                          : Colors.blue),
                 ),
+              ),
             ],
           ),
         ),

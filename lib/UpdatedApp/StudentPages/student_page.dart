@@ -1,13 +1,13 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors, prefer_final_fields, sort_child_properties_last, use_function_type_syntax_for_parameters, use_build_context_synchronously, deprecated_member_use, avoid_print
 
-import 'package:api_com/UpdatedApp/StudentPages/ChatPage.dart';
+// import 'package:api_com/DeactivatedFiles/ChatPageSt.dart';
+import 'package:api_com/UpdatedApp/Sign-Page/login_page.dart';
 import 'package:api_com/UpdatedApp/StudentPages/HomePage.dart';
-import 'package:api_com/UpdatedApp/StudentPages/HomePage2.dart';
+// import 'package:api_com/DeactivatedFiles/HomePage2.dart';
 import 'package:api_com/UpdatedApp/StudentPages/NotificationPage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/PeersonalPage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/Search-Class.dart';
-import 'package:api_com/UpdatedApp/Terms&Conditions.dart';
-import 'package:api_com/UpdatedApp/login_page.dart';
+import 'package:api_com/UpdatedApp/Accomate%20pages/Terms&Conditions.dart'; 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -61,7 +61,7 @@ class _StudentPageState extends State<StudentPage> {
               onPressed: () async {
                 Navigator.of(context).pop();
                 await FirebaseAuth.instance.signOut();
-                Navigator.pushReplacementNamed(context, '/startPage');
+                Navigator.pushReplacementNamed(context, '/login');
               },
             ),
           ],
@@ -187,7 +187,7 @@ class _StudentPageState extends State<StudentPage> {
                       onPressed: () async {
                         Navigator.of(context).pop();
                         messageController.text = '';
-                        Navigator.pushReplacementNamed(context, '/studentPage');
+                        Navigator.pushReplacementNamed(context, '/login');
                       },
                       child: Text('Done'),
                       style: ButtonStyle(
@@ -212,31 +212,31 @@ class _StudentPageState extends State<StudentPage> {
     _loadUserData();
   }
 
-  List<Map<String, dynamic>> _landlordsData = [];
+  // List<Map<String, dynamic>> _landlordsData = [];
 
-  Future<void> _loadLandlordData() async {
-    QuerySnapshot landlordSnapshot =
-        await FirebaseFirestore.instance.collection('Landlords').get();
+  // Future<void> _loadLandlordData() async {
+  //   QuerySnapshot landlordSnapshot =
+  //       await FirebaseFirestore.instance.collection('Landlords').get();
 
-    List<Map<String, dynamic>> landlordsData = [];
+  //   List<Map<String, dynamic>> landlordsData = [];
 
-    for (QueryDocumentSnapshot documentSnapshot in landlordSnapshot.docs) {
-      Map<String, dynamic> landlordData =
-          documentSnapshot.data() as Map<String, dynamic>;
-      landlordsData.add(landlordData);
-    }
+  //   for (QueryDocumentSnapshot documentSnapshot in landlordSnapshot.docs) {
+  //     Map<String, dynamic> landlordData =
+  //         documentSnapshot.data() as Map<String, dynamic>;
+  //     landlordsData.add(landlordData);
+  //   }
 
-    setState(() {
-      _landlordsData = landlordsData;
-    });
-  }
+  //   setState(() {
+  //     _landlordsData = landlordsData;
+  //   });
+  // }
 
   void _onNotificationOpened() {
     _loadNotificationCount();
   }
 
   Future<void> _handleRefresh() async {
-    await _loadLandlordData();
+    // await _loadLandlordData();
     await _loadUserData();
     _refreshController.refreshCompleted();
   }
@@ -318,13 +318,13 @@ class _StudentPageState extends State<StudentPage> {
                       ),
                       label: 'Notificationns',
                     ),
-              BottomNavigationBarItem(
-                backgroundColor: Colors.blue,
-                icon: Icon(
-                  Icons.mail_outline_outlined,
-                ),
-                label: 'Chat',
-              ),
+              // BottomNavigationBarItem(
+              //   backgroundColor: Colors.blue,
+              //   icon: Icon(
+              //     Icons.mail_outline_outlined,
+              //   ),
+              //   label: 'Chat',
+              // ),
               BottomNavigationBarItem(
                 backgroundColor: Colors.blue,
                 icon: Icon(
@@ -383,7 +383,7 @@ class _StudentPageState extends State<StudentPage> {
                               child: Column(
                                 children: [
                                   Text(
-                                      'We will sent a respond to you in Accomate chatPage',
+                                      'We will sent a feedback soon.',
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 15,
@@ -480,8 +480,7 @@ class _StudentPageState extends State<StudentPage> {
                         : Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => LoginPage(
-                                    userRole: 'Student', guest: false)));
+                                builder: (context) => LoginPage()));
                   },
                   textColor: Colors.white,
                 )
@@ -506,8 +505,8 @@ class _StudentPageState extends State<StudentPage> {
       case 1:
         return NotificationPage(onNotificationOpened: _onNotificationOpened);
       case 2:
-        return Chatpage();
-      case 3:
+      //   return Chatpage();
+      // case 3:
         return PersonalPage();
       default:
         return Container();

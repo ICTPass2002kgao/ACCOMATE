@@ -1,11 +1,9 @@
 // ignore_for_file: prefer_const_constructors, unnecessary_brace_in_string_interps, sized_box_for_whitespace
-
-import 'package:api_com/UpdatedApp/StudentPages/ViewContract.dart';
+ 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_swiper_view/flutter_swiper_view.dart';
-import 'package:switcher_button/switcher_button.dart';
+import 'package:flutter_swiper_view/flutter_swiper_view.dart'; 
 
 class AccountDetails extends StatefulWidget {
   const AccountDetails({super.key});
@@ -381,7 +379,7 @@ class _AccountDetailsState extends State<AccountDetails> {
                                 onPressed: () async {
                                   await FirebaseAuth.instance.signOut();
                                   Navigator.pushReplacementNamed(
-                                      context, '/startPage');
+                                      context, '/login');
                                 },
                                 child: Text('Sign-Out'),
                                 style: ButtonStyle(

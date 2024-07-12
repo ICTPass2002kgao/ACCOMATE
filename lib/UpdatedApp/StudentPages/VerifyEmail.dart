@@ -10,7 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:lottie/lottie.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
-import 'login_page.dart';
+import '../Sign-Page/login_page.dart';
 
 class CodeVerificationPage extends StatefulWidget {
   final String email;
@@ -78,6 +78,7 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
         'name': widget.name,
         'surname': widget.surname,
         'email': user,
+        'userRole':'student',
         'university': widget.university,
         'contactDetails': widget.contactDetails,
         'userId': userId,
@@ -96,12 +97,10 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
           widget.email,
           'Successful account',
           widget.gender == 'Male'
-              ? 'Hello Mr ${widget.surname},\nYour account has been registered successfully. Please proceed to login.\n\nBest Regards,\nYours Accomate'
-              : 'Hello Mrs ${widget.surname},\nYour account has been registered successfully. Please proceed to login.\n\nBest Regards,\nYours Accomate');
+              ? '''<p>Hello Mr ${widget.surname},<br/>Your account has been registered successfully. Please proceed to login<br/>Best Regards,<br/>Yours Accomate</p>'''
+              : '''<p>Hello Mrs ${widget.surname},<br/>Your account has been registered successfully. Please proceed to login.<br/>Best Regards,<br/>Yours Accomate</p>''');
 
-      Navigator.pop(context);
-      
-    Navigator.of(context).pop();
+     
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -109,7 +108,7 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
         Future.delayed(Duration(seconds: 30), () {
           if (Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
-            Navigator.pushReplacementNamed(context, '/studentPage');
+            Navigator.pushReplacementNamed(context, '/login');
           }
         });
 
@@ -174,7 +173,7 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
         Navigator.pushReplacementNamed(context, '/studentPage');
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => LoginPage(userRole: 'Student', guest: false,)),
+        MaterialPageRoute(builder: (context) => LoginPage()),
       );
                       },
                       child: Text('Done'),

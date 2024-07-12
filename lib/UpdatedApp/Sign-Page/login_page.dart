@@ -1,16 +1,16 @@
 // ignore_for_file: unnecessary_const, prefer_const_constructors, avoid_unnecessary_containers, sort_child_properties_last, prefer_const_literals_to_create_immutables, sized_box_for_whitespace, avoid_print, use_build_context_synchronously, unrelated_type_equality_checks
 
-import 'package:api_com/UpdatedApp/CreateAnAccount.dart';
-import 'package:api_com/forgot_password.dart';
+import 'package:api_com/UpdatedApp/Sign-up-Pages/CreateAnAccount.dart';
+import 'package:api_com/UpdatedApp/Sign-Page/forgot_password.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginPage extends StatefulWidget {
-  final String userRole;
-  final bool guest;
-  const LoginPage({super.key, required this.userRole, required this.guest});
+  const LoginPage({
+    super.key,
+  });
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -31,73 +31,13 @@ class _LoginPageState extends State<LoginPage> {
   bool isLoading = true;
 
   bool showError = false;
-  late FirebaseAuth _auth;
+  // late FirebaseAuth _auth;
   @override
   void initState() {
     super.initState();
-    _googleSignIn = GoogleSignIn();
-    _auth = FirebaseAuth.instance;
+    // _googleSignIn = GoogleSignIn();
+    // _auth = FirebaseAuth.instance;
     loadData();
-  }
-
-  late GoogleSignIn _googleSignIn;
-  Future<User?> _handleSignIn() async {
-    try {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-            ),
-          );
-        },
-      );
-
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-
-      if (googleUser != null) {
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
-
-        final AuthCredential credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        );
-
-        final UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithCredential(credential);
-
-        User? user = userCredential.user;
-
-        if (user != null) {
-          if (widget.userRole == 'Student') {
-            Navigator.pushReplacementNamed(context, '/studentPage');
-          } else if (widget.userRole == 'Landlord') {
-            Navigator.pushReplacementNamed(context, '/landlordPage');
-          } else if (widget.userRole == 'Admin') {
-            Navigator.pushReplacementNamed(context, '/adminPage');
-          }
-        }
-        return user;
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          backgroundColor: Colors.red,
-          content: Text('Google Sign-In Failed'),
-        ));
-        return null;
-      }
-    } on FirebaseException catch (e) {
-      print(e);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        backgroundColor: Colors.red,
-        content: Text(e.message.toString()),
-      ));
-      return null;
-    } finally {
-      Navigator.pop(context);
-    }
   }
 
   Future<void> loadData() async {
@@ -127,27 +67,32 @@ class _LoginPageState extends State<LoginPage> {
         password: txtPassword.text,
       );
 
-      if (widget.userRole == 'Student' && _auth.currentUser != null) {
-        Navigator.pushReplacementNamed(context, '/studentPage');
-      } else if (widget.userRole == 'Landlord' && _auth.currentUser != null) {
-        Navigator.pushReplacementNamed(context, '/landlordPage');
-      } else if (widget.userRole == 'Admin' && _auth.currentUser != null) {
-        Navigator.pushReplacementNamed(context, '/adminPage');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          showCloseIcon: true,
-          content: Text('Something went wrong! Please retry logging in'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3), 
-        ));
-      }
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        DocumentSnapshot landlordSnapshot = await FirebaseFirestore.instance
+            .collection('Landlords')
+            .doc(user.uid)
+            .get();
+        DocumentSnapshot studentSnapshot = await FirebaseFirestore.instance
+            .collection('Landlords')
+            .doc(user.uid)
+            .get();
 
-      await Future.delayed(Duration(seconds: 2));
+        String landlordRole = landlordSnapshot['userRole'];
+        String studentRole = studentSnapshot['userRole'];
+
+        if (studentRole == 'student') {
+          Navigator.pushReplacementNamed(context, '/studentPage');
+        } else if (landlordRole == 'landlord') {
+          Navigator.pushReplacementNamed(context, '/landlordPage');
+        } else {
+          Navigator.pushReplacementNamed(context, '/adminPage');
+        }
+      }
     } on FirebaseAuthException catch (e) {
       Navigator.pop(context);
 
       String errorMessage = '';
-
       if (e.code == 'user-not-found') {
         errorMessage = 'User not found. Please check your email or register.';
       } else if (e.code == 'wrong-password') {
@@ -180,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     double buttonWidth =
         MediaQuery.of(context).size.width < 550 ? double.infinity : 400;
-    bool isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    // bool isIOS = Theme.of(context).platform == TargetPlatform.iOS;
 
     return Scaffold(
         backgroundColor: Colors.blue[100],
@@ -237,42 +182,6 @@ class _LoginPageState extends State<LoginPage> {
                                       ),
                                     ),
                                   ),
-                                  if (widget.userRole == 'Student')
-                                    Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(
-                                            "You're Logging in as a Student",
-                                            style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.blue[700])),
-                                      ),
-                                    ),
-                                  if (widget.userRole == 'Landlord')
-                                    Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(
-                                            "You're Logging in as a Landlord",
-                                            style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.blue[700])),
-                                      ),
-                                    ),
-                                  if (widget.userRole == 'Admin')
-                                    Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(
-                                            "You're Logging in as a Admin",
-                                            style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.blue[700])),
-                                      ),
-                                    ),
                                   SizedBox(height: 0),
                                   Padding(
                                     padding: EdgeInsets.all(0.0),
@@ -386,6 +295,7 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                   OutlinedButton(
                                     onPressed: () {
+                                      
                                       _loginFunction();
                                     },
                                     child: Text(
@@ -408,70 +318,29 @@ class _LoginPageState extends State<LoginPage> {
                                   SizedBox(
                                     height: 10,
                                   ),
-                                  // if (widget.userRole == 'Student')
-                                  //   Row(
-                                  //     mainAxisAlignment:
-                                  //         MainAxisAlignment.center,
-                                  //     children: <Widget>[
-                                  //       Expanded(
-                                  //         child: Divider(
-                                  //           color: Colors.black,
-                                  //         ),
-                                  //       ),
-                                  //       Padding(
-                                  //         padding:
-                                  //             const EdgeInsets.symmetric(
-                                  //                 horizontal: 8.0),
-                                  //         child: Text(
-                                  //           'OR sign in with',
-                                  //           style: TextStyle(
-                                  //             color: Colors.black,
-                                  //           ),
-                                  //         ),
-                                  //       ),
-                                  //       Expanded(
-                                  //         child: Divider(
-                                  //           color: Colors.black,
-                                  //         ),
-                                  //       ),
-                                  //     ],
-                                  //   ),
-                                  // SizedBox(
-                                  //   height: 20,
-                                  // ),
-                                  // if (widget.userRole == 'Student')
-                                  //   Row(
-                                  //       mainAxisAlignment:
-                                  //           MainAxisAlignment.center,
-                                  //       children: [
-                                  //         ClipRRect(
-                                  //           borderRadius:
-                                  //               BorderRadius.circular(90),
-                                  //           child: GestureDetector(
-                                  //             onTap: () async {
-                                  //               await _handleSignIn();
-                                  //             },
-                                  //             child: Image.asset(
-                                  //                 'assets/google.png',
-                                  //                 height: 55,
-                                  //                 width: 55),
-                                  //           ),
-                                  //         ),
-                                  //         SizedBox(width: 10),
-                                  //         if (isIOS)
-                                  //           Padding(
-                                  //             padding:
-                                  //                 const EdgeInsets.only(
-                                  //                     bottom: 10.0),
-                                  //             child: GestureDetector(
-                                  //               onTap: () {},
-                                  //               child: Icon(
-                                  //                 Icons.apple,
-                                  //                 size: 77,
-                                  //               ),
-                                  //             ),
-                                  //           )
-                                  //       ]),
+                                  OutlinedButton(
+                                    onPressed: () {
+                                      
+                                      FirebaseAuth.instance.signInAnonymously();
+                                      Navigator.pushReplacementNamed(
+                                          context, '/studentPage');
+                                    },
+                                    child: Text(
+                                      'Proceed without Sign-in',
+                                      style: TextStyle(fontSize: 18),
+                                    ),
+                                    style: ButtonStyle(
+                                        shape: WidgetStatePropertyAll(
+                                            RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(5))),
+                                        foregroundColor:
+                                            WidgetStatePropertyAll(Colors.blue),
+                                        backgroundColor: WidgetStatePropertyAll(
+                                            Colors.white),
+                                        minimumSize: WidgetStatePropertyAll(
+                                            Size(buttonWidth, 50))),
+                                  ),
                                 ],
                               )
                             ]),
@@ -700,43 +569,82 @@ class _LoginPageState extends State<LoginPage> {
                                     SizedBox(
                                       height: 60,
                                     ),
-                                    // Row(
-                                    //   mainAxisAlignment:
-                                    //       MainAxisAlignment.center,
-                                    //   children: <Widget>[
-                                    //     Expanded(
-                                    //       child: Divider(
-                                    //         color: Colors.black,
-                                    //       ),
-                                    //     ),
-                                    //     Padding(
-                                    //       padding:
-                                    //           const EdgeInsets.symmetric(
-                                    //               horizontal: 8.0),
-                                    //       child: Text(
-                                    //         'OR sign in with',
-                                    //         style: TextStyle(
-                                    //           color: Colors.black,
-                                    //         ),
-                                    //       ),
-                                    //     ),
-                                    //     Expanded(
-                                    //       child: Divider(
-                                    //         color: Colors.black,
-                                    //       ),
-                                    //     ),
-                                    //   ],
-                                    // ),
-                                  ],
-                                ),
-                              ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: <Widget>[
+                                        Expanded(
+                                          child: Divider(
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 8.0),
+                                          child: Text(
+                                            'OR ',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Divider(
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                    ],
+                                ),     
+                                
+                                    SizedBox(
+                                      height: 10,
+                                    ),
+                                 Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () async {
+                                            isLoading
+                                                ? Center(
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      valueColor:
+                                                          AlwaysStoppedAnimation<
+                                                                  Color>(
+                                                              Colors.blue),
+                                                    ),
+                                                  )
+                                                : Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: ((context) =>
+                                                            RegistrationOption())));
+                                          },
+                                          child: Text(
+                                            'Create new account',
+                                            style: TextStyle(
+                                                decorationColor: Colors.blue,
+                                                decoration:
+                                                    TextDecoration.underline,
+                                                color: Colors.blue,
+                                                decorationThickness: 2,
+                                                decorationStyle:
+                                                    TextDecorationStyle.solid,
+                                                fontSize: 16),
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                
+                    ]),
                             ),
                           )),
                         ),
                       )
-                    ],
+                  )],)
                   ),
                 ),
-              ));
+              );
   }
 }

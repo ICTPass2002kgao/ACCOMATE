@@ -1,4 +1,4 @@
-import 'package:api_com/UpdatedApp/accomodation_page.dart';
+import 'package:api_com/UpdatedApp/StudentPages/accomodation_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 

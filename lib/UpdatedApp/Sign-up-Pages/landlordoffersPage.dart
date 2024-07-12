@@ -3,18 +3,18 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:api_com/UpdatedApp/login_page.dart';
+import 'package:api_com/UpdatedApp/Sign-Page/login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:encrypt/encrypt.dart';
+// import 'package:encrypt/encrypt.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+// import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
-import 'package:encrypt/encrypt.dart' as encrypt;
+// import 'package:encrypt/encrypt.dart' as encrypt;
 
 // class EncryptionUtil {
 //   static final _key = encrypt.Key.fromLength(32); // Generate a 32-byte key
@@ -41,8 +41,7 @@ class OffersPage extends StatefulWidget {
   final String contactDetails;
   final bool isLandlord;
   final String location;
-  final XFile? residenceLogo;
-  final File? pdfContract;
+  final XFile? residenceLogo; 
 
   final Map<String, bool> selectedPaymentsMethods;
   const OffersPage({
@@ -55,8 +54,7 @@ class OffersPage extends StatefulWidget {
     required this.contactDetails,
     required this.landlordEmail,
     required this.distance,
-    required this.isLandlord,
-    this.pdfContract,
+    required this.isLandlord, 
   });
 
   @override
@@ -81,7 +79,7 @@ class _OffersPageState extends State<OffersPage> {
     'Transport to campus': false,
   };
   String _selectedDuration = '';
-  List<String> _duration = ['Half Year', 'Full Year', 'Both'];
+  List<String> _duration = ['Half Year', 'Full Year'];
 
   Map<String, bool> selectedRoomTypes = {
     'Single Rooms': false,
@@ -94,10 +92,10 @@ class _OffersPageState extends State<OffersPage> {
     'North West University(Vaal campus)': false,
   };
 
-  Map<String, bool> selectedMonths = {
-    'Half Year': false,
-    'Full Year': false,
-  };
+  // Map<String, bool> selectedMonths = {
+  //   'Half Year': false,
+  //   'Full Year': false,
+  // };
   bool requireDeposit = true;
   bool isAccomodation = true;
   bool isNsfasAccredited = false;
@@ -284,6 +282,7 @@ class _OffersPageState extends State<OffersPage> {
 
   void _registerUserToFirebase() async {
     List<String> images = pickedImages.map((file) => file.path).toList();
+    if (images.length < 5) {}
     try {
       showDialog(
         context: context,
@@ -301,18 +300,17 @@ class _OffersPageState extends State<OffersPage> {
         password: widget.password,
       );
 
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      firebase_storage.Reference reference = firebase_storage
-          .FirebaseStorage.instance
-          .ref('Contracts')
-          .child('${widget.accomodationName}($fileName).pdf');
+      // String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      // firebase_storage.Reference reference = firebase_storage
+      //     .FirebaseStorage.instance
+      //     .ref('Contracts')
+      //     .child('${widget.accomodationName}($fileName).pdf');
 
-      await reference.putFile(widget.pdfContract!);
-      String downloadContractUrl = await reference.getDownloadURL();
+      // await reference.putFile(widget.pdfContract!);
+      // String downloadContractUrl = await reference.getDownloadURL();
       Reference storageReference = FirebaseStorage.instance
           .ref('Residence Logos')
-          .child(
-              '${widget.accomodationName}(${DateTime.now().toString()})');
+          .child('${widget.accomodationName}(${DateTime.now().toString()})');
       UploadTask uploadTask =
           storageReference.putFile(File(widget.residenceLogo!.path));
       TaskSnapshot storageTaskSnapshot =
@@ -362,6 +360,7 @@ class _OffersPageState extends State<OffersPage> {
       //         'accountNumber': encryptedAccountNumber,
       //         'branchCode': encryptedBranchCode,
       //       }):
+      
       await FirebaseFirestore.instance.collection('Landlords').doc(userId).set({
         'accomodationStatus': false,
         'accomodationName': widget.accomodationName,
@@ -370,7 +369,8 @@ class _OffersPageState extends State<OffersPage> {
         'selectedOffers': selectedOffers,
         'selectedUniversity': selectedUniversity,
         'distance': widget.distance,
-        'selectedPaymentsMethods': widget.selectedPaymentsMethods,
+        'userRole':'landlord',
+        // 'selectedPaymentsMethods': widget.selectedPaymentsMethods,
         'requireDeposit': requireDeposit,
         'contactDetails': widget.contactDetails,
         'accomodationType': isAccomodation,
@@ -382,13 +382,13 @@ class _OffersPageState extends State<OffersPage> {
         'isFull': false,
         'registeredDate': registeredDate,
         'Duration': _selectedDuration,
-        'contract': downloadContractUrl,
+        // 'contract': downloadContractUrl,
       });
 
       sendEmail('accomate33@gmail.com', 'Review Accommodation',
-          'Gooday Review officer, \nYou have a new review request from ${widget.accomodationName}.\n\n\n\n\n\n\n\n\n\n\n\nBest Regards\nYours Accomate');
+          '''Gooday Review officer, <br/>You have a new review request from ${widget.accomodationName}.<br/><br/><p>Best Regards<br/>Yours Accomate</p>''');
 
-      sendEmail(widget.landlordEmail, 'Successful Account',
+      sendEmail(userEmail!, 'Successful Account',
           '''<p>Good day ${widget.accomodationName} landlord,</p>
           
           <p>Your account has been registered successfully. Please note that your accommodation will undergo a review for verification. You will receive further communication soon.</p>
@@ -414,9 +414,7 @@ class _OffersPageState extends State<OffersPage> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: ((context) => LoginPage(
-                                      guest: false,
-                                      userRole: 'Landlord',
+                                builder: ((context) => LoginPage( 
                                     ))));
                       },
                       child: Text('Proceed'),
@@ -603,81 +601,28 @@ class _OffersPageState extends State<OffersPage> {
                     SizedBox(
                       height: 5,
                     ),
-                    ExpansionTile(
-                      title: Text('Select residence type'),
-                      children: [
-                        Row(
-                          children: [
-                            Radio(
-                              activeColor: Colors.blue,
-                              value: false,
-                              groupValue: isAccomodation,
-                              onChanged: (value) {
-                                setState(() {
-                                  isAccomodation = value!;
-                                });
-                              },
-                            ),
-                            Text('Accomodation'),
-                          ],
-                        ),
-                        SizedBox(width: 10),
-                        Row(
-                          children: [
-                            Radio(
-                              activeColor: Colors.blue,
-                              value: true,
-                              groupValue: isAccomodation,
-                              onChanged: (value) {
-                                setState(() {
-                                  isAccomodation = value!;
-                                });
-                              },
-                            ),
-                            Text('House'),
-                          ],
-                        ),
-                      ],
-                    ),
-                    SizedBox(
+                    
+                    SwitchListTile(
+                        title: Text('Is Accomodation'),
+                        value: isAccomodation,
+                        onChanged: (value) {
+                          setState(() {
+                            isAccomodation = !value;
+                            print(isAccomodation);
+                          });
+                        }),
+                        SizedBox(
                       height: 5,
                     ),
-                    ExpansionTile(
-                      title: Text('Select Accrediation state'),
-                      children: [
-                        Row(
-                          children: [
-                            Radio(
-                              activeColor: Colors.blue,
-                              value: true,
-                              groupValue: isNsfasAccredited,
-                              onChanged: (value) {
-                                setState(() {
-                                  isNsfasAccredited = value!;
-                                });
-                              },
-                            ),
-                            Text('Nsfas Accredited'),
-                          ],
-                        ),
-                        SizedBox(width: 10),
-                        Row(
-                          children: [
-                            Radio(
-                              activeColor: Colors.blue,
-                              value: false,
-                              groupValue: isNsfasAccredited,
-                              onChanged: (value) {
-                                setState(() {
-                                  isNsfasAccredited = value!;
-                                });
-                              },
-                            ),
-                            Text('Not Nsfas Accredited'),
-                          ],
-                        ),
-                      ],
-                    ),
+                    SwitchListTile(
+                        title: Text('Is Nsfas Accredited'),
+                        value: isNsfasAccredited,
+                        onChanged: (value) {
+                          setState(() {
+                            isNsfasAccredited = !value;
+                            print(isNsfasAccredited);
+                          });
+                        }),
                     SizedBox(
                       height: 5,
                     ),
@@ -781,45 +726,15 @@ class _OffersPageState extends State<OffersPage> {
                     SizedBox(
                       height: 5,
                     ),
-                    ExpansionTile(
-                      title: Text(
-                        'Requires Deposit?',
-                      ),
-                      children: [
-                        Row(
-                          children: [
-                            Radio(
-                              activeColor: Colors.blue,
-                              value: false,
-                              groupValue: requireDeposit,
-                              onChanged: (value) {
-                                setState(() {
-                                  requireDeposit = value!;
-                                });
-                              },
-                            ),
-                            Text('No'),
-                          ],
-                        ),
-                        SizedBox(width: 16),
-                        Row(
-                          children: [
-                            Radio(
-                              activeColor: Colors.blue,
-                              value: true,
-                              groupValue: requireDeposit,
-                              onChanged: (value) {
-                                setState(() {
-                                  requireDeposit = value!;
-                                });
-                              },
-                            ),
-                            Text('Yes'),
-                          ],
-                        ),
-                      ],
-                    ),
-                    if (requireDeposit == true)
+                     SwitchListTile(
+                        title: Text('Requires Deposit'),
+                        value: requireDeposit,
+                        onChanged: (value) {
+                          setState(() {
+                            requireDeposit = !value;
+                            print(requireDeposit);
+                          });
+                        }), if (requireDeposit == true)
                       Column(
                         children: [
                           Text(
@@ -894,7 +809,7 @@ class _OffersPageState extends State<OffersPage> {
                     TextButton(
                       onPressed: () async {
                         sendEmail(widget.landlordEmail, 'Verification Code',
-                            '''Hi ${widget.accomodationName} landlord, \nThis is your verification codes:<a href="">$verificationCode</a> <br>please comfirm by entering it.\n\n\n\n\nBest Regards\nYours Accomate''');
+                            '''<p>Hi ${widget.accomodationName} landlord, <br/>This is your verification codes:$verificationCode <br>please comfirm by entering it.<br/>Best Regards<br/>Yours Accomate Team</p>''');
                         showDialog(
                           barrierDismissible: false,
                           context: context,

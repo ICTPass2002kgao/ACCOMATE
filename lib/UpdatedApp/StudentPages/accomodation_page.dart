@@ -1,8 +1,8 @@
 // ignore_for_file: prefer_const_constructors, dead_code, prefer_const_literals_to_create_immutables, sort_child_properties_last, avoid_unnecessary_containers, unnecessary_string_interpolations, sized_box_for_whitespace, use_build_context_synchronously, avoid_print, unrelated_type_equality_checks
 
-import 'package:api_com/UpdatedApp/Apply-Accomodation.dart';
-import 'package:api_com/UpdatedApp/either_landlord_or_student.dart';
-import 'package:api_com/UpdatedApp/login_page.dart';
+import 'package:api_com/UpdatedApp/Sign-Page/login_page.dart';
+import 'package:api_com/UpdatedApp/StudentPages/Apply-Accomodation.dart';
+import 'package:api_com/UpdatedApp/Sign-up-Pages/either_landlord_or_student.dart'; 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_swiper_view/flutter_swiper_view.dart';
@@ -416,10 +416,7 @@ class _AccomodationPageState extends State<AccomodationPage> {
                                                           MaterialPageRoute(
                                                               builder: (context) =>
                                                                   LoginPage(
-                                                                      userRole:
-                                                                          'Student',
-                                                                      guest:
-                                                                          true)));
+                                                                      )));
                                                     },
                                                     child: Text('Sign-in'),
                                                     style: ButtonStyle(

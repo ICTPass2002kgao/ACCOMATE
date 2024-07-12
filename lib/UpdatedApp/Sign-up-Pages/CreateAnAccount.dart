@@ -1,6 +1,6 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last, sized_box_for_whitespace
 
-import 'package:api_com/UpdatedApp/either_landlord_or_student.dart';
+import 'package:api_com/UpdatedApp/Sign-up-Pages/either_landlord_or_student.dart';
 import 'package:flutter/material.dart';
 
 class RegistrationOption extends StatefulWidget {

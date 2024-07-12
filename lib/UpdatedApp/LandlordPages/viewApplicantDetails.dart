@@ -1,6 +1,6 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, deprecated_member_use
 
-import 'package:api_com/UpdatedApp/DocumentViewer.dart';
+// import 'package:api_com/UpdatedApp/DocumentViewer.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/Tables.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -210,52 +210,47 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
         'status': status,
         'userId': _userData?['userId'] ?? '',
         'feedbackDate': feedbackDate,
-        'contract': _userData?['contract'],
         'read': false,
-        'profilePicture': _userData?['profilePicture'] ?? '',
-        'accomodationStatus': false,
-        'location': _userData?['location'] ?? '',
         'email': _userData?['email'] ?? '',
-        'selectedOffers': _userData?['selectedOffers'] ?? '',
-        'selectedUniversity': _userData?['selectedUniversity'] ?? '',
-        'distance': _userData?['distance'] ?? '',
-        'selectedPaymentsMethods': _userData?['selectedPaymentsMethods'] ?? '',
-        'requireDeposit': _userData?['requireDeposit'] ?? '',
-        'contactDetails': _userData?['contactDetails'] ?? '',
-        'accomodationType': _userData?['accomodationType'] ?? '',
-        'roomType': _userData?['roomType'] ?? '',
-        'displayedImages': _userData?['displayedImages'] ?? '',
-        'isNsfasAccredited': _userData?['isNsfasAccredited'] ?? '',
-        'isFull': false,
-        'registeredDate': _userData?['registeredDate'] ?? '',
-        'Duration': _userData?['Duration'] ?? '',
+        'location': _userData?['location'] ?? '',
+        // 'contract': _userData?['contract'],
+        // 'profilePicture': _userData?['profilePicture'] ?? '',
+        // 'accomodationStatus': false,
+        // 'selectedOffers': _userData?['selectedOffers'] ?? '',
+        // 'selectedUniversity': _userData?['selectedUniversity'] ?? '',
+        // 'distance': _userData?['distance'] ?? '',
+        // 'selectedPaymentsMethods': _userData?['selectedPaymentsMethods'] ?? '',
+        // 'requireDeposit': _userData?['requireDeposit'] ?? '',
+        // 'contactDetails': _userData?['contactDetails'] ?? '',
+        // 'accomodationType': _userData?['accomodationType'] ?? '',
+        // 'roomType': _userData?['roomType'] ?? '',
+        // 'displayedImages': _userData?['displayedImages'] ?? '',
+        // 'isNsfasAccredited': _userData?['isNsfasAccredited'] ?? '',
+        // 'isFull': false,
+        // 'registeredDate': _userData?['registeredDate'] ?? '',
+        // 'Duration': _userData?['Duration'] ?? '',
       });
 
       await sendEmail(
         _userData?['email'] ?? '',
         'Response sent successfully',
-        'Hi ${_userData?['accomodationName']} landlord, \nYour feedback was sent successfully to ${widget.studentApplicationData['name']} ${widget.studentApplicationData['surname']}.\nBest Regards\nYour Accomate Team',
+        '''<p>Hi ${_userData?['accomodationName']} landlord, <br/>Your feedback was sent successfully to ${widget.studentApplicationData['name']} ${widget.studentApplicationData['surname']}.<br/>Best Regards<br/>Your Accomate Team</p>''',
       );
 
       if (status == true) {
         await sendEmail(
           widget.studentApplicationData['email'],
           'Application Approved',
-          'Hi ${widget.studentApplicationData['name']} , \nYour application from ${_userData?['accomodationName']} have been approved. Go to notification page in our app for more information.\nBest Regards\nYour Accomate Team',
+          '''<p>Hi ${widget.studentApplicationData['name']} , <br/>Your application from ${_userData?['accomodationName']} have been approved. Go to notification page in our app for more information.<br/>Best Regards<br/>Your Accomate Team</p>''',
         );
       } else {
         await sendEmail(
           widget.studentApplicationData['email'],
           'Application Rejected',
-          'Hi ${widget.studentApplicationData['name']} , \nYour application from ${_userData?['accomodationName']} have been rejected due to some reasons. Go to notification page in our app for more information.\nBest Regards\nYour Accomate Team',
+          '''<p>Hi ${widget.studentApplicationData['name']} , <br/>Your application from ${_userData?['accomodationName']} have been rejected due to some reasons. Go to notification page in our app for more information.<br/>Best Regards<br/>Your Accomate Team</p>''',
         );
       }
-      await FirebaseFirestore.instance
-          .collection('Landlords')
-          .doc(landlordUserId) 
-          .collection('applications')
-          .doc(studentUserId)
-          .delete();
+      
       Navigator.of(context).pop();
 
       _showFeedback();
@@ -459,33 +454,33 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                             SizedBox(
                               height: 20,
                             ),
-                            OutlinedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => Documentviewer(
-                                              userData: _userData,
-                                            )));
-                              },
-                              child: Text(
-                                'View Contract',
-                              ),
-                              style: ButtonStyle(
-                                  shape: WidgetStatePropertyAll(
-                                      RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(5))),
-                                  foregroundColor:
-                                      WidgetStatePropertyAll(Colors.blue),
-                                  backgroundColor:
-                                      WidgetStatePropertyAll(Colors.blue[50]),
-                                  minimumSize: WidgetStatePropertyAll(
-                                      Size(buttonWidth, 50))),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
+                            // OutlinedButton(
+                            //   onPressed: () {
+                            //     Navigator.push(
+                            //         context,
+                            //         MaterialPageRoute(
+                            //             builder: (context) => Documentviewer(
+                            //                   userData: _userData,
+                            //                 )));
+                            //   },
+                            //   child: Text(
+                            //     'View Contract',
+                            //   ),
+                            //   style: ButtonStyle(
+                            //       shape: WidgetStatePropertyAll(
+                            //           RoundedRectangleBorder(
+                            //               borderRadius:
+                            //                   BorderRadius.circular(5))),
+                            //       foregroundColor:
+                            //           WidgetStatePropertyAll(Colors.blue),
+                            //       backgroundColor:
+                            //           WidgetStatePropertyAll(Colors.blue[50]),
+                            //       minimumSize: WidgetStatePropertyAll(
+                            //           Size(buttonWidth, 50))),
+                            // ),
+                            // SizedBox(
+                            //   height: 10,
+                            // ),
                             Container(
                               width: buttonWidth,
                               child: TextField(
