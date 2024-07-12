@@ -2,13 +2,13 @@
 
 import 'dart:io';
 import 'package:api_com/UpdatedApp/Sign-up-Pages/landlordoffersPage.dart';
-import 'package:file_picker/file_picker.dart';
+// import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart';
+// import 'package:path/path.dart';
 
 import 'package:permission_handler/permission_handler.dart';
 
@@ -36,7 +36,7 @@ class _LandlordFurtherRegistrationState
     extends State<LandlordFurtherRegistration> {
   TextEditingController txtLiveLocation = TextEditingController();
   TextEditingController distanceController = TextEditingController();
-  void showError(BuildContext context) {
+  void showError() {
     showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog(
@@ -68,12 +68,12 @@ class _LandlordFurtherRegistrationState
 //          &&
 //        &&
 //
-  void checkLandlordDetails(context) {
+  void checkLandlordDetails() {
     if (txtLiveLocation.text == '') {
-      showError(context);
+      showError();
     
     } else if (distanceController.text == '') {
-      showError(context);
+      showError();
     } else {
       setState(() {
         Navigator.push(
@@ -109,7 +109,7 @@ class _LandlordFurtherRegistrationState
     requestLocationPermission();
   }
 
-  void _showErrorDialog(String errorMessage, BuildContext context) {
+  void _showErrorDialog(String errorMessage) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -320,7 +320,7 @@ class _LandlordFurtherRegistrationState
                             );
                           },
                         );
-                        showLocationDialog(context);
+                        showLocationDialog();
                       },
                       icon:
                           Icon(Icons.location_on_outlined, color: Colors.white),
@@ -382,7 +382,7 @@ class _LandlordFurtherRegistrationState
                     SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: () {
-                        checkLandlordDetails(context);
+                        checkLandlordDetails( );
                       },
                       child: Text(
                         'Continue',
@@ -407,7 +407,7 @@ class _LandlordFurtherRegistrationState
     );
   }
 
-  Future<void> showLocationDialog(BuildContext context) async {
+  Future<void> showLocationDialog( ) async {
     // Request location permissions
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.denied) {

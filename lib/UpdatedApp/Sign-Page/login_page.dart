@@ -341,6 +341,72 @@ class _LoginPageState extends State<LoginPage> {
                                         minimumSize: WidgetStatePropertyAll(
                                             Size(buttonWidth, 50))),
                                   ),
+                                   SizedBox(
+                                      height: 60,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: <Widget>[
+                                        Expanded(
+                                          child: Divider(
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 8.0),
+                                          child: Text(
+                                            'OR ',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Divider(
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                    ],
+                                ),     
+                                
+                                    SizedBox(
+                                      height: 10,
+                                    ),
+                                 GestureDetector(
+                                   onTap: () async {
+                                     isLoading
+                                         ? Center(
+                                             child:
+                                                 CircularProgressIndicator(
+                                               valueColor:
+                                                   AlwaysStoppedAnimation<
+                                                           Color>(
+                                                       Colors.blue),
+                                             ),
+                                           )
+                                         : Navigator.push(
+                                             context,
+                                             MaterialPageRoute(
+                                                 builder: ((context) =>
+                                                     RegistrationOption())));
+                                   },
+                                   child: Text(
+                                     'Create new account',
+                                     style: TextStyle(
+                                         decorationColor: Colors.blue,
+                                         decoration:
+                                             TextDecoration.underline,
+                                         color: Colors.blue,
+                                         decorationThickness: 2,
+                                         decorationStyle:
+                                             TextDecorationStyle.solid,
+                                         fontSize: 16),
+                                   ),
+                                 ),
+                                
                                 ],
                               )
                             ]),
@@ -600,42 +666,37 @@ class _LoginPageState extends State<LoginPage> {
                                     SizedBox(
                                       height: 10,
                                     ),
-                                 Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        GestureDetector(
-                                          onTap: () async {
-                                            isLoading
-                                                ? Center(
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                      valueColor:
-                                                          AlwaysStoppedAnimation<
-                                                                  Color>(
-                                                              Colors.blue),
-                                                    ),
-                                                  )
-                                                : Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                        builder: ((context) =>
-                                                            RegistrationOption())));
-                                          },
-                                          child: Text(
-                                            'Create new account',
-                                            style: TextStyle(
-                                                decorationColor: Colors.blue,
-                                                decoration:
-                                                    TextDecoration.underline,
-                                                color: Colors.blue,
-                                                decorationThickness: 2,
-                                                decorationStyle:
-                                                    TextDecorationStyle.solid,
-                                                fontSize: 16),
-                                          ),
-                                        )
-                                      ],
-                                    ),
+                                 GestureDetector(
+                                   onTap: () async {
+                                     isLoading
+                                         ? Center(
+                                             child:
+                                                 CircularProgressIndicator(
+                                               valueColor:
+                                                   AlwaysStoppedAnimation<
+                                                           Color>(
+                                                       Colors.blue),
+                                             ),
+                                           )
+                                         : Navigator.push(
+                                             context,
+                                             MaterialPageRoute(
+                                                 builder: ((context) =>
+                                                     RegistrationOption())));
+                                   },
+                                   child: Text(
+                                     'Create new account',
+                                     style: TextStyle(
+                                         decorationColor: Colors.blue,
+                                         decoration:
+                                             TextDecoration.underline,
+                                         color: Colors.blue,
+                                         decorationThickness: 2,
+                                         decorationStyle:
+                                             TextDecorationStyle.solid,
+                                         fontSize: 16),
+                                   ),
+                                 ),
                                 
                     ]),
                             ),
