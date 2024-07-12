@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 .metadata
+linux/flutter/generated_plugin_registrant.cc
+*.cc
+*.cc
+*.swift
+*.cc
+*.cmake
