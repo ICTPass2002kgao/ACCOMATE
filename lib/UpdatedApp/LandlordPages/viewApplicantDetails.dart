@@ -1,8 +1,8 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously, deprecated_member_use
 
+import 'package:api_com/UpdatedApp/DocumentViewer.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/Tables.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -24,7 +24,6 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
   late User _user;
 
   Map<String, dynamic>? _userData;
-  // Make _userData nullable
   @override
   void initState() {
     super.initState();
@@ -35,10 +34,7 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
 
   bool isLoading = true;
   Future<void> loadData() async {
-    // Simulate loading data
     await Future.delayed(Duration(seconds: 3));
-
-    // Set isLoading to false when data is loaded
     setState(() {
       isLoading = false;
     });
@@ -111,6 +107,63 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
     );
   }
 
+  void _appliedStudent(BuildContext context, String message, String title) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Container(
+        height: 250,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          backgroundColor: Colors.blue[50],
+          title: Text(
+            title,
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
+          content: Container(
+            height: 200,
+            child: Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(75),
+                  child: Container(
+                    color: const Color.fromRGBO(239, 83, 80, 1),
+                    width: 100,
+                    height: 100,
+                    child: Icon(Icons.cancel_outlined,
+                        color: Colors.white, size: 35),
+                  ),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  message,
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                print('email sent successfully');
+              },
+              style: ButtonStyle(
+                shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5))),
+                foregroundColor: WidgetStatePropertyAll(Colors.white),
+                backgroundColor: WidgetStatePropertyAll(Colors.red[300]),
+              ),
+              child: Text('Okay'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _saveApplicationResponse() async {
     try {
       showDialog(
@@ -127,13 +180,25 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
 
       String studentUserId = widget.studentApplicationData['userId'] ?? '';
       String landlordUserId = _userData?['userId'] ?? '';
+      DocumentSnapshot applicationSnapshot = await FirebaseFirestore.instance
+          .collection('Landlords')
+          .doc(landlordUserId)
+          .collection('applicationsResponse')
+          .doc(studentUserId)
+          .get();
 
+      if (applicationSnapshot.exists) {
+        Navigator.of(context).pop();
+        _appliedStudent(
+            context,
+            'You already sent a feedback to ${widget.studentApplicationData['name']} ${widget.studentApplicationData['surname']}',
+            'Feedback Duplication');
+
+        return;
+      }
       DateTime now = DateTime.now();
       Timestamp feedbackDate = Timestamp.fromDate(now);
-      FirebaseFirestore.instance
-          .collection('Students')
-          .doc(widget.studentApplicationData['userId'] ?? '')
-          .update({'applicationReviewed': true});
+
       await FirebaseFirestore.instance
           .collection('Students')
           .doc(studentUserId)
@@ -144,7 +209,26 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
         'accomodationName': _userData?['accomodationName'] ?? '',
         'status': status,
         'userId': _userData?['userId'] ?? '',
-        'feedbackDate': feedbackDate
+        'feedbackDate': feedbackDate,
+        'contract': _userData?['contract'],
+        'read': false,
+        'profilePicture': _userData?['profilePicture'] ?? '',
+        'accomodationStatus': false,
+        'location': _userData?['location'] ?? '',
+        'email': _userData?['email'] ?? '',
+        'selectedOffers': _userData?['selectedOffers'] ?? '',
+        'selectedUniversity': _userData?['selectedUniversity'] ?? '',
+        'distance': _userData?['distance'] ?? '',
+        'selectedPaymentsMethods': _userData?['selectedPaymentsMethods'] ?? '',
+        'requireDeposit': _userData?['requireDeposit'] ?? '',
+        'contactDetails': _userData?['contactDetails'] ?? '',
+        'accomodationType': _userData?['accomodationType'] ?? '',
+        'roomType': _userData?['roomType'] ?? '',
+        'displayedImages': _userData?['displayedImages'] ?? '',
+        'isNsfasAccredited': _userData?['isNsfasAccredited'] ?? '',
+        'isFull': false,
+        'registeredDate': _userData?['registeredDate'] ?? '',
+        'Duration': _userData?['Duration'] ?? '',
       });
 
       await sendEmail(
@@ -166,14 +250,16 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
           'Hi ${widget.studentApplicationData['name']} , \nYour application from ${_userData?['accomodationName']} have been rejected due to some reasons. Go to notification page in our app for more information.\nBest Regards\nYour Accomate Team',
         );
       }
-
-      // Dismiss the progress indicator
+      await FirebaseFirestore.instance
+          .collection('Landlords')
+          .doc(landlordUserId) 
+          .collection('applications')
+          .doc(studentUserId)
+          .delete();
       Navigator.of(context).pop();
 
-      // Show feedback dialog
       _showFeedback();
     } catch (e) {
-      // Dismiss the progress indicator in case of error
       Navigator.of(context).pop();
 
       showDialog(
@@ -316,81 +402,112 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                         SizedBox(
                           height: 20,
                         ),
-                        Container(
-                          width: buttonWidth,
-                          child: ExpansionTile(
-                            title: Text('Choose Status'),
-                            children: [
-                              Row(
-                                children: [
-                                  Radio(
-                                    activeColor: Colors.green,
-                                    fillColor:
-                                        MaterialStatePropertyAll(Colors.green),
-                                    value: true,
-                                    groupValue: status,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        status = value!;
-                                      });
-                                    },
-                                  ),
-                                  Text('Accept applicant'),
-                                ],
-                              ),
-                              SizedBox(width: 16),
-                              Row(
-                                children: [
-                                  Radio(
-                                    activeColor: Colors.red,
-                                    fillColor:
-                                        MaterialStatePropertyAll(Colors.red),
-                                    value: false,
-                                    groupValue: status,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        status = value!;
-                                      });
-                                    },
-                                  ),
-                                  Text('Reject applicant'),
-                                ],
-                              ),
-                            ],
+                        Center(
+                          child: Container(
+                            width: buttonWidth,
+                            child: ExpansionTile(
+                              title: Text('Choose Status'),
+                              children: [
+                                Row(
+                                  children: [
+                                    Radio(
+                                      activeColor: Colors.green,
+                                      fillColor: MaterialStatePropertyAll(
+                                          Colors.green),
+                                      value: true,
+                                      groupValue: status,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          status = value!;
+                                        });
+                                      },
+                                    ),
+                                    Text('Accept applicant'),
+                                  ],
+                                ),
+                                SizedBox(width: 16),
+                                Row(
+                                  children: [
+                                    Radio(
+                                      activeColor: Colors.red,
+                                      fillColor:
+                                          MaterialStatePropertyAll(Colors.red),
+                                      value: false,
+                                      groupValue: status,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          status = value!;
+                                        });
+                                      },
+                                    ),
+                                    Text('Reject applicant'),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         SizedBox(
                           height: 20,
                         ),
-                        if (status == false)
-                          Column(
-                            children: [
-                              Text(
-                                  'Please provide the reason a student is rejected & let the student know that they can reApply if their prefered room is not available or the problem can be resolved.'),
-                              Container(
-                                width: buttonWidth,
-                                child: TextField(
-                                  maxLines: 4,
-                                  controller: messageController,
-                                  decoration: InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      labelText: "Rejected reason"),
-                                ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(status == false
+                                ? 'Please provide the reason a student is rejected & let the student know that they can reApply if their prefered room is not available or the problem can be resolved.'
+                                : 'Please give the student Instructions on how they can sign the contract.'),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            OutlinedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => Documentviewer(
+                                              userData: _userData,
+                                            )));
+                              },
+                              child: Text(
+                                'View Contract',
                               ),
-                            ],
-                          ),
+                              style: ButtonStyle(
+                                  shape: WidgetStatePropertyAll(
+                                      RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(5))),
+                                  foregroundColor:
+                                      WidgetStatePropertyAll(Colors.blue),
+                                  backgroundColor:
+                                      WidgetStatePropertyAll(Colors.blue[50]),
+                                  minimumSize: WidgetStatePropertyAll(
+                                      Size(buttonWidth, 50))),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Container(
+                              width: buttonWidth,
+                              child: TextField(
+                                maxLines: 4,
+                                controller: messageController,
+                                decoration: InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    labelText: status == false
+                                        ? "Rejected reason"
+                                        : 'Registration Instructions'),
+                              ),
+                            ),
+                          ],
+                        ),
                         SizedBox(
                           height: 10,
                         ),
-                        ElevatedButton.icon(
+                        ElevatedButton(
                           onPressed: () {
                             _saveApplicationResponse();
                           },
-                          icon: Icon(
-                            Icons.feedback_outlined,
-                            color: Colors.white,
-                          ),
-                          label: Text('Send Response'),
+                          child: Text('Send Response'),
                           style: ButtonStyle(
                               shape: MaterialStatePropertyAll(
                                   RoundedRectangleBorder(

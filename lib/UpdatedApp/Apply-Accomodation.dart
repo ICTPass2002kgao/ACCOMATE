@@ -109,7 +109,7 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
     }
   }
 
-  void _appliedStudent() {
+  void _appliedStudent(String mess, String title) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -121,7 +121,7 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
           ),
           backgroundColor: Colors.blue[50],
           title: Text(
-            'Application Response',
+            title,
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
           ),
           content: Container(
@@ -140,7 +140,7 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
                 ),
                 SizedBox(height: 20),
                 Text(
-                  'Please note that an application cannot be duplicated, You have already applied to this accommodation.',
+                  mess,
                   style: TextStyle(fontSize: 16),
                 ),
               ],
@@ -285,11 +285,20 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
 
       if (applicationSnapshot.exists) {
         Navigator.of(context).pop();
-        _appliedStudent();
+        _appliedStudent(
+            'Please note that an application cannot be duplicated, you are already applied on this residence.',
+            'Duplicating Application');
 
         return;
       }
-
+      await FirebaseFirestore.instance
+          .collection('Students')
+          .doc(studentUserId)
+          .update({
+        'roomType': selectedRoomsType,
+        'fieldOfStudy': yearOfStudy,
+        'periodOfStudy': periodOfStudy,
+      });
       DateTime now = DateTime.now();
       Timestamp appliedDate = Timestamp.fromDate(now);
       await FirebaseFirestore.instance
@@ -301,6 +310,7 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
         'name': _userData?['name'] ?? '',
         'surname': _userData?['surname'] ?? '',
         'university': _userData?['university'] ?? '',
+        'read': false,
         'email': _userData?['email'] ?? '',
         'contactDetails': _userData?['contactDetails'] ?? '',
         'gender': _userData?['gender'] ?? '',
@@ -425,26 +435,27 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
                   );
                 }).toList(),
               ),
-              ElevatedButton(
-                onPressed: selectedRoomsType.isEmpty ||
-                        periodOfStudy.isEmpty ||
-                        yearOfStudy.isEmpty
-                    ? null
-                    : () => _saveApplicationDetails(),
-                child: Text('Submit Application'),
-                style: ButtonStyle(
-                  shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5))),
-                  minimumSize: WidgetStatePropertyAll(Size(buttonWidth, 50)),
-                  foregroundColor: WidgetStateProperty.all(Colors.white),
-                  backgroundColor: WidgetStateProperty.all(
-                      selectedRoomsType.isEmpty ||
-                              periodOfStudy.isEmpty ||
-                              yearOfStudy.isEmpty
-                          ? Colors.grey
-                          : Colors.blue),
+              if (_userData?['isRegistered'] == false)
+                ElevatedButton(
+                  onPressed: selectedRoomsType.isEmpty ||
+                          periodOfStudy.isEmpty ||
+                          yearOfStudy.isEmpty
+                      ? null
+                      : () => _saveApplicationDetails(),
+                  child: Text('Submit Application'),
+                  style: ButtonStyle(
+                    shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5))),
+                    minimumSize: WidgetStatePropertyAll(Size(buttonWidth, 50)),
+                    foregroundColor: WidgetStateProperty.all(Colors.white),
+                    backgroundColor: WidgetStateProperty.all(
+                        selectedRoomsType.isEmpty ||
+                                periodOfStudy.isEmpty ||
+                                yearOfStudy.isEmpty
+                            ? Colors.grey
+                            : Colors.blue),
+                  ),
                 ),
-              ),
             ],
           ),
         ),

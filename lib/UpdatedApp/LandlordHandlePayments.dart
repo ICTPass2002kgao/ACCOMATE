@@ -158,4 +158,75 @@ class PayFastService {
       throw Exception('Failed to create recurring payment');
     }
   }
+
+  Future<void> registerLandlord({
+    required bool requiresDeposit,
+    String? accountHolderName,
+    String? bankName,
+    String? accountNumber,
+    String? branchCode,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/register-landlord'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'requires_deposit': requiresDeposit,
+        'account_holder_name': accountHolderName,
+        'bank_name': bankName,
+        'account_number': accountNumber,
+        'branch_code': branchCode,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to register landlord');
+    }
+  }
+
+  Future<Map<String, dynamic>> getLandlordDetails(String landlordId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/landlord-details/$landlordId'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to get landlord details');
+    }
+  }
+
+  Future<Map<String, dynamic>> makeOneTimePayment({
+    required String cardNumber,
+    required String cardExpiryMonth,
+    required String cardExpiryYear,
+    required String cardCvv,
+    required double amount,
+    required Map<String, dynamic> landlordBankDetails,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/make-one-time-payment'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'card_number': cardNumber,
+        'card_expiry_month': cardExpiryMonth,
+        'card_expiry_year': cardExpiryYear,
+        'card_cvv': cardCvv,
+        'amount': amount.toString(),
+        'landlord_bank_details': landlordBankDetails,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to make one-time payment');
+    }
+  }
 }

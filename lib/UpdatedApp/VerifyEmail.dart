@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:lottie/lottie.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
 import 'login_page.dart';
@@ -87,6 +88,8 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
         'registeredDate': registeredDate,
         'appliedAccomodation': false,
         'applicationReviewed': false,
+        'isRegistered':false,
+        'registeredResidence':''
       });
 
       sendEmail(
@@ -97,13 +100,102 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
               : 'Hello Mrs ${widget.surname},\nYour account has been registered successfully. Please proceed to login.\n\nBest Regards,\nYours Accomate');
 
       Navigator.pop(context);
-      if (widget.isGuest == true) 
-        Navigator.pushReplacementNamed(context, '/studentPage');
       
+    Navigator.of(context).pop();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        Future.delayed(Duration(seconds: 30), () {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+            Navigator.pushReplacementNamed(context, '/studentPage');
+          }
+        });
+
+        return Center(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: Colors.blue[50],
+            ),
+            height: 360,
+            width: 300,
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Center(
+                    child: Lottie.network(
+                      repeat: false,
+                      'https://lottie.host/7b0dcc73-3274-41ef-a3f3-5879cade8ffa/zCbLIAPAww.json',
+                      height: 250,
+                      width: 250,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Container(
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(50)),
+                            height: 100,
+                            width: 100,
+                            color: Colors.green,
+                            child: Center(
+                              child: Icon(
+                                Icons.done,
+                                size: 60,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Text(
+                    'Submitted successfully',
+                    style: TextStyle(
+                        decoration: TextDecoration.none,
+                        fontSize: 20,
+                        color: Colors.green),
+                  ),
+                  SizedBox(
+                    height: 5,
+                  ),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.of(context).pop(); 
+                        if (widget.isGuest == true) 
+        Navigator.pushReplacementNamed(context, '/studentPage');
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => LoginPage(userRole: 'Student', guest: false,)),
       );
+                      },
+                      child: Text('Done'),
+                      style: ButtonStyle(
+                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5))),
+                          backgroundColor: WidgetStatePropertyAll(Colors.blue),
+                          foregroundColor: WidgetStatePropertyAll(Colors.white),
+                          minimumSize: WidgetStatePropertyAll(Size(200, 50))),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  
+
+     
     } on FirebaseException catch (e) {
       Navigator.pop(context);
       showDialog(

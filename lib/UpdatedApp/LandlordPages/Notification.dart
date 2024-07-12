@@ -8,7 +8,8 @@ import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class Notifications extends StatefulWidget {
-  const Notifications({super.key});
+  final Function onNotificationOpened;
+  const Notifications({super.key, required this.onNotificationOpened});
 
   @override
   State<Notifications> createState() => _NotificationsState();
@@ -37,12 +38,12 @@ class _NotificationsState extends State<Notifications>
     });
   }
 
-  late User _user;
+  late User? _user;
   Map<String, dynamic>? _userData;
   Future<void> _loadUserData() async {
     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
         .collection('Landlords')
-        .doc(_user.uid)
+        .doc(_user?.uid)
         .get();
     setState(() {
       _userData = userDataSnapshot.data() as Map<String, dynamic>?;
@@ -83,6 +84,24 @@ class _NotificationsState extends State<Notifications>
   Future<void> _handleRefresh() async {
     await _loadStudentApplications();
     _refreshController.refreshCompleted();
+  }
+
+  Future<void> _markNotificationAsRead(String documentId) async {
+    try {
+      for (int index = 0; index < _studentApplications.length; index++) {
+        await FirebaseFirestore.instance
+            .collection('Landlords')
+            .doc(_user?.uid)
+            .collection('applications')
+            .doc(_studentApplications[index]['userId'])
+            .update({'read': true});
+      }
+
+      widget.onNotificationOpened();
+      _loadStudentApplications();
+    } catch (e) {
+      print('Error marking notification as read: $e');
+    }
   }
 
   @override
@@ -127,60 +146,62 @@ class _NotificationsState extends State<Notifications>
                       for (int index = 0;
                           index < _studentApplications.length;
                           index++)
-                        if (_studentApplications[index]
-                                ['applicationReviewed'] ==
-                            false)
-                          Container(
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: Colors.blue)),
-                            child: ListTile(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ViewApplicantDetails(
-                                      studentApplicationData:
-                                          _studentApplications[index],
-                                    ),
+                        Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(color: Colors.blue)),
+                          child: ListTile(
+                            onTap: () {
+                              _markNotificationAsRead('');
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ViewApplicantDetails(
+                                    studentApplicationData:
+                                        _studentApplications[index],
                                   ),
-                                );
-                              },
-                              title: Text(
-                                '${_studentApplications[index]['name'] ?? ''} ${_studentApplications[index]['surname'] ?? ''}',
-                                style: TextStyle(
-                                  fontWeight: _studentApplications[index]
-                                              ['applicationReviewed'] ==
-                                          true
-                                      ? FontWeight.normal
-                                      : FontWeight.bold,
                                 ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'You have a new application from ${_studentApplications[index]['surname'] ?? ''} ${_studentApplications[index]['name'] ?? ''}',
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  ),
-                                  Text(
-                                    DateFormat('yyyy-MM-dd HH:mm').format(
-                                        _studentApplications[index]
-                                                ['appliedDate']
-                                            .toDate()),
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.w400),
-                                  ),
-                                ],
-                              ),
-                              trailing: Icon(
-                                Icons.arrow_right,
-                                size: 40,
-                                color: Colors.blue,
+                              );
+                            },
+                            title: Text(
+                              '${_studentApplications[index]['name'] ?? ''} ${_studentApplications[index]['surname'] ?? ''}',
+                              style: TextStyle(
+                                fontWeight:
+                                    _studentApplications[index]['read'] == true
+                                        ? FontWeight.normal
+                                        : FontWeight.w900,
                               ),
                             ),
-                          )
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'You have a new application from ${_studentApplications[index]['surname'] ?? ''} ${_studentApplications[index]['name'] ?? ''}',
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  style: TextStyle(
+                                      fontWeight: _studentApplications[index]
+                                                  ['read'] ==
+                                              true
+                                          ? FontWeight.normal
+                                          : FontWeight.w600,
+                                      fontSize: 14),
+                                ),
+                                Text(
+                                  DateFormat('yyyy-MM-dd HH:mm').format(
+                                      _studentApplications[index]['appliedDate']
+                                          .toDate()),
+                                  style: TextStyle(fontWeight: FontWeight.w400),
+                                ),
+                              ],
+                            ),
+                            trailing: Icon(
+                              Icons.arrow_right,
+                              size: 40,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        )
                     ],
                   ),
                 ),

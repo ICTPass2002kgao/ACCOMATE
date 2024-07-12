@@ -70,7 +70,16 @@ dependencies:
   flutter_intl_phone_field: ^0.0.4
   switcher_button: ^0.0.4
   webview_flutter: ^4.8.0
-  flutter_credit_card: ^4.0.1
+  flutter_credit_card: ^4.0.1 
+  syncfusion_flutter_pdfviewer: ^26.1.40
+  printing: ^5.13.1
+  pdf: ^3.11.0
+  encrypt: ^5.0.3
+  flutter_inapp_notifications: ^1.0.0
+  icon_badge: ^1.0.0
+  crypto: ^3.0.3
+  data_table_2: ^2.5.15
+  
     
 
 
