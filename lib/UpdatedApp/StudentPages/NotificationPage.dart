@@ -1,3 +1,4 @@
+import 'package:animated_card/animated_card.dart';
 import 'package:api_com/UpdatedApp/StudentPages/ViewApplicationResponses.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -150,94 +151,97 @@ class _NotificationPageState extends State<NotificationPage>
                           index++)
                         Padding(
                           padding: const EdgeInsets.only(top: 5.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: Colors.blue),
-                            ),
-                            child: Column(
-                              children: [
-                                _studentApplications.isEmpty
-                                    ? Center(
-                                        child: Text(
-                                        'No Notification',
-                                        style: TextStyle(
-                                          fontSize: 25,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ))
-                                    : ListTile(
-                                        onTap: () {
-                                          _markNotificationAsRead(
-                                              _studentApplications[index]
-                                                  ['documentId']);
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  ViewApplicationResponses(
-                                                studentApplicationData:
-                                                    _studentApplications[index],
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        title: Text(
-                                          '${_studentApplications[index]['accomodationName']}',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                          child: AnimatedCard(
+          direction: AnimatedCardDirection.top,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.blue),
+                              ),
+                              child: Column(
+                                children: [
+                                  _studentApplications.isEmpty
+                                      ? Center(
+                                          child: Text(
+                                          'No Notification',
                                           style: TextStyle(
-                                            fontWeight:
-                                                _studentApplications[index]
-                                                            ['read'] ==
-                                                        true
-                                                    ? FontWeight.normal
-                                                    : FontWeight.w900,
+                                            fontSize: 25,
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                        ),
-                                        subtitle: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              _studentApplications[index]
-                                                          ['status'] ==
-                                                      true
-                                                  ? 'Hi ${_userData?['name'] ?? ''}, your application from ${_studentApplications[index]['accomodationName']} was successfully approved'
-                                                  : 'Hi ${_userData?['name'] ?? ''}, we regret to inform you that your application from ${_studentApplications[index]['accomodationName']} was Unsuccessful',
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontWeight:
-                                                    _studentApplications[index]
-                                                                ['read'] ==
-                                                            true
-                                                        ? FontWeight.normal
-                                                        : FontWeight.w900,
+                                        ))
+                                      : ListTile(
+                                          onTap: () {
+                                            _markNotificationAsRead(
+                                                _studentApplications[index]
+                                                    ['documentId']);
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ViewApplicationResponses(
+                                                  studentApplicationData:
+                                                      _studentApplications[index],
+                                                ),
                                               ),
+                                            );
+                                          },
+                                          title: Text(
+                                            '${_studentApplications[index]['accomodationName']}',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontWeight:
+                                                  _studentApplications[index]
+                                                              ['read'] ==
+                                                          true
+                                                      ? FontWeight.normal
+                                                      : FontWeight.w900,
                                             ),
-                                            Text(
-                                              DateFormat('yyyy-MM-dd HH:mm')
-                                                  .format(_studentApplications[
-                                                          index]['feedbackDate']
-                                                      .toDate()),
-                                              style: TextStyle(
+                                          ),
+                                          subtitle: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                _studentApplications[index]
+                                                            ['status'] ==
+                                                        true
+                                                    ? 'Hi ${_userData?['name'] ?? ''}, your application from ${_studentApplications[index]['accomodationName']} was successfully approved'
+                                                    : 'Hi ${_userData?['name'] ?? ''}, we regret to inform you that your application from ${_studentApplications[index]['accomodationName']} was Unsuccessful',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
                                                   fontWeight:
-                                                      _studentApplications[
-                                                                      index]
+                                                      _studentApplications[index]
                                                                   ['read'] ==
                                                               true
                                                           ? FontWeight.normal
-                                                          : FontWeight.w500,
-                                                  fontSize: 14),
-                                            ),
-                                          ],
+                                                          : FontWeight.w900,
+                                                ),
+                                              ),
+                                              Text(
+                                                DateFormat('yyyy-MM-dd HH:mm')
+                                                    .format(_studentApplications[
+                                                            index]['feedbackDate']
+                                                        .toDate()),
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        _studentApplications[
+                                                                        index]
+                                                                    ['read'] ==
+                                                                true
+                                                            ? FontWeight.normal
+                                                            : FontWeight.w500,
+                                                    fontSize: 14),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                SizedBox(
-                                  height: 5,
-                                )
-                              ],
+                                  SizedBox(
+                                    height: 5,
+                                  )
+                                ],
+                              ),
                             ),
                           ),
                         ),

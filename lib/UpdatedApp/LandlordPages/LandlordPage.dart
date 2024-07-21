@@ -374,15 +374,15 @@ class _LandlordPageState extends State<LandlordPage> {
                                                                         BorderRadius.circular(
                                                                             5))),
                                                             foregroundColor:
-                                                                MaterialStatePropertyAll(
+                                                                WidgetStatePropertyAll(
                                                                     Colors
                                                                         .white),
                                                             backgroundColor:
-                                                                MaterialStatePropertyAll(
+                                                                WidgetStatePropertyAll(
                                                                     Colors
                                                                         .green),
                                                             minimumSize:
-                                                                MaterialStatePropertyAll(
+                                                                WidgetStatePropertyAll(
                                                                     Size(
                                                                         double
                                                                             .infinity,

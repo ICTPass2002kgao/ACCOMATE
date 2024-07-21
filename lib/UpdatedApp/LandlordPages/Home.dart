@@ -115,10 +115,10 @@ class _HomePageState extends State<HomePage> {
                     badgeColor: Colors.blue,
                     itemCount: registeredStudents.length,
                     icon:
-                        Icon(Icons.people_sharp, size: 200, color: Colors.blue),
+                        Icon(Icons.people_sharp, size: 150, color: Colors.blue),
                   ),
                   Text(
-                    'Total number of students who are not did not get a feedback [${registeredStudents.length}]',
+                    'Total number of students who Applied [${registeredStudents.length}]',
                     style: TextStyle(
                       fontSize: 24,
                     ),

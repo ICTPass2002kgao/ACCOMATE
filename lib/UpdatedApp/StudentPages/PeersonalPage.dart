@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:animated_content/animated_content.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -230,172 +231,157 @@ class _PersonalPageState extends State<PersonalPage> {
     return Scaffold(
       backgroundColor: Colors.blue[100],
       body: SingleChildScrollView(
-        child: isLoading
-            ? Center(
-                child: Container(
-                    width: 100,
-                    height: 100,
-                    child: Center(
-                        child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Center(child: Text("Loading...")),
-                        Center(
-                            child: LinearProgressIndicator(color: Colors.blue)),
-                      ],
-                    ))))
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Center(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(78),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        const Color.fromARGB(
-                                            255, 187, 222, 251),
-                                        Colors.blue,
-                                        const Color.fromARGB(255, 15, 76, 167)
-                                      ],
-                                    ),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(4.0),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(75),
-                                      child: Image.asset('assets/icon.jpg',
-                                          width: 150,
-                                          height: 150,
-                                          fit: BoxFit.fill),
-                                    ),
-                                  ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Center(
+                        child: AnimatedContent(
+                       duration: Duration(seconds: 2),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(78),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    const Color.fromARGB(255, 187, 222, 251),
+                                    Colors.blue,
+                                    const Color.fromARGB(255, 15, 76, 167)
+                                  ],
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(75),
+                                  child: Image.asset('assets/icon.jpg',
+                                      width: 150,
+                                      height: 150,
+                                      fit: BoxFit.fill),
                                 ),
                               ),
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: SingleChildScrollView(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    child: TextField(
-                                      maxLines: 1,
-                                      controller: emailController,
-                                      decoration: InputDecoration(
-                                          border: OutlineInputBorder(),
-                                          labelText:
-                                              "${_userData?['email'] ?? 'NaN'}"),
-                                    ),
-                                  ),
-                                  SizedBox(height: 10),
-                                  Container(
-                                    child: TextField(
-                                      maxLines: 1,
-                                      readOnly: true,
-                                      controller: nameController,
-                                      decoration: InputDecoration(
-                                          border: OutlineInputBorder(),
-                                          hintText:
-                                              "${_userData?['name'] ?? 'NaN'}"),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: 10,
-                                  ),
-                                  Container(
-                                    child: TextField(
-                                      readOnly: true,
-                                      maxLines: 1,
-                                      controller: nameController,
-                                      decoration: InputDecoration(
-                                          border: OutlineInputBorder(),
-                                          hintText:
-                                              "${_userData?['surname'] ?? 'NaN'}"),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: 10,
-                                  ),
-                                  Container(
-                                    child: TextField(
-                                      maxLines: 1,
-                                      readOnly: true,
-                                      controller: nameController,
-                                      decoration: InputDecoration(
-                                          border: OutlineInputBorder(),
-                                          hintText:
-                                              "${_userData?['university'] ?? 'NaN'}"),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: 10,
-                                  ),
-                                  if (_user?.uid != null)
-                                    Container(
-                                      child: TextField(
-                                        maxLines: 1,
-                                        readOnly: true,
-                                        controller: nameController,
-                                        decoration: InputDecoration(
-                                            border: OutlineInputBorder(),
-                                            hintText: DateFormat(
-                                                    'yyyy-MM-dd HH:mm')
-                                                .format(
-                                                    _userData?['registeredDate']
-                                                            .toDate() ??
-                                                        'NaN')),
-                                      ),
-                                    ),
-                                  SizedBox(
-                                    height: 10,
-                                  ),
-                                  TextButton(
-                                    onPressed: () => emailController.text
-                                                .contains('@gmail.com') ||
-                                            emailController.text
-                                                .contains('@edu.vut.ac.za')
-                                        ? _confirmUpdate()
-                                        : null,
-                                    child: Text('Update'),
-                                    style: ButtonStyle(
-                                        backgroundColor: WidgetStatePropertyAll(
-                                            emailController.text.contains(
-                                                        '@gmail.com') ||
-                                                    emailController.text
-                                                        .contains(
-                                                            '@edu.vut.ac.za')
-                                                ? Colors.blue
-                                                : Colors.grey),shape: WidgetStatePropertyAll(
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              child: TextField(
+                                maxLines: 1,
+                                controller: emailController,
+                                decoration: InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    labelText:
+                                        "${_userData?['email'] ?? 'NaN'}"),
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            Container(
+                              child: TextField(
+                                maxLines: 1,
+                                readOnly: true,
+                                controller: nameController,
+                                decoration: InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    hintText:
+                                        "${_userData?['name'] ?? 'NaN'}"),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Container(
+                              child: TextField(
+                                readOnly: true,
+                                maxLines: 1,
+                                controller: nameController,
+                                decoration: InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    hintText:
+                                        "${_userData?['surname'] ?? 'NaN'}"),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Container(
+                              child: TextField(
+                                maxLines: 1,
+                                readOnly: true,
+                                controller: nameController,
+                                decoration: InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    hintText:
+                                        "${_userData?['university'] ?? 'NaN'}"),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            if (_user?.uid != null)
+                              Container(
+                                child: TextField(
+                                  maxLines: 1,
+                                  readOnly: true,
+                                  controller: nameController,
+                                  decoration: InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      hintText: DateFormat('yyyy-MM-dd HH:mm')
+                                          .format(_userData?['registeredDate']
+                                                  .toDate() ??
+                                              'NaN')),
+                                ),
+                              ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            TextButton(
+                              onPressed: () => emailController.text
+                                          .contains('@gmail.com') ||
+                                      emailController.text
+                                          .contains('@edu.vut.ac.za')
+                                  ? _confirmUpdate()
+                                  : null,
+                              child: Text('Update'),
+                              style: ButtonStyle(
+                                  backgroundColor: WidgetStatePropertyAll(
+                                      emailController.text
+                                                  .contains('@gmail.com') ||
+                                              emailController.text
+                                                  .contains('@edu.vut.ac.za')
+                                          ? Colors.blue
+                                          : Colors.grey),
+                                  shape: WidgetStatePropertyAll(
                                       RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(5))),
-                                        foregroundColor: WidgetStatePropertyAll(
-                                            Colors.white),
-                                        minimumSize: WidgetStatePropertyAll(
-                                            Size(double.infinity, 50))),
-                                  ),
-                                  
+                                  foregroundColor:
+                                      WidgetStatePropertyAll(Colors.white),
+                                  minimumSize: WidgetStatePropertyAll(
+                                      Size(double.infinity, 50))),
+                            ),
                             SizedBox(
                               height: 10,
                             ),
                             ElevatedButton(
                               onPressed: () async {
                                 await FirebaseAuth.instance.signOut();
-                Navigator.pushReplacementNamed(context, '/login');
+                                Navigator.pushReplacementNamed(
+                                    context, '/login');
                               },
                               child: Text('Sign-Out'),
                               style: ButtonStyle(
@@ -410,18 +396,16 @@ class _PersonalPageState extends State<PersonalPage> {
                                   minimumSize: WidgetStatePropertyAll(
                                       Size(double.infinity, 50))),
                             ),
-                         
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    ],
-                  ),
-                      
-                ],
-              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,9 +1,12 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
+import 'package:animated_card/animated_card.dart';
+import 'package:animated_loading_border/animated_loading_border.dart';
 import 'package:api_com/UpdatedApp/StudentPages/accomodation_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -12,9 +15,11 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  RefreshController _refreshController = RefreshController(initialRefresh: false);
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -53,25 +58,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('Landlords').snapshots(),
+              stream: FirebaseFirestore.instance
+                  .collection('Landlords')
+                  .snapshots(),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                      child: Container(
-                          width: 100,
-                          height: 100,
-                          child: Center(
-                              child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Center(child: Text("Loading...")),
-                              Center(
-                                  child: LinearProgressIndicator(
-                                      color: Colors.blue)),
-                            ],
-                          ))));
-                } else if (snapshot.hasError) {
+            if (snapshot.hasError) {
                   return Center(child: Text('Error loading data'));
                 } else if (snapshot.hasData) {
                   List<Map<String, dynamic>> landlordsData = snapshot.data!.docs
@@ -81,8 +72,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     physics: NeverScrollableScrollPhysics(),
                     controller: _tabController,
                     children: [
-                      _buildAccommodationList(landlordsData, false),
                       _buildAccommodationList(landlordsData, true),
+                      _buildAccommodationList(landlordsData, false),
                     ],
                   );
                 } else {
@@ -96,9 +87,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  Widget _buildAccommodationList(List<Map<String, dynamic>> landlordsData, bool isHouse) {
+  Widget _buildAccommodationList(
+      List<Map<String, dynamic>> landlordsData, bool isAccomodation) {
     List<Map<String, dynamic>> filteredList = landlordsData.where((landlord) {
-      return landlord['accomodationType'] == isHouse && landlord['accomodationStatus'] == true;
+      return landlord['accomodationType'] == isAccomodation &&
+          landlord['accomodationStatus'] == true;
     }).toList();
 
     return SingleChildScrollView(
@@ -106,9 +99,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (filteredList.isNotEmpty)
-            _buildAccommodationSection('Nsfas Accredited', filteredList, true, isHouse),
+            _buildAccommodationSection(
+                'Nsfas Accredited', filteredList, true, isAccomodation),
           if (filteredList.isNotEmpty)
-            _buildAccommodationSection('Not Nsfas Accredited', filteredList, false, isHouse),
+            _buildAccommodationSection(
+                'Not Nsfas Accredited', filteredList, false, isAccomodation),
         ],
       ),
     );
@@ -118,13 +113,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       String title,
       List<Map<String, dynamic>> list,
       bool accrediationAvailability,
-      bool isHouse) {
-    String fullTitle = '$title ${isHouse ? 'Houses' : 'Accommodations'}';
+      bool isAccomodation) {
+    String fullTitle = '$title ${isAccomodation ? 'Accommodations' : 'Houses'}';
 
     List<Map<String, dynamic>> sectionList = list
         .where((landlord) =>
             landlord['isNsfasAccredited'] == accrediationAvailability &&
-            landlord['accomodationType'] == isHouse)
+            landlord['accomodationType'] == isAccomodation)
         .toList();
 
     // If there is no residence available for that particular funding
@@ -169,90 +164,119 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   Widget buildLandlordCard(Map<String, dynamic> landlordData) {
-    String? profilePictureUrl = landlordData['profilePicture'];
+    String? profilePictureUrl = landlordData['displayedImages'][1];
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: Card(
         color: Colors.blue[50],
-        elevation: 5,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(5.0),
+          padding: const EdgeInsets.all(3.0),
           child: Container(
             width: 250,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.only(
+            child: Skeletonizer(
+              enabled: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(5),
-                      topRight: Radius.circular(5)),
-                  child: profilePictureUrl != null
-                      ? Image.network(
-                          profilePictureUrl,
-                          width: 249,
-                          height: 200,
-                          fit: BoxFit.cover,
-                        )
-                      : Container(), // Or replace with a placeholder image
-                ),
-                SizedBox(height: 5.0),
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        ' ${landlordData['accomodationName'] ?? 'N/A'}',
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
+                      topRight: Radius.circular(5),
+                    ),
+                    child: profilePictureUrl != null
+                        ? AnimatedLoadingBorder(
+                            borderColor: Colors.blue,
+                            borderWidth: 5.0,
+                            duration: Duration(seconds: 2),
+                            child: Image.network(
+                              profilePictureUrl,
+                              width: 249,
+                              height: 200,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Container(),
+                  ),
+                  AnimatedCard(
+                    direction: AnimatedCardDirection.top,
+                    initDelay: Duration(seconds: 0),
+                    duration: Duration(seconds: 2),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 5.0),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                ' ${landlordData['accomodationName'] ?? 'N/A'}',
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.verified,
+                              color: Colors.blue[900],
+                              size: 14,
+                            ),
+                          ],
                         ),
-                      ),
+                        SizedBox(height: 5.0),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              landlordData['isFull'] == false
+                                  ? 'Available Now'
+                                  : 'Unavailable due to space',
+                              style: TextStyle(
+                                  color: landlordData['isFull'] == false
+                                      ? Colors.green
+                                      : Colors.red),
+                            ),
+                            Icon(
+                                landlordData['isFull'] == false
+                                    ? Icons.lock_open
+                                    : Icons.lock_outline,
+                                size: 16),
+                          ],
+                        ),
+                        SizedBox(height: 5.0),
+                        Text(
+                          landlordData['isNsfasAccredited'] == true
+                              ? 'Nsfas Accredited'
+                              : 'Not Nsfas accredited',
+                          style: TextStyle(
+                              color: landlordData['isNsfasAccredited'] == true
+                                  ? Colors.green
+                                  : Colors.red),
+                        ),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.timer_outlined,
+                              size: 13,
+                              color: Colors.blue,
+                            ),
+                            Text(landlordData['Duration'] == "Half Year"
+                                ? 'Six Months Allowed'
+                                : landlordData['Duration'] == "Full Year"
+                                    ? 'Full Year Only'
+                                    : 'All Students Allowed'),
+                          ],
+                        ),
+                      ],
                     ),
-                    Icon(
-                      Icons.verified,
-                      color: Colors.blue[900],
-                      size: 14,
-                    ),
-                  ],
-                ),
-                SizedBox(height: 5.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      landlordData['isFull'] == false
-                          ? 'Available Now'
-                          : 'Unavailable due to space',
-                      style: TextStyle(
-                          color: landlordData['isFull'] == false
-                              ? Colors.green
-                              : Colors.red),
-                    ),
-                    Icon(
-                        landlordData['isFull'] == false
-                            ? Icons.lock_open
-                            : Icons.lock_outline,
-                        size: 16)
-                  ],
-                ),
-                SizedBox(height: 5.0),
-                Text(
-                  landlordData['isNsfasAccredited'] == true ? 'Nsfas Accredited' : 'Not Nsfas accredited',
-                  style: TextStyle(
-                      color: landlordData['isNsfasAccredited'] == true
-                          ? Colors.green
-                          : Colors.red),
-                ),
-                Text(landlordData['Duration'] == "Half Year"
-                    ? 'Six Months Allowed'
-                    : landlordData['Duration'] == "Full Year"
-                        ? 'Full Year Only'
-                        : 'All Students Allowed'),
-              ],
+                  )
+                ],
+              ),
             ),
           ),
         ),

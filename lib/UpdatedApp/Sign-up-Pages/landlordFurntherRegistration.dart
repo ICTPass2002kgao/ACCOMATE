@@ -2,15 +2,20 @@
 
 import 'dart:io';
 import 'package:api_com/UpdatedApp/Sign-up-Pages/landlordoffersPage.dart';
+import 'package:flutter/foundation.dart';
 // import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:image_picker/image_picker.dart'; 
+// import 'package:path/path.dart';
 // import 'package:path/path.dart';
 
 import 'package:permission_handler/permission_handler.dart';
+
+// import 'dart:html' as html;
+ 
 
 class LandlordFurtherRegistration extends StatefulWidget {
   final String accomodationName;
@@ -71,7 +76,6 @@ class _LandlordFurtherRegistrationState
   void checkLandlordDetails() {
     if (txtLiveLocation.text == '') {
       showError();
-    
     } else if (distanceController.text == '') {
       showError();
     } else {
@@ -79,7 +83,7 @@ class _LandlordFurtherRegistrationState
         Navigator.push(
             context,
             MaterialPageRoute(
-                builder: ((context) => OffersPage( 
+                builder: ((context) => OffersPage(
                       selectedPaymentsMethods: selectedPaymentsMethods,
                       residenceLogo: _imageFile,
                       location: txtLiveLocation.text,
@@ -96,8 +100,6 @@ class _LandlordFurtherRegistrationState
       });
     }
   }
-
-  List<XFile> selectedImages = [];
 
   String currentAddress = '';
   bool isLoading = true;
@@ -143,7 +145,24 @@ class _LandlordFurtherRegistrationState
       ),
     );
   }
+//  late html.File _cloudFile;
+//  var _fileBytes;
+//  late Image _imageWidget;
 
+//  Future<void> getMultipleImageInfos() async {
+//     var mediaData = await ImagePickerWeb.getImageInfo;
+//     String mimeType = mime( basename(mediaData.fileName));
+//     html.File mediaFile =
+//         new html.File(mediaData.data, mediaData.fileName, {'type': mimeType});
+
+//     if (mediaFile != null) {
+//       setState(() {
+//         _cloudFile = mediaFile;
+//         _fileBytes = mediaData.data;
+//         _imageWidget = Image.memory(mediaData.data);
+//       });
+//     }
+//   }
   Future<void> getCurrentLocation() async {
     try {
       List<Location> locations = await locationFromAddress(
@@ -367,22 +386,22 @@ class _LandlordFurtherRegistrationState
                                     WidgetStatePropertyAll(Size(130, 50))),
                           ),
                           SizedBox(width: 5),
-                         _imageFile != null?
-                            Image.file(
-                              File(
-                                _imageFile!.path,
-                              ),
-                              fit: BoxFit.cover,
-                              height: 45,
-                              width: 50,
-                            ):Text('Optional'),
+                          _imageFile != null
+                              ? kIsWeb
+                                  ? Image.network(_imageFile!.path,
+                                      fit: BoxFit.cover, height: 45, width: 50)
+                                  : Image.file(File(_imageFile!.path),
+                                      fit: BoxFit.cover, height: 45, width: 50)
+                              : Text('Optional (If available)'),
                         ],
                       ),
                     ),
                     SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: () {
-                        checkLandlordDetails( );
+                        checkLandlordDetails();
+                        print(widget.landlordEmail);
+                        print(_imageFile);
                       },
                       child: Text(
                         'Continue',
@@ -407,40 +426,89 @@ class _LandlordFurtherRegistrationState
     );
   }
 
-  Future<void> showLocationDialog( ) async {
-    // Request location permissions
-    LocationPermission permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied) {
-      getCurrentLocation();
-      print('Location permission denied');
-      return;
-    }
+  Future<void> showLocationDialog() async {
+    if (kIsWeb) {
+      // Handle location on the web
+      try {
+        // Use HTML5 Geolocation API for web
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
 
-    // Get current location
-    Position position = await Geolocator.getCurrentPosition();
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
 
-    // Get address from coordinates
-    try {
-      // ignore: use_build_context_synchronously
-
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(position.latitude, position.longitude);
-
-      // Display the address in a text field
-      Navigator.of(context).pop();
-      if (placemarks.isNotEmpty) {
-        String city = placemarks.first.subLocality ?? 'Unknown';
-        String postalCode = placemarks.first.postalCode ?? 'Unknown';
-        String street = placemarks.first.street ?? 'Unknown';
-        String province = placemarks.first.administrativeArea ?? 'Unknown';
-
-        String country = placemarks.first.country ?? 'Unknown';
-
-        txtLiveLocation.text =
-            '$country, $province, $city, $street, $postalCode';
+        // Display the address in a text field
+        if (placemarks.isNotEmpty) {
+          Placemark placemark = placemarks.first;
+          String city = placemark.subLocality ?? 'Unknown';
+          String postalCode = placemark.postalCode ?? 'Unknown';
+          String street = placemark.street ?? 'Unknown';
+          String province = placemark.administrativeArea ?? 'Unknown';
+          String country = placemark.country ?? 'Unknown';
+          setState(() {
+            txtLiveLocation.text =
+                '$country, $province, $city, $street, $postalCode';
+          });
+        } else {
+          setState(() {
+            txtLiveLocation.text =
+                'Unable to get you current location please enter your address manually';
+            Navigator.pop(context);
+          });
+        }
+      } catch (e) {
+        setState(() {
+          txtLiveLocation.text =
+              'Unable to get you current location please enter your address manually';
+          Navigator.pop(context);
+        });
+        print('Error fetching address: $e');
       }
-    } catch (e) {
-      print('Error fetching address: $e');
+    } else {
+      // Handle location on mobile
+      LocationPermission permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print('Location permission denied');
+        return;
+      }
+
+      // Get current location
+      Position position = await Geolocator.getCurrentPosition();
+
+      // Get address from coordinates
+      try {
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+            position.latitude, position.longitude);
+
+        // Display the address in a text field
+        if (placemarks.isNotEmpty) {
+          Placemark placemark = placemarks.first;
+          String city = placemark.subLocality ?? 'Unknown';
+          String postalCode = placemark.postalCode ?? 'Unknown';
+          String street = placemark.street ?? 'Unknown';
+          String province = placemark.administrativeArea ?? 'Unknown';
+          String country = placemark.country ?? 'Unknown';
+
+          setState(() {
+            txtLiveLocation.text =
+                '$country, $province, $city, $street, $postalCode';
+          });
+        } else {
+          setState(() {
+            txtLiveLocation.text =
+                'Unable to get you current location please enter your address manually';
+          });
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        setState(() {
+          Navigator.pop(context);
+        });
+        print('Error fetching address: $e');
+      }
     }
   }
 }

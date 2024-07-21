@@ -5,10 +5,12 @@ import 'dart:math';
 
 import 'package:api_com/UpdatedApp/Sign-Page/login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart'; 
 // import 'package:encrypt/encrypt.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 // import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -41,7 +43,7 @@ class OffersPage extends StatefulWidget {
   final String contactDetails;
   final bool isLandlord;
   final String location;
-  final XFile? residenceLogo; 
+  final XFile? residenceLogo;
 
   final Map<String, bool> selectedPaymentsMethods;
   const OffersPage({
@@ -54,7 +56,7 @@ class OffersPage extends StatefulWidget {
     required this.contactDetails,
     required this.landlordEmail,
     required this.distance,
-    required this.isLandlord, 
+    required this.isLandlord,
   });
 
   @override
@@ -86,6 +88,29 @@ class _OffersPageState extends State<OffersPage> {
     'Sharing/double Rooms': false,
     "Bachelor's room": false,
   };
+  Map<String, Map<String, dynamic>> roomData = {
+    'Single Rooms': {'selected': false, 'amount': ''},
+    'Sharing/double Rooms': {'selected': false, 'amount': ''},
+    "Bachelor's room": {'selected': false, 'amount': ''},
+  };
+
+  Map<String, TextEditingController> controllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    roomData.forEach((key, value) {
+      controllers[key] = TextEditingController(text: value['amount']);
+    });
+  }
+
+  @override
+  void dispose() {
+    controllers.forEach((key, controller) {
+      controller.dispose();
+    });
+    super.dispose();
+  }
 
   Map<String, bool> selectedUniversity = {
     'Vaal University of Technology': false,
@@ -259,20 +284,36 @@ class _OffersPageState extends State<OffersPage> {
 
   Future<void> sendEmail(
       String recipientEmail, String subject, String body) async {
-    final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
-    final message = Message()
-      ..from = Address('accomate33@gmail.com', 'Accomate')
-      ..recipients.add(recipientEmail)
-      ..subject = subject
-      ..html = body;
+    if (!kIsWeb) {
+      final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
+      final message = Message()
+        ..from = Address('accomate33@gmail.com', 'Accomate')
+        ..recipients.add(recipientEmail)
+        ..subject = subject
+        ..html = body;
 
-    try {
-      await send(message, smtpServer);
-      print('Email sent successfully');
-    } catch (e) {
-      print('Error sending email: $e');
+      try {
+        await send(message, smtpServer);
+        print('Email sent successfully');
+      } catch (e) {
+        print('Error sending email: $e');
+      }
+    } else {
+      try {
+        final result = await sendEmailCallable.call({
+          'to': recipientEmail,
+          'subject': subject,
+          'body': body,
+        });
+        print(result.data);
+      } catch (e) {
+        print(e.toString());
+      }
     }
   }
+
+  final HttpsCallable sendEmailCallable =
+      FirebaseFunctions.instance.httpsCallable('sendEmail');
 
   final String verificationCode = _generateRandomCode();
   bool isLandlord = true;
@@ -282,7 +323,9 @@ class _OffersPageState extends State<OffersPage> {
 
   void _registerUserToFirebase() async {
     List<String> images = pickedImages.map((file) => file.path).toList();
-    if (images.length < 5) {}
+    if (images.length < 5) {
+      
+    }
     try {
       showDialog(
         context: context,
@@ -300,14 +343,6 @@ class _OffersPageState extends State<OffersPage> {
         password: widget.password,
       );
 
-      // String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      // firebase_storage.Reference reference = firebase_storage
-      //     .FirebaseStorage.instance
-      //     .ref('Contracts')
-      //     .child('${widget.accomodationName}($fileName).pdf');
-
-      // await reference.putFile(widget.pdfContract!);
-      // String downloadContractUrl = await reference.getDownloadURL();
       Reference storageReference = FirebaseStorage.instance
           .ref('Residence Logos')
           .child('${widget.accomodationName}(${DateTime.now().toString()})');
@@ -325,42 +360,6 @@ class _OffersPageState extends State<OffersPage> {
       DateTime now = DateTime.now();
       Timestamp registeredDate = Timestamp.fromDate(now);
 
-      // String encryptedAccountHolderName =
-      //     EncryptionUtil.encrypt(accountHolderName);
-      // String encryptedBankName = EncryptionUtil.encrypt(bankName);
-      // String encryptedAccountNumber = EncryptionUtil.encrypt(accountNumber);
-      // String encryptedBranchCode = EncryptionUtil.encrypt(branchCode);
-      // requireDeposit == true
-      //     ? await FirebaseFirestore.instance
-      //         .collection('Landlords')
-      //         .doc(userId)
-      //         .set({
-      //         'accomodationStatus': false,
-      //         'accomodationName': widget.accomodationName,
-      //         'location': widget.location,
-      //         'email': userEmail,
-      //         'selectedOffers': selectedOffers,
-      //         'selectedUniversity': selectedUniversity,
-      //         'distance': widget.distance,
-      //         'selectedPaymentsMethods': widget.selectedPaymentsMethods,
-      //         'requireDeposit': requireDeposit,
-      //         'contactDetails': widget.contactDetails,
-      //         'accomodationType': isAccomodation,
-      //         'profilePicture': downloadUrl,
-      //         'userId': userId,
-      //         'roomType': selectedRoomTypes,
-      //         'displayedImages': downloadUrls,
-      //         'isNsfasAccredited': isNsfasAccredited,
-      //         'isFull': false,
-      //         'registeredDate': registeredDate,
-      //         'Duration': _selectedDuration,
-      //         'contract': downloadContractUrl,
-      //         'accountHolderName': encryptedAccountHolderName,
-      //         'bankName': encryptedBankName,
-      //         'accountNumber': encryptedAccountNumber,
-      //         'branchCode': encryptedBranchCode,
-      //       }):
-      
       await FirebaseFirestore.instance.collection('Landlords').doc(userId).set({
         'accomodationStatus': false,
         'accomodationName': widget.accomodationName,
@@ -369,8 +368,7 @@ class _OffersPageState extends State<OffersPage> {
         'selectedOffers': selectedOffers,
         'selectedUniversity': selectedUniversity,
         'distance': widget.distance,
-        'userRole':'landlord',
-        // 'selectedPaymentsMethods': widget.selectedPaymentsMethods,
+        'userRole': 'landlord',
         'requireDeposit': requireDeposit,
         'contactDetails': widget.contactDetails,
         'accomodationType': isAccomodation,
@@ -382,13 +380,14 @@ class _OffersPageState extends State<OffersPage> {
         'isFull': false,
         'registeredDate': registeredDate,
         'Duration': _selectedDuration,
+        if (requireDeposit == true) 'roomDetails': roomData
         // 'contract': downloadContractUrl,
       });
 
       sendEmail('accomate33@gmail.com', 'Review Accommodation',
           '''Gooday Review officer, <br/>You have a new review request from ${widget.accomodationName}.<br/><br/><p>Best Regards<br/>Yours Accomate</p>''');
 
-      sendEmail(userEmail!, 'Successful Account',
+      sendEmail(userEmail ?? '', 'Successful Account',
           '''<p>Good day ${widget.accomodationName} landlord,</p>
           
           <p>Your account has been registered successfully. Please note that your accommodation will undergo a review for verification. You will receive further communication soon.</p>
@@ -414,8 +413,7 @@ class _OffersPageState extends State<OffersPage> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: ((context) => LoginPage( 
-                                    ))));
+                                builder: ((context) => LoginPage())));
                       },
                       child: Text('Proceed'),
                       style: ButtonStyle(
@@ -500,48 +498,6 @@ class _OffersPageState extends State<OffersPage> {
     return downloadUrls;
   }
 
-// void _saveToPDF() async {
-//   final pdf = pw.Document();
-//   final image = pw.MemoryImage(widget.residenceLogo!);
-
-//   pdf.addPage(
-//     pw.Page(
-//       build: (pw.Context context) {
-//         return pw.Center(
-//           child: pw.Row(
-//             mainAxisAlignment: pw.MainAxisAlignment.center,
-//             children: [
-//               pw.Image(image,height: 100,width: 100),
-
-//              pw.Column(children: [
-//               pw.SizedBox(height: 20),
-//               pw.Text('Account Name: ${bankName}'),
-//               pw.Text('Account Number: ${accountNumber}'),
-//               pw.Text('Branch Code: ${branchCode}'),
-//               pw.Text('Reference: Your Email Address'), ]
-//              )
-//             ],
-//           ),
-//         );
-//       },
-//     ),
-//   );
-
-//   final output = await getTemporaryDirectory();
-//   final file = File("${output.path}/user_info.pdf");
-//   await file.writeAsBytes(await pdf.save());
-
-//   await _uploadToFirebase(file);
-// }
-
-// Future<void> _uploadToFirebase(File file) async {
-//   final storageRef = FirebaseStorage.instance.ref();
-//   final pdfRef = storageRef.child('user_pdfs/${basename(file.path)}');
-//   await pdfRef.putFile(file);
-
-//   final pdfUrl = await pdfRef.getDownloadURL();
-
-// }
   @override
   Widget build(BuildContext context) {
     double containerWidth =
@@ -601,17 +557,16 @@ class _OffersPageState extends State<OffersPage> {
                     SizedBox(
                       height: 5,
                     ),
-                    
                     SwitchListTile(
                         title: Text('Is Accomodation'),
                         value: isAccomodation,
                         onChanged: (value) {
                           setState(() {
-                            isAccomodation = !value;
+                            isAccomodation = value;
                             print(isAccomodation);
                           });
                         }),
-                        SizedBox(
+                    SizedBox(
                       height: 5,
                     ),
                     SwitchListTile(
@@ -619,31 +574,108 @@ class _OffersPageState extends State<OffersPage> {
                         value: isNsfasAccredited,
                         onChanged: (value) {
                           setState(() {
-                            isNsfasAccredited = !value;
+                            isNsfasAccredited = value;
                             print(isNsfasAccredited);
                           });
                         }),
                     SizedBox(
                       height: 5,
                     ),
-                    ExpansionTile(
-                      title: Text('Select Room types',
+                    SwitchListTile(
+                        title: Text('Requires Deposit'),
+                        value: requireDeposit,
+                        onChanged: (value) {
+                          setState(() {
+                            requireDeposit = value;
+                            print(requireDeposit);
+                          });
+                        }),
+                    if (!requireDeposit)
+                      ExpansionTile(
+                        title: Text('Select Room types',
+                            style: TextStyle(
+                                color: selectedRoomTypes.isEmpty
+                                    ? Colors.red
+                                    : Colors.black)),
+                        children: selectedRoomTypes.keys.map((roomTypes) {
+                          return CheckboxListTile(
+                            title: Text(roomTypes),
+                            value: selectedRoomTypes[roomTypes] ?? false,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedRoomTypes[roomTypes] = value ?? false;
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    if (requireDeposit)
+                      ExpansionTile(
+                        title: Text(
+                          'Select Room types',
                           style: TextStyle(
-                              color: selectedRoomTypes.isEmpty
-                                  ? Colors.red
-                                  : Colors.black)),
-                      children: selectedRoomTypes.keys.map((roomTypes) {
-                        return CheckboxListTile(
-                          title: Text(roomTypes),
-                          value: selectedRoomTypes[roomTypes] ?? false,
-                          onChanged: (value) {
-                            setState(() {
-                              selectedRoomTypes[roomTypes] = value ?? false;
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
+                            color:
+                                roomData.values.any((data) => data['selected'])
+                                    ? Colors.black
+                                    : Colors.red,
+                          ),
+                        ),
+                        children: roomData.keys.map((roomType) {
+                          final isSelected =
+                              roomData[roomType]!['selected'] as bool; 
+
+                          final controller = controllers[roomType]!;
+
+                          return ListTile(
+                            title: Row(
+                              children: [
+                                Expanded(
+                                  child: CheckboxListTile(
+                                    title: Text(roomType),
+                                    value: isSelected,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        roomData[roomType]!['selected'] =
+                                            value ?? false;
+                                      });
+                                    },
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8.0),
+                                      child: TextField(
+                                          keyboardType: TextInputType.number,
+                                          decoration: InputDecoration(
+                                            labelText: 'Amount',
+                                            border: OutlineInputBorder(),
+                                          ),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              roomData[roomType]!['amount'] =
+                                                  value;
+                                            });
+                                          },
+                                          controller: controller),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    if (requireDeposit == true)
+                      Column(
+                        children: [
+                          Text(
+                              '*Please note that the student will be paying the deposit only when they come in contact*'),
+                          SizedBox(
+                            height: 10,
+                          ),
+                        ],
+                      ),
                     SizedBox(
                       height: 5,
                     ),
@@ -726,80 +758,40 @@ class _OffersPageState extends State<OffersPage> {
                     SizedBox(
                       height: 5,
                     ),
-                     SwitchListTile(
-                        title: Text('Requires Deposit'),
-                        value: requireDeposit,
-                        onChanged: (value) {
-                          setState(() {
-                            requireDeposit = !value;
-                            print(requireDeposit);
-                          });
-                        }), if (requireDeposit == true)
-                      Column(
-                        children: [
-                          Text(
-                              '*Please note that the student will be signing the contract only their payment will be made in contact.*'),
-                          SizedBox(
-                            height: 10,
-                          ),
-                        ],
+                    TextButton.icon(
+                      onPressed: () async {
+                        await pickImages();
+                      },
+                      icon: Icon(Icons.add_photo_alternate_outlined,
+                          color: Colors.white),
+                      label: Text(
+                        'Add Images',
+                        style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
-                    Container(
-                      height: 55,
-                      width: containerWidth,
+                      style: ButtonStyle(
+                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5))),
+                          backgroundColor: WidgetStatePropertyAll(Colors.blue),
+                          foregroundColor: WidgetStatePropertyAll(Colors.white),
+                          minimumSize: WidgetStatePropertyAll(Size(100, 50))),
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          TextButton.icon(
-                            onPressed: () async {
-                              await pickImages();
-                            },
-                            icon: Icon(Icons.add_photo_alternate_outlined,
-                                color: Colors.white),
-                            label: Text(
-                              'Add Images',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 18),
-                            ),
-                            style: ButtonStyle(
-                                shape: WidgetStatePropertyAll(
-                                    RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(5))),
-                                backgroundColor:
-                                    WidgetStatePropertyAll(Colors.blue),
-                                foregroundColor:
-                                    WidgetStatePropertyAll(Colors.white),
-                                minimumSize:
-                                    WidgetStatePropertyAll(Size(100, 50))),
-                          ),
+                          SizedBox(width: 5),
                           for (int index = 0;
                               index < pickedImages.length;
                               index++)
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: [
-                                  Container(
-                                    color: Color.fromARGB(255, 233, 231, 231),
-                                    child: Row(
-                                      children: [
-                                        SizedBox(width: 5),
-                                        SingleChildScrollView(
-                                          scrollDirection: Axis.horizontal,
-                                          child: Container(
-                                            child: Image.file(
-                                                File(pickedImages[index].path),
-                                                height: 45,
-                                                width: 50,
-                                                fit: BoxFit.cover),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            !kIsWeb
+                                ? Image.file(File(pickedImages[index].path),
+                                    height: 45, width: 50, fit: BoxFit.cover)
+                                : Image.network(pickedImages[index].path,
+                                    height: 45, width: 50, fit: BoxFit.cover),
+                          SizedBox(width: 5),
                         ],
                       ),
                     ),
@@ -808,8 +800,14 @@ class _OffersPageState extends State<OffersPage> {
                     ),
                     TextButton(
                       onPressed: () async {
-                        sendEmail(widget.landlordEmail, 'Verification Code',
-                            '''<p>Hi ${widget.accomodationName} landlord, <br/>This is your verification codes:$verificationCode <br>please comfirm by entering it.<br/>Best Regards<br/>Yours Accomate Team</p>''');
+                        print(widget.landlordEmail);
+                        sendEmail(widget.landlordEmail, 'Verification Code', '''
+              <p>Hi ${widget.accomodationName} landlord,</p>
+              <p>This is your verification code: $verificationCode</p>
+              <p>Please use it to register your account with Accomate.</p>
+              <p>Best Regards,</p>
+              <p>Yours Accomate Team</p>
+            ''');
                         showDialog(
                           barrierDismissible: false,
                           context: context,

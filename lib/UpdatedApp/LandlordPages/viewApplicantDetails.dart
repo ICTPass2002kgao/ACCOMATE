@@ -250,7 +250,7 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
           '''<p>Hi ${widget.studentApplicationData['name']} , <br/>Your application from ${_userData?['accomodationName']} have been rejected due to some reasons. Go to notification page in our app for more information.<br/>Best Regards<br/>Your Accomate Team</p>''',
         );
       }
-      
+
       Navigator.of(context).pop();
 
       _showFeedback();
@@ -448,9 +448,8 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(status == false
-                                ? 'Please provide the reason a student is rejected & let the student know that they can reApply if their prefered room is not available or the problem can be resolved.'
-                                : 'Please give the student Instructions on how they can sign the contract.'),
+                            Text(
+                                'Please provide the reason a student is rejected & let the student know that they can reApply if their prefered room is not available or the problem can be resolved.'),
                             SizedBox(
                               height: 20,
                             ),
@@ -488,9 +487,7 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                                 controller: messageController,
                                 decoration: InputDecoration(
                                     border: OutlineInputBorder(),
-                                    labelText: status == false
-                                        ? "Rejected reason"
-                                        : 'Registration Instructions'),
+                                    labelText: "Rejected reason"),
                               ),
                             ),
                           ],

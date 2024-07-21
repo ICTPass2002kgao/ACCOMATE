@@ -1,13 +1,14 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors, prefer_final_fields, sort_child_properties_last, use_function_type_syntax_for_parameters, use_build_context_synchronously, deprecated_member_use, avoid_print
 
 // import 'package:api_com/DeactivatedFiles/ChatPageSt.dart';
+import 'package:animated_card/animated_card.dart';
 import 'package:api_com/UpdatedApp/Sign-Page/login_page.dart';
 import 'package:api_com/UpdatedApp/StudentPages/HomePage.dart';
 // import 'package:api_com/DeactivatedFiles/HomePage2.dart';
 import 'package:api_com/UpdatedApp/StudentPages/NotificationPage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/PeersonalPage.dart';
 import 'package:api_com/UpdatedApp/StudentPages/Search-Class.dart';
-import 'package:api_com/UpdatedApp/Accomate%20pages/Terms&Conditions.dart'; 
+import 'package:api_com/UpdatedApp/Accomate%20pages/Terms&Conditions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -294,16 +295,14 @@ class _StudentPageState extends State<StudentPage> {
               BottomNavigationBarItem(
                 backgroundColor: Colors.blue,
                 icon: Icon(
-                  Icons.home_outlined,
+                  Icons.home,
                 ),
                 label: 'Home',
               ),
               _notificationCount > 0
                   ? BottomNavigationBarItem(
                       icon: IconBadge(
-                        icon: Icon(
-                          Icons.notifications_active_outlined,
-                        ),
+                        icon: Icon(Icons.notifications_none),
                         itemCount: _notificationCount,
                         badgeColor: Colors.red,
                         itemColor: Colors.white,
@@ -341,10 +340,21 @@ class _StudentPageState extends State<StudentPage> {
                 SizedBox(
                   height: 30,
                 ),
-                Icon(
-                  Icons.settings,
-                  size: 100,
-                  color: Colors.white,
+                Center(
+                  child: AnimatedCard(
+                    duration: Duration(seconds: 2),
+                    direction: AnimatedCardDirection.bottom,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.settings,
+                          size: 150,
+                          color: Colors.white,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 SizedBox(
                   height: 50,
@@ -369,100 +379,103 @@ class _StudentPageState extends State<StudentPage> {
                       context: context,
                       builder: (context) => StatefulBuilder(
                         builder: (BuildContext context, StateSetter setState) {
-                          return AlertDialog(
-                            title: Center(
-                              child: Text('Contact Us',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                      color: Colors.blue)),
-                            ),
-                            scrollable: true,
-                            content: Container(
-                              height: 250,
-                              child: Column(
-                                children: [
-                                  Text(
-                                      'We will sent a feedback soon.',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                          color: Colors.grey)),
-                                  SizedBox(height: 10),
-                                  Container(
-                                    width: buttonWidth,
-                                    child: TextField(
-                                      maxLines: 6,
-                                      controller: messageController,
-                                      decoration: InputDecoration(
-                                          border: OutlineInputBorder(),
-                                          labelText: "Tell us how we can help"),
-                                    ),
-                                  )
-                                ],
+                          return AnimatedCard(
+                            direction: AnimatedCardDirection.bottom,
+                            child: AlertDialog(
+                              title: Center(
+                                child: Text('Contact Us',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                        color: Colors.blue)),
                               ),
+                              scrollable: true,
+                              content: Container(
+                                height: 250,
+                                child: Column(
+                                  children: [
+                                    Text('We will sent a feedback soon.',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                            color: Colors.grey)),
+                                    SizedBox(height: 10),
+                                    Container(
+                                      width: buttonWidth,
+                                      child: TextField(
+                                        maxLines: 6,
+                                        controller: messageController,
+                                        decoration: InputDecoration(
+                                            border: OutlineInputBorder(),
+                                            labelText:
+                                                "Tell us how we can help"),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              actions: [
+                                TextButton.icon(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      messageController.text.isEmpty &&
+                                              messageController.text.length < 10
+                                          ? showDialog(
+                                              context: context,
+                                              barrierDismissible: false,
+                                              builder: (BuildContext context) =>
+                                                  AlertDialog(
+                                                    title: Text(
+                                                      'Error',
+                                                      style: TextStyle(
+                                                          fontSize: 15),
+                                                    ),
+                                                    content: Text(
+                                                        'The your issue cannot be resolved'),
+                                                    actions: <Widget>[
+                                                      TextButton(
+                                                          onPressed: () async {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                          },
+                                                          child: Text('Okay'),
+                                                          style: ButtonStyle(
+                                                              shape: MaterialStatePropertyAll(
+                                                                  RoundedRectangleBorder(
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              5))),
+                                                              foregroundColor:
+                                                                  MaterialStatePropertyAll(
+                                                                      Colors
+                                                                          .white),
+                                                              backgroundColor:
+                                                                  MaterialStatePropertyAll(
+                                                                      Colors
+                                                                          .green),
+                                                              minimumSize:
+                                                                  MaterialStatePropertyAll(Size(
+                                                                      double
+                                                                          .infinity,
+                                                                      50)))),
+                                                    ],
+                                                  ))
+                                          : _sendHelpMessage();
+                                    },
+                                    icon: Icon(
+                                      Icons.send,
+                                      color: Colors.blue,
+                                    ),
+                                    label: Text(
+                                      "Send",
+                                      style: TextStyle(color: Colors.blue),
+                                    ))
+                              ],
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            actions: [
-                              TextButton.icon(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    messageController.text.isEmpty &&
-                                            messageController.text.length < 10
-                                        ? showDialog(
-                                            context: context,
-                                            barrierDismissible: false,
-                                            builder: (BuildContext context) =>
-                                                AlertDialog(
-                                                  title: Text(
-                                                    'Error',
-                                                    style:
-                                                        TextStyle(fontSize: 15),
-                                                  ),
-                                                  content: Text(
-                                                      'The your issue cannot be resolved'),
-                                                  actions: <Widget>[
-                                                    TextButton(
-                                                        onPressed: () async {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                        child: Text('Okay'),
-                                                        style: ButtonStyle(
-                                                            shape: MaterialStatePropertyAll(
-                                                                RoundedRectangleBorder(
-                                                                    borderRadius:
-                                                                        BorderRadius.circular(
-                                                                            5))),
-                                                            foregroundColor:
-                                                                MaterialStatePropertyAll(
-                                                                    Colors
-                                                                        .white),
-                                                            backgroundColor:
-                                                                MaterialStatePropertyAll(
-                                                                    Colors
-                                                                        .green),
-                                                            minimumSize:
-                                                                MaterialStatePropertyAll(
-                                                                    Size(
-                                                                        double
-                                                                            .infinity,
-                                                                        50)))),
-                                                  ],
-                                                ))
-                                        : _sendHelpMessage();
-                                  },
-                                  icon: Icon(
-                                    Icons.send,
-                                    color: Colors.blue,
-                                  ),
-                                  label: Text(
-                                    "Send",
-                                    style: TextStyle(color: Colors.blue),
-                                  ))
-                            ],
                           );
                         },
                       ),
@@ -505,8 +518,8 @@ class _StudentPageState extends State<StudentPage> {
       case 1:
         return NotificationPage(onNotificationOpened: _onNotificationOpened);
       case 2:
-      //   return Chatpage();
-      // case 3:
+        //   return Chatpage();
+        // case 3:
         return PersonalPage();
       default:
         return Container();

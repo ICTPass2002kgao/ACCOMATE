@@ -11,7 +11,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   firebase_storage
   geolocator_windows
   permission_handler_windows
-  printing
   syncfusion_pdfviewer_windows
   url_launcher_windows
 )

@@ -1,9 +1,9 @@
 // ignore_for_file: prefer_const_constructors, unnecessary_brace_in_string_interps, sized_box_for_whitespace
- 
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_swiper_view/flutter_swiper_view.dart'; 
+import 'package:flutter_swiper_view/flutter_swiper_view.dart';
 
 class AccountDetails extends StatefulWidget {
   const AccountDetails({super.key});
@@ -48,6 +48,7 @@ class _AccountDetailsState extends State<AccountDetails> {
   Widget build(BuildContext context) {
     double buttonWidth =
         MediaQuery.of(context).size.width < 550 ? double.infinity : 600;
+    bool status = _userData?['isNsfasAccredited'];
     return Scaffold(
         backgroundColor: Colors.blue[100],
         body: isLoading
@@ -308,6 +309,37 @@ class _AccountDetailsState extends State<AccountDetails> {
                                     )
                                   : Container(),
                               SizedBox(height: 5),
+
+                              ExpansionTile(
+                                  title: Text(
+                                      _userData?['isNsfasAccredited'] == true
+                                          ? 'Nsfas Accredited'
+                                          : 'Not Nsfas Accredited',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color:
+                                              _userData?['isNsfasAccredited'] ==
+                                                      true
+                                                  ? Colors.green
+                                                  : Colors.red)),
+                                  children: [
+                                    SwitchListTile(
+                                        title: Text(
+                                            status == true
+                                                ? 'Nsfas Accredited'
+                                                : 'Not Nsfas Accredited',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: status == true
+                                                    ? Colors.green
+                                                    : Colors.red)),
+                                        value: true,
+                                        onChanged: (value) => {
+                                              setState(() {
+                                                status = value;
+                                              }),
+                                            })
+                                  ]),
                               ExpansionTile(
                                 title: Text('More details',
                                     style:
@@ -331,19 +363,12 @@ class _AccountDetailsState extends State<AccountDetails> {
                                         style: TextStyle(
                                             fontWeight: FontWeight.bold)),
                                   ),
-                                  for (String paymentMethods
-                                      in _userData?['selectedPaymentsMethods']
-                                          .keys)
-                                    if (_userData?['selectedPaymentsMethods']
-                                            ?[paymentMethods] ??
-                                        false)
-                                      ListTile(
-                                        title: Text(paymentMethods),
-                                      ),
                                   SizedBox(height: 5),
                                   ListTile(
                                       title: Text(
-                                    'Nsfas Accredited',
+                                    _userData?['isNsfasAccredited'] == true
+                                        ? 'Nsfas Accredited'
+                                        : 'Not Nsfas Accredited',
                                     style: TextStyle(color: Colors.green),
                                   )),
                                 ],

@@ -2,6 +2,7 @@
 
 import 'dart:math';
 
+import 'package:api_com/UpdatedApp/Sign-up-Pages/textfield.dart';
 import 'package:api_com/UpdatedApp/StudentPages/VerifyEmail.dart';
 import 'package:api_com/UpdatedApp/Sign-up-Pages/landlordFurntherRegistration.dart';
 // import 'package:cloud_functions/cloud_functions.dart';
@@ -9,9 +10,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_intl_phone_field/flutter_intl_phone_field.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
+import 'package:text_field_validation/text_field_validation.dart';
 
 class StudentOrLandlord extends StatefulWidget {
-  const StudentOrLandlord({super.key, required this.isLandlord, required this.guest});
+  const StudentOrLandlord(
+      {super.key, required this.isLandlord, required this.guest});
   final bool isLandlord;
   final bool guest;
 
@@ -24,44 +27,55 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
   final TextEditingController surnameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController CpasswordController = TextEditingController();
   final TextEditingController accomodationName = TextEditingController();
   final TextEditingController distanceController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
 
     selectedUniversity = 'Vaal University of Technology';
-  
-    nameController.addListener(() { 
+
+    nameController.addListener(() {
       String nameText = nameController.text;
- 
+
       if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
         nameController.text = nameText.trim();
         nameController.selection = TextSelection.fromPosition(
             TextPosition(offset: nameController.text.length));
       }
     });
-    surnameController.addListener(() { 
+    CpasswordController.addListener(() {
+      String nameText = CpasswordController.text;
+
+      if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
+        CpasswordController.text = nameText.trim();
+        CpasswordController.selection = TextSelection.fromPosition(
+            TextPosition(offset: CpasswordController.text.length));
+      }
+    });
+    surnameController.addListener(() {
       String nameText = surnameController.text;
- 
+
       if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
         surnameController.text = nameText.trim();
         surnameController.selection = TextSelection.fromPosition(
             TextPosition(offset: surnameController.text.length));
       }
     });
-    emailController.addListener(() { 
-      String nameText = emailController.text; 
+    emailController.addListener(() {
+      String nameText = emailController.text;
       if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
         emailController.text = nameText.trim();
         emailController.selection = TextSelection.fromPosition(
             TextPosition(offset: emailController.text.length));
       }
     });
-    passwordController.addListener(() { 
+    passwordController.addListener(() {
       String nameText = passwordController.text;
- 
+
       if (nameText.isNotEmpty && nameText[nameText.length - 1] == ' ') {
         passwordController.text = nameText.trim();
         passwordController.selection = TextSelection.fromPosition(
@@ -76,6 +90,8 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
     surnameController.dispose();
     emailController.dispose();
     passwordController.dispose();
+
+    CpasswordController.dispose();
     super.dispose();
   }
 
@@ -143,146 +159,82 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
   }
 
   void checkStudentValues() {
-    String email = emailController.text;
-    String contacts = _phoneController.text;
-    String password = passwordController.text;
-    if (nameController.text == '') {
-      showError('Please make sure you fill in all the required details');
-    } else if (surnameController.text == '') {
-      showError('Please make sure you fill in all the required details');
-    } else if (emailController.text == '') {
-      showError('Please make sure you fill in all the required details');
-    } else if (passwordController.text == '') {
-      showError('Please make sure you fill in all the required details');
-    } else if (password.length < 8) {
-      showError('Please make sure the length of your password is 8 or more');
+    String _generateRandomCode() {
+      final random = Random();
+      return '${random.nextInt(999999).toString().padLeft(6, '0')}';
     }
-    if (email.contains('@gmail.com')) {
-      print('everything is well');
-    } else {
-      showError(
-          'Invalid email, Please make sure the email is in a correct format');
-    }
-    if (email.contains('@edu.vut.ac.za')) {
-      print('everything is well');
-    } else {
-      showError(
-          'Invalid email, Please make sure the email is in a correct format');
-    }
-    if (_phoneController.text == '') {
-      showError('Please make sure you fill in all the required details');
-    } else if (contacts.length != 9) {
-      showError('Please make sure the contacts are correct');
-    } else {
-      String _generateRandomCode() {
-        final random = Random();
-        // Generate a random 6-digit code
-        return '${random.nextInt(999999).toString().padLeft(6, '0')}';
-      }
 
-      String verificationCode = _generateRandomCode();
+    String verificationCode = _generateRandomCode();
 
-      sendEmail(
-          emailController.text, // Student's email
-          'Verification Code',
-          selectedGender == 'Male'
-              ? '''<p>Hello Mr ${surnameController.text}, <br/>We are aware that you are trying to register your account with Accomate <br/>Here  is your verification code:  $verificationCode <br/>Best Regards <br/>Yours Accomate</p>'''
-              : '''<p>Hello Mrs ${surnameController.text}, <br/>We are aware that you are trying to register your account with Accomate <br/>Here  is your verification code: $verificationCode <br/>Best Regards\nYours Accomate</p>''');
+    sendEmail(
+        emailController.text,
+        'Verification Code',
+        selectedGender == 'Male'
+            ? '''<p>Hello Mr ${surnameController.text}, <br/>We are aware that you are trying to register your account with Accomate <br/>Here  is your verification code:  $verificationCode <br/>Best Regards <br/>Yours Accomate</p>'''
+            : '''<p>Hello Mrs ${surnameController.text}, <br/>We are aware that you are trying to register your account with Accomate <br/>Here  is your verification code: $verificationCode <br/>Best Regards\nYours Accomate</p>''');
 
-      setState(() {
-        Navigator.of(context).pop();
-        showDialog(
-          barrierDismissible: false,
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: Colors.blue[100],
-            title: Text(
-              'Verification Email Sent',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-            icon: Icon(Icons.verified_user_rounded, size: 50),
-            iconColor: Colors.blue,
-            content: Text(selectedGender == 'Male'
-                ? 'Hello Mr ${surnameController.text},\nA verification code have been sent to ${maskEmail(emailController.text)} provide the codes to proceed'
-                : 'Hello Mrs ${surnameController.text},\nA verification code have been sent to ${maskEmail(emailController.text)} provide the codes to proceed'),
-            actions: [
-              OutlinedButton(
-                  child: Text('Verify'),
-                  onPressed: () async {
-                    Navigator.of(context).pop();
+    Navigator.of(context).pop();
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.blue[100],
+        title: Text(
+          'Verification Email Sent',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+        ),
+        icon: Icon(Icons.verified_user_rounded, size: 50),
+        iconColor: Colors.blue,
+        content: Text(selectedGender == 'Male'
+            ? 'Hello Mr ${surnameController.text},\nA verification code have been sent to ${maskEmail(emailController.text)} provide the codes to proceed'
+            : 'Hello Mrs ${surnameController.text},\nA verification code have been sent to ${maskEmail(emailController.text)} provide the codes to proceed'),
+        actions: [
+          OutlinedButton(
+              child: Text('Verify'),
+              onPressed: () async {
+                Navigator.of(context).pop();
 
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: ((context) => CodeVerificationPage(
-                                  email: emailController.text,
-                                  verificationCode: verificationCode,
-                                  name: nameController.text,
-                                  surname: surnameController.text,
-                                  university: selectedUniversity,
-                                  gender: selectedGender,
-                                  password: passwordController.text,
-                                  contactDetails: phoneNumber,
-                                  isLandlord: widget.isLandlord,
-                                  isGuest:widget.guest
-                                ))));
-                  },
-                  style: ButtonStyle(
-                    shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5))),
-                    foregroundColor: WidgetStatePropertyAll(Colors.white),
-                    backgroundColor: WidgetStatePropertyAll(Colors.blue),
-                  )),
-            ],
-          ),
-        );
-      });
-    }
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: ((context) => CodeVerificationPage(
+                            email: emailController.text,
+                            verificationCode: verificationCode,
+                            name: nameController.text,
+                            surname: surnameController.text,
+                            university: selectedUniversity,
+                            gender: selectedGender,
+                            password: passwordController.text,
+                            contactDetails: phoneNumber,
+                            isLandlord: widget.isLandlord,
+                            isGuest: widget.guest))));
+              },
+              style: ButtonStyle(
+                shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5))),
+                foregroundColor: WidgetStatePropertyAll(Colors.white),
+                backgroundColor: WidgetStatePropertyAll(Colors.blue),
+              )),
+        ],
+      ),
+    );
   }
 
   void checkLandlordValues() {
-    String email = emailController.text;
-    String contacts = _phoneController.text;
-    String password = passwordController.text;
-    if (emailController.text == '') {
-      showError('Please make sure you fill in all the required details');
-    } else if (passwordController.text == '') {
-      showError('Please make sure you fill in all the required details');
-    } else if (password.length < 8) {
-      showError('Please make sure the length of your password is 8 or more');
-    } else if (email.contains('@gmail.com')) {
-      print('everything is well');
-    } else {
-      showError(
-          'Invalid email, Please make sure the email is in a correct format');
-    }
-    if (email.contains('@edu.vut.ac.za')) {
-      print('everything is well');
-    } else {
-      showError(
-          'Invalid email, Please make sure the email is in a correct format');
-    }
-    if (_phoneController.text == '') {
-      showError('Please make sure you fill in all the required details');
-    } else if (contacts.length != 9) {
-      showError('Please make sure the contacts are correct');
-    } else if (contacts.length != 9) {
-      showError('Please make sure the contacts are correct');
-    } else {
-      setState(() {
-        Navigator.of(context).pop();
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: ((context) => LandlordFurtherRegistration(
-                      password: passwordController.text,
-                      contactDetails: phoneNumber,
-                      isLandlord: widget.isLandlord,
-                      accomodationName: accomodationName.text,
-                      landlordEmail: emailController.text,
-                    ))));
-      });
-    }
+    print(emailController.text);
+    setState(() {
+      Navigator.of(context).pop();
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: ((context) => LandlordFurtherRegistration(
+                    password: passwordController.text,
+                    contactDetails: phoneNumber,
+                    isLandlord: widget.isLandlord,
+                    accomodationName: accomodationName.text,
+                    landlordEmail: emailController.text,
+                  ))));
+    });
   }
 
   bool _obscureText = true;
@@ -362,206 +314,156 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                             ),
                           ),
                         ),
-                        Container(
-                          width: buttonWidth,
-                          child: TextField(
-                            controller: nameController,
-                            decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusColor: Colors.blue,
-                                fillColor: Colors.blue[50],
-                                filled: true,
-                                prefixIcon: Icon(
-                                  Icons.person,
-                                  color: Colors.blue,
-                                ),
-                                labelText: 'Name'),
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Container(
-                          width: buttonWidth,
-                          child: TextField(
-                            controller: surnameController,
-                            decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusColor: Colors.blue,
-                                fillColor: Colors.blue[50],
-                                filled: true,
-                                prefixIcon: Icon(
-                                  Icons.person,
-                                  color: Colors.blue,
-                                ),
-                                labelText: 'Surname'),
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Container(
-                          width: buttonWidth,
-                          child: TextField(
-                            keyboardType: TextInputType.emailAddress,
-                            controller: emailController,
-                            decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusColor: Colors.blue,
-                                fillColor: Colors.blue[50],
-                                filled: true,
-                                prefixIcon: Icon(
-                                  Icons.mail,
-                                  color: Colors.blue,
-                                ),
-                                labelText: 'Email account'),
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Container(
-                          width: buttonWidth,
-                          child: TextField(
-                            controller: passwordController,
-                            decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusColor: Colors.blue,
-                                fillColor: Colors.blue[50],
-                                filled: true,
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscureText
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                    color: Colors.blue,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscureText = !_obscureText;
-                                    });
-                                  },
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.lock,
-                                  color: Colors.blue,
-                                ),
-                                labelText: 'Password'),
-                            obscureText: _obscureText,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Container(
-                            width: buttonWidth,
-                            child: IntlPhoneField(
-                              decoration: InputDecoration(
-                                labelText: 'Phone Number',
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusColor: Colors.blue,
-                                fillColor: Colors.blue[50],
-                                filled: true,
+                        Form(
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              AuthTextField(
+                                icon: Icons.person,
+                                placeholder: 'Name',
+                                controller: nameController,
+                                onValidate: (value) =>
+                                    TextFieldValidation.name(value!),
                               ),
-                              initialCountryCode: 'ZA',
-                              onChanged: (phone) {
-                                setState(() {
-                                  phoneNumber = phone.completeNumber;
-                                });
-                              },
-                              controller: _phoneController,
-                            )),
-                        SizedBox(height: 8),
-                        Container(
-                          width: buttonWidth,
-                          child: ExpansionTile(
-                            title: Text('Select University'),
-                            children: universities.map((university) {
-                              return RadioListTile<String>(
-                                title: Text(university),
-                                value: university,
-                                groupValue: selectedUniversity,
-                                onChanged: (value) {
+                              SizedBox(height: 8),
+                              AuthTextField(
+                                icon: Icons.person,
+                                placeholder: 'Surname',
+                                controller: surnameController,
+                                onValidate: (value) => TextFieldValidation.name(
+                                    value!,
+                                    textResponse: TextValidateResponse(
+                                        empty: 'Surname is required',
+                                        invalid:
+                                            'Surname cannot have less than 3 chararacters')),
+                              ),
+                              SizedBox(height: 8),
+                              AuthTextField(
+                                placeholder: 'Email',
+                                controller: emailController,
+                                onValidate: (value) =>
+                                    TextFieldValidation.email(value!),
+                                icon: Icons.mail_outline_outlined,
+                              ),
+                              SizedBox(height: 8),
+                              AuthTextField(
+                                visible: _obscureText,
+                                placeholder: 'Password',
+                                controller: passwordController,
+                                onValidate: (value) =>
+                                    TextFieldValidation.strictPassword(value!,
+                                        textResponse: TextValidateResponse(
+                                            empty: 'Password is required',
+                                            invalid:
+                                                'Password should contain special character(!@#\$%^&*)\nNumbers(1234567890)\nUpperCase Chars(A-Z)\nLowerCase Chars(a-z)')),
+                                icon: Icons.password,
+                              ),
+                              SizedBox(height: 8),
+                              AuthTextField(
+                                  icon: Icons.password,
+                                  visible: _obscureText,
+                                  placeholder: 'Confirm password',
+                                  controller: CpasswordController,
+                                  onValidate: (value) =>
+                                      TextFieldValidation.strictPassword(value!,
+                                          textResponse: TextValidateResponse(
+                                              empty: 'Password is required',
+                                              invalid:
+                                                  'Password does not match!'))),
+                              SizedBox(height: 8),
+                              IntlPhoneField(
+                                decoration: InputDecoration(
+                                  labelText: 'Phone Number',
+                                  border: OutlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.blue),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.blue),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusColor: Colors.blue,
+                                  fillColor: Colors.blue[50],
+                                  filled: true,
+                                ),
+                                initialCountryCode: 'ZA',
+                                onChanged: (phone) {
                                   setState(() {
-                                    selectedUniversity = value!;
+                                    phoneNumber = phone.completeNumber;
                                   });
                                 },
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Container(
-                          width: buttonWidth,
-                          child: ExpansionTile(
-                            title: Text('Select Gender',
-                                style: TextStyle(
-                                    color: selectedGender.isEmpty
-                                        ? Colors.red
-                                        : Colors.black)),
-                            children: gender.map((paramgender) {
-                              return RadioListTile<String>(
-                                title: Text(paramgender),
-                                value: paramgender,
-                                groupValue: selectedGender,
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedGender = value!;
-                                  });
+                                controller: _phoneController,
+                              ),
+                              SizedBox(height: 8),
+                              ExpansionTile(
+                                title: Text('Select University'),
+                                children: universities.map((university) {
+                                  return RadioListTile<String>(
+                                    title: Text(university),
+                                    value: university,
+                                    groupValue: selectedUniversity,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        selectedUniversity = value!;
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                              SizedBox(height: 8),
+                              ExpansionTile(
+                                title: Text('Select Gender'),
+                                children: gender.map((gender) {
+                                  return RadioListTile<String>(
+                                    title: Text(gender),
+                                    value: gender,
+                                    groupValue: selectedGender,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        selectedGender = value!;
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                              SizedBox(height: 20),
+                              TextButton(
+                                onPressed: () async {
+                                  if (_formKey.currentState!.validate() &&
+                                      _phoneController.text.length == 9 &&
+                                      _phoneController.text.length == 9) {
+                                    if (CpasswordController.text ==
+                                        passwordController.text) {
+                                      checkStudentValues();
+                                    } else {
+                                      showError('Password does not Match');
+                                    }
+                                  } else {
+                                    showError(
+                                        'Cannot continue without the correct inputs');
+                                  }
                                 },
-                              );
-                            }).toList(),
+                                child: Text(
+                                  'Continue',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 18),
+                                ),
+                                style: ButtonStyle(
+                                    shape: WidgetStatePropertyAll(
+                                        RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(5))),
+                                    foregroundColor:
+                                        WidgetStatePropertyAll(Colors.blue),
+                                    backgroundColor:
+                                        WidgetStatePropertyAll(Colors.blue),
+                                    minimumSize: WidgetStatePropertyAll(
+                                        Size(buttonWidth, 50))),
+                              ),
+                            ],
                           ),
                         ),
-                        SizedBox(height: 20.0),
-                        TextButton(
-                          onPressed: () async {
-
-                            checkStudentValues();
-                          },
-                          child: Text(
-                            'Continue',
-                            style: TextStyle(color: Colors.white, fontSize: 18),
-                          ),
-                          style: ButtonStyle(
-                              shape: WidgetStatePropertyAll(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(5))),
-                              foregroundColor:
-                                  WidgetStatePropertyAll(Colors.blue),
-                              backgroundColor:
-                                  WidgetStatePropertyAll(Colors.blue),
-                              minimumSize: WidgetStatePropertyAll(
-                                  Size(buttonWidth, 50))),
-                        ),
-                        SizedBox(height: 20.0),
                       ]),
                     ),
                   ),
@@ -607,134 +509,133 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                             ),
                           ),
                         ),
-                        Container(
-                          width: buttonWidth,
-                          child: TextField(
-                            keyboardType: TextInputType.emailAddress,
-                            controller: emailController,
-                            decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusColor: Colors.blue,
-                                fillColor: Colors.blue[50],
-                                filled: true,
-                                prefixIcon: Icon(
-                                  Icons.mail,
-                                  color: Colors.blue,
-                                ),
-                                labelText: 'Email'),
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Container(
-                          width: buttonWidth,
-                          child: TextField(
-                            controller: passwordController,
-                            decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusColor: Colors.blue,
-                                fillColor: Colors.blue[50],
-                                filled: true,
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscureText
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                    color: Colors.blue,
+                        Form(
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              AuthTextField(
+                                icon: Icons.person,
+                                placeholder: 'Email',
+                                controller: emailController,
+                                onValidate: (value) =>
+                                    TextFieldValidation.email(value!),
+                              ),
+                              SizedBox(height: 8),
+                              AuthTextField(
+                                icon: Icons.password_rounded,
+                                visible: _obscureText,
+                                placeholder: 'Password',
+                                controller: passwordController,
+                                onValidate: (value) =>
+                                    TextFieldValidation.strictPassword(value!,
+                                        textResponse: TextValidateResponse(
+                                            empty: 'Password is required',
+                                            invalid:
+                                                'Password should have special character(!@#\$%^&*)\nNumbers(1234567890)\nUpperCase Chars(A-Z)\nLowerCase Chars(a-z)')),
+                              ),
+                              SizedBox(height: 8),
+                              AuthTextField(
+                                  icon: Icons.password_rounded,
+                                  visible: _obscureText,
+                                  placeholder: 'Confirm password',
+                                  controller: CpasswordController,
+                                  onValidate: (value) =>
+                                      TextFieldValidation.strictPassword(value!,
+                                          textResponse: TextValidateResponse(
+                                              empty: 'Password is required',
+                                              invalid: passwordController
+                                                          .text !=
+                                                      CpasswordController.text
+                                                  ? 'Password does not match!'
+                                                  : 'Password does not match!'))),
+                              SizedBox(height: 8),
+                              AuthTextField(
+                                placeholder: 'Residence Name',
+                                controller: accomodationName,
+                                onValidate: (value) => TextFieldValidation.name(
+                                    value!,
+                                    textResponse: TextValidateResponse(
+                                        empty: 'Residence name required',
+                                        invalid:
+                                            'Please provide the Residence name')),
+                                icon: Icons.home_work,
+                              ),
+                              SizedBox(height: 8),
+                              IntlPhoneField(
+                                decoration: InputDecoration(
+                                  labelText: 'Phone Number',
+                                  border: OutlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.blue),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscureText = !_obscureText;
-                                    });
-                                  },
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.blue),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusColor: Colors.blue,
+                                  fillColor: Colors.blue[50],
+                                  filled: true,
                                 ),
-                                prefixIcon: Icon(
-                                  Icons.lock,
-                                  color: Colors.blue,
-                                ),
-                                labelText: 'Password'),
-                            obscureText: _obscureText,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        TextField(
-                          controller: accomodationName,
-                          decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.blue),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.blue),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              focusColor: Colors.blue,
-                              fillColor: Colors.blue[50],
-                              filled: true,
-                              prefixIcon: Icon(
-                                Icons.maps_home_work_outlined,
-                                color: Colors.blue,
-                              ),
-                              labelText: 'Accomodation Name'),
-                        ),
-                        SizedBox(height: 8),
-                        Container(
-                            width: buttonWidth,
-                            child: IntlPhoneField(
-                              decoration: InputDecoration(
-                                labelText: 'Phone Number',
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              initialCountryCode: 'ZA',
-                              onChanged: (phone) {
-                                setState(() {
-                                  if (phone.isValidNumber()) {
+                                initialCountryCode: 'ZA',
+                                onChanged: (phone) {
+                                  setState(() {
                                     phoneNumber = phone.completeNumber;
+                                  });
+                                },
+                                controller: _phoneController,
+                              ),
+                              SizedBox(height: 10),
+                              TextButton(
+                                onPressed: () async {
+                                  if (_formKey.currentState!.validate() &&
+                                      _phoneController.text.length == 9) {
+                                    if (CpasswordController.text ==
+                                        passwordController.text) {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: ((context) =>
+                                                  LandlordFurtherRegistration(
+                                                    password:
+                                                        passwordController.text,
+                                                    contactDetails: phoneNumber,
+                                                    isLandlord:
+                                                        widget.isLandlord,
+                                                    accomodationName:
+                                                        accomodationName.text,
+                                                    landlordEmail:
+                                                        emailController.text,
+                                                  ))));
+                                    } else {
+                                      showError('Password does not Match');
+                                    }
+                                  } else {
+                                    showError(
+                                        'Cannot continue without the correct inputs');
                                   }
-                                });
-                              },
-                              controller: _phoneController,
-                            )),
-                        SizedBox(height: 20.0),
-                        ElevatedButton(
-                          onPressed: () async {
-                            checkLandlordValues();
-                          },
-                          child: Text(
-                            widget.isLandlord ? 'Create account' : 'Continue',
-                            style: TextStyle(color: Colors.white, fontSize: 18),
+                                },
+                                child: Text(
+                                  'Continue',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 18),
+                                ),
+                                style: ButtonStyle(
+                                    shape: WidgetStatePropertyAll(
+                                        RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(5))),
+                                    foregroundColor:
+                                        WidgetStatePropertyAll(Colors.blue),
+                                    backgroundColor:
+                                        WidgetStatePropertyAll(Colors.blue),
+                                    minimumSize: WidgetStatePropertyAll(
+                                        Size(buttonWidth, 50))),
+                              ),
+                              SizedBox(height: 10),
+                            ],
                           ),
-                          style: ButtonStyle(
-                              shape: WidgetStatePropertyAll(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(5))),
-                              foregroundColor:
-                                  WidgetStatePropertyAll(Colors.blue),
-                              backgroundColor:
-                                  WidgetStatePropertyAll(Colors.blue),
-                              minimumSize: WidgetStatePropertyAll(
-                                  Size(buttonWidth, 50))),
-                        )
+                        ),
                       ]),
                     ),
                   ),

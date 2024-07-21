@@ -302,7 +302,7 @@ class AccomodationApprovalState extends State<AccomodationApproval> {
                               Radio(
                                 activeColor: Colors.green,
                                 fillColor:
-                                    MaterialStateProperty.all(Colors.green),
+                                    WidgetStateProperty.all(Colors.green),
                                 value: true,
                                 groupValue: accomodationStatus,
                                 onChanged: (value) {
@@ -320,7 +320,7 @@ class AccomodationApprovalState extends State<AccomodationApproval> {
                               Radio(
                                 activeColor: Colors.red,
                                 fillColor:
-                                    MaterialStateProperty.all(Colors.red),
+                                    WidgetStateProperty.all(Colors.red),
                                 value: false,
                                 groupValue: accomodationStatus,
                                 onChanged: (value) {
@@ -424,19 +424,19 @@ class AccomodationApprovalState extends State<AccomodationApproval> {
                           ? 'Approve accommodation'
                           : 'Reject accommodation'),
                       style: ButtonStyle(
-                        shape: MaterialStateProperty.all(
+                        shape: WidgetStateProperty.all(
                           RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(5),
                           ),
                         ),
-                        backgroundColor: MaterialStateProperty.all(
+                        backgroundColor: WidgetStateProperty.all(
                           accomodationStatus == true
                               ? Colors.green
                               : Colors.red[400],
                         ),
                         foregroundColor:
-                            MaterialStateProperty.all(Colors.white),
-                        minimumSize: MaterialStateProperty.all(
+                            WidgetStateProperty.all(Colors.white),
+                        minimumSize: WidgetStateProperty.all(
                           Size(buttonWidth, 50),
                         ),
                       ),

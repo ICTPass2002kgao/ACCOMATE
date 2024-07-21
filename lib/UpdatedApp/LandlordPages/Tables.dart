@@ -278,3 +278,46 @@ class Tables extends StatelessWidget {
   //     _showErrorDialog(e.toString(), context);
   //   }
   // }
+
+// void _saveToPDF() async {
+//   final pdf = pw.Document();
+//   final image = pw.MemoryImage(widget.residenceLogo!);
+
+//   pdf.addPage(
+//     pw.Page(
+//       build: (pw.Context context) {
+//         return pw.Center(
+//           child: pw.Row(
+//             mainAxisAlignment: pw.MainAxisAlignment.center,
+//             children: [
+//               pw.Image(image,height: 100,width: 100),
+
+//              pw.Column(children: [
+//               pw.SizedBox(height: 20),
+//               pw.Text('Account Name: ${bankName}'),
+//               pw.Text('Account Number: ${accountNumber}'),
+//               pw.Text('Branch Code: ${branchCode}'),
+//               pw.Text('Reference: Your Email Address'), ]
+//              )
+//             ],
+//           ),
+//         );
+//       },
+//     ),
+//   );
+
+//   final output = await getTemporaryDirectory();
+//   final file = File("${output.path}/user_info.pdf");
+//   await file.writeAsBytes(await pdf.save());
+
+//   await _uploadToFirebase(file);
+// }
+
+// Future<void> _uploadToFirebase(File file) async {
+//   final storageRef = FirebaseStorage.instance.ref();
+//   final pdfRef = storageRef.child('user_pdfs/${basename(file.path)}');
+//   await pdfRef.putFile(file);
+
+//   final pdfUrl = await pdfRef.getDownloadURL();
+
+// }
