@@ -452,6 +452,8 @@ class _LandlordFurtherRegistrationState
             txtLiveLocation.text =
                 '$country, $province, $city, $street, $postalCode';
           });
+          
+          Navigator.pop(context);
         } else {
           setState(() {
             txtLiveLocation.text =
@@ -496,6 +498,8 @@ class _LandlordFurtherRegistrationState
             txtLiveLocation.text =
                 '$country, $province, $city, $street, $postalCode';
           });
+          
+          Navigator.pop(context);
         } else {
           setState(() {
             txtLiveLocation.text =

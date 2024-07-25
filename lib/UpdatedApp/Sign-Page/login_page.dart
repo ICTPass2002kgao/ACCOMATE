@@ -90,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
           userRole = studentSnapshot['userRole'];
         }
 
-        Navigator.pop(context); // Dismiss the progress dialog
+        Navigator.pop(context); 
 
         if (userRole != null) {
           if (userRole == 'student') {
@@ -98,15 +98,16 @@ class _LoginPageState extends State<LoginPage> {
           } else if (userRole == 'landlord') {
             Navigator.pushReplacementNamed(context, '/landlordPage');
           } else {
-            Navigator.pushReplacementNamed(context, '/adminPage');
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             showCloseIcon: true,
-            content: Text('User role not found.'),
+            content: Text('Account does not exists.'),
             backgroundColor: Colors.red,
             duration: Duration(seconds: 3),
           ));
+          }
+        } else {
+           Navigator.pushReplacementNamed(context, '/adminPage');
+          
         }
       }
     } on FirebaseAuthException catch (e) {
