@@ -72,9 +72,9 @@ class _AdminPageState extends State<AdminPage>
             TextButton(
               child: Text('Yes'),
               onPressed: () async {
-                Navigator.of(context).pop();
+                Navigator.pop(context);
                 await FirebaseAuth.instance.signOut();
-                Navigator.pushReplacementNamed(context, '/startPage');
+                Navigator.pushReplacementNamed(context, '/login');
               },
             ),
           ],
@@ -137,8 +137,8 @@ class _AdminPageState extends State<AdminPage>
               ListTile(
                 leading: Icon(Icons.logout_outlined, color: Colors.white),
                 title: Text('Logout'),
-                onTap: () {
-                  _showLogoutConfirmationDialog(context);
+                onTap: () async {
+                  await _showLogoutConfirmationDialog(context);
                 },
                 textColor: Colors.white,
               )
@@ -147,6 +147,7 @@ class _AdminPageState extends State<AdminPage>
         ),
         backgroundColor: Colors.blue,
       ),
+      backgroundColor: Colors.blue[100],
       body: RefreshIndicator(
         onRefresh: _handleRefresh,
         child: FutureBuilder<List<Map<String, dynamic>>>(

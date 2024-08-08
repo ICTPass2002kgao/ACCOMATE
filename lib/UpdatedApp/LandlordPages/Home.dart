@@ -106,103 +106,105 @@ class _HomePageState extends State<HomePage> {
                   .map((doc) => doc.data() as Map<String, dynamic>)
                   .toList();
 
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconBadge(
-                    hideZero: true,
-                    maxCount: registeredStudents.length,
-                    badgeColor: Colors.blue,
-                    itemCount: registeredStudents.length,
-                    icon:
-                        Icon(Icons.people_sharp, size: 150, color: Colors.blue),
-                  ),
-                  Text(
-                    'Total number of students who Applied [${registeredStudents.length}]',
-                    style: TextStyle(
-                      fontSize: 24,
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconBadge(
+                      hideZero: true,
+                      maxCount: registeredStudents.length,
+                      badgeColor: Colors.blue,
+                      itemCount: registeredStudents.length,
+                      icon:
+                          Icon(Icons.people_sharp, size: 100, color: Colors.blue),
                     ),
-                  ),
-                  Expanded(
-                    child: DataTable2(
-                      headingRowColor: WidgetStatePropertyAll(Colors.grey),
-                      dataRowColor: WidgetStatePropertyAll(Colors.blue[50]),
-                      columnSpacing: 8,
-                      horizontalMargin: 10,
-                      minWidth: 600,
-                      border: TableBorder.all(
-                          style: BorderStyle.solid,
-                          width: 1,
-                          color: Color.fromARGB(255, 145, 204, 252)),
-                      columns: [
-                        DataColumn2(
-                          label: Text('Name'),
-                          size: ColumnSize.S,
-                        ),
-                        DataColumn(
-                          label: Text('Surname'),
-                        ),
-                        DataColumn(
-                          label: Text('Email'),
-                        ),
-                        DataColumn(
-                          label: Text('Phone Number'),
-                        ),
-                        DataColumn(
-                          label: Text('University'),
-                        ),
-                        DataColumn(
-                          label: Text('Gender'),
-                        ),
-                        DataColumn(
-                          label: Text('Application Date and Time'),
-                        ),
-                      ],
-                      rows: registeredStudents
-                          .map((student) => DataRow(cells: [
-                                DataCell(onTap: () {
-                                  ViewApplicantDetails(
-                                    studentApplicationData: student,
-                                  );
-                                }, Text(student['name'] ?? '')),
-                                DataCell(onTap: () {
-                                  ViewApplicantDetails(
-                                    studentApplicationData: student,
-                                  );
-                                }, Text(student['surname'] ?? '')),
-                                DataCell(onTap: () {
-                                  ViewApplicantDetails(
-                                    studentApplicationData: student,
-                                  );
-                                }, Text(student['email'] ?? '')),
-                                DataCell(onTap: () {
-                                  ViewApplicantDetails(
-                                    studentApplicationData: student,
-                                  );
-                                }, Text(student['contactDetails'] ?? '')),
-                                DataCell(onTap: () {
-                                  ViewApplicantDetails(
-                                    studentApplicationData: student,
-                                  );
-                                }, Text(student['university'] ?? '')),
-                                DataCell(onTap: () {
-                                  ViewApplicantDetails(
-                                    studentApplicationData: student,
-                                  );
-                                }, Text(student['gender'] ?? '')),
-                                DataCell(onTap: () {
-                                  ViewApplicantDetails(
-                                    studentApplicationData: student,
-                                  );
-                                },
-                                    Text(DateFormat('yyyy-MM-dd HH:mm').format(
-                                        student['appliedDate'].toDate() ??
-                                            DateTime.now()))),
-                              ]))
-                          .toList(),
+                    Text(
+                      'Total number of students who Applied [${registeredStudents.length}]',
+                      style: TextStyle(
+                        fontSize: 24,
+                      ),
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: DataTable2(
+                        headingRowColor: WidgetStatePropertyAll(Colors.grey),
+                        dataRowColor: WidgetStatePropertyAll(Colors.blue[50]),
+                        columnSpacing: 8,
+                        horizontalMargin: 10,
+                        minWidth: 600,
+                        border: TableBorder.all(
+                            style: BorderStyle.solid,
+                            width: 1,
+                            color: Color.fromARGB(255, 145, 204, 252)),
+                        columns: [
+                          DataColumn2(
+                            label: Text('Name'),
+                            size: ColumnSize.S,
+                          ),
+                          DataColumn(
+                            label: Text('Surname'),
+                          ),
+                          DataColumn(
+                            label: Text('Email'),
+                          ),
+                          DataColumn(
+                            label: Text('Phone Number'),
+                          ),
+                          DataColumn(
+                            label: Text('University'),
+                          ),
+                          DataColumn(
+                            label: Text('Gender'),
+                          ),
+                          DataColumn(
+                            label: Text('Application Date and Time'),
+                          ),
+                        ],
+                        rows: registeredStudents
+                            .map((student) => DataRow(cells: [
+                                  DataCell(onTap: () {
+                                    ViewApplicantDetails(
+                                      studentApplicationData: student,
+                                    );
+                                  }, Text(student['name'] ?? '')),
+                                  DataCell(onTap: () {
+                                    ViewApplicantDetails(
+                                      studentApplicationData: student,
+                                    );
+                                  }, Text(student['surname'] ?? '')),
+                                  DataCell(onTap: () {
+                                    ViewApplicantDetails(
+                                      studentApplicationData: student,
+                                    );
+                                  }, Text(student['email'] ?? '')),
+                                  DataCell(onTap: () {
+                                    ViewApplicantDetails(
+                                      studentApplicationData: student,
+                                    );
+                                  }, Text(student['contactDetails'] ?? '')),
+                                  DataCell(onTap: () {
+                                    ViewApplicantDetails(
+                                      studentApplicationData: student,
+                                    );
+                                  }, Text(student['university'] ?? '')),
+                                  DataCell(onTap: () {
+                                    ViewApplicantDetails(
+                                      studentApplicationData: student,
+                                    );
+                                  }, Text(student['gender'] ?? '')),
+                                  DataCell(onTap: () {
+                                    ViewApplicantDetails(
+                                      studentApplicationData: student,
+                                    );
+                                  },
+                                      Text(DateFormat('yyyy-MM-dd HH:mm').format(
+                                          student['appliedDate'].toDate() ??
+                                              DateTime.now()))),
+                                ]))
+                            .toList(),
+                      ),
+                    ),
+                  ],
+                ),
               );
             } else if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));

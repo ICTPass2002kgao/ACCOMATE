@@ -1,7 +1,9 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last, sized_box_for_whitespace
 
+import 'package:api_com/UpdatedApp/Accomate%20pages/Functions.dart';
 import 'package:api_com/UpdatedApp/Sign-up-Pages/either_landlord_or_student.dart';
 import 'package:flutter/material.dart';
+import 'package:page_transition/page_transition.dart';
 
 class RegistrationOption extends StatefulWidget {
   const RegistrationOption({super.key});
@@ -34,10 +36,15 @@ class _RegistrationOptionState extends State<RegistrationOption> {
     Navigator.pop(context);
     Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) => StudentOrLandlord(isLandlord: isLandlord, guest: false,)));
+        PageTransition(
+            type: PageTransitionType.fade,
+            child: StudentOrLandlord(
+              isLandlord: isLandlord,
+              guest: false,
+            )));
   }
 
+  TermsAndConditions _terms = TermsAndConditions();
   @override
   Widget build(BuildContext context) {
     double buttonWidth =

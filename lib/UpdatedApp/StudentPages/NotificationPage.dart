@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class NotificationPage extends StatefulWidget {
-  final Function onNotificationOpened; // Added callback function
+  final Function onNotificationOpened;
 
   const NotificationPage({Key? key, required this.onNotificationOpened})
       : super(key: key);
@@ -63,7 +63,7 @@ class _NotificationPageState extends State<NotificationPage>
             documentSnapshot.data() as Map<String, dynamic>;
         studentApplications.add({
           ...applicationData,
-          'documentId': documentSnapshot.id,  
+          'documentId': documentSnapshot.id,
         });
       }
 
@@ -109,6 +109,10 @@ class _NotificationPageState extends State<NotificationPage>
 
   @override
   Widget build(BuildContext context) {
+    double containerWidth =
+        MediaQuery.of(context).size.width < 550 ? double.infinity : 650;
+    bool isLargeScreen = MediaQuery.of(context).size.width > 650;
+
     return Scaffold(
       backgroundColor: Colors.blue[100],
       body: SmartRefresher(
@@ -135,117 +139,158 @@ class _NotificationPageState extends State<NotificationPage>
                         ],
                       ))))
               : Padding(
-                  padding: const EdgeInsets.only(left: 12.0, right: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Notifications',
-                        style: TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      for (int index = 0;
-                          index < _studentApplications.length;
-                          index++)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 5.0),
-                          child: AnimatedCard(
-          direction: AnimatedCardDirection.top,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: Colors.blue),
+                  padding:
+                      const EdgeInsets.only(left: 12.0, right: 12, top: 10),
+                  child: Center(
+                    child: Container(
+                      decoration: BoxDecoration(
+                          border: Border.all(
+                            color: isLargeScreen
+                                ? Colors.blue
+                                : Colors.transparent,
+                          ),
+                          borderRadius: BorderRadius.circular(10)),
+                      width: containerWidth,
+                      child: Padding(
+                        padding: const EdgeInsets.all(18.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Notifications',
+                              style: TextStyle(
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold,
                               ),
-                              child: Column(
-                                children: [
-                                  _studentApplications.isEmpty
-                                      ? Center(
-                                          child: Text(
-                                          'No Notification',
-                                          style: TextStyle(
-                                            fontSize: 25,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ))
-                                      : ListTile(
-                                          onTap: () {
-                                            _markNotificationAsRead(
-                                                _studentApplications[index]
-                                                    ['documentId']);
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    ViewApplicationResponses(
-                                                  studentApplicationData:
-                                                      _studentApplications[index],
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          title: Text(
-                                            '${_studentApplications[index]['accomodationName']}',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontWeight:
-                                                  _studentApplications[index]
-                                                              ['read'] ==
-                                                          true
-                                                      ? FontWeight.normal
-                                                      : FontWeight.w900,
-                                            ),
-                                          ),
-                                          subtitle: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                _studentApplications[index]
-                                                            ['status'] ==
-                                                        true
-                                                    ? 'Hi ${_userData?['name'] ?? ''}, your application from ${_studentApplications[index]['accomodationName']} was successfully approved'
-                                                    : 'Hi ${_userData?['name'] ?? ''}, we regret to inform you that your application from ${_studentApplications[index]['accomodationName']} was Unsuccessful',
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Divider(),
+                            if (_studentApplications.isEmpty)
+                              Center(
+                                  child: Text(
+                                'No Notification',
+                                style: TextStyle(
+                                  fontSize: 25,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )),
+                            for (int index = 0;
+                                index < _studentApplications.length;
+                                index++)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 5.0),
+                                child: AnimatedCard(
+                                  direction: AnimatedCardDirection.top,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(5),
+                                      border: Border.all(color: Colors.blue),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        _studentApplications.isEmpty
+                                            ? Center(
+                                                child: Text(
+                                                'No Notification',
                                                 style: TextStyle(
-                                                  fontWeight:
-                                                      _studentApplications[index]
-                                                                  ['read'] ==
-                                                              true
-                                                          ? FontWeight.normal
-                                                          : FontWeight.w900,
+                                                  fontSize: 25,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
-                                              ),
-                                              Text(
-                                                DateFormat('yyyy-MM-dd HH:mm')
-                                                    .format(_studentApplications[
-                                                            index]['feedbackDate']
-                                                        .toDate()),
-                                                style: TextStyle(
+                                              ))
+                                            : ListTile(
+                                                onTap: () {
+                                                  _markNotificationAsRead(
+                                                      _studentApplications[
+                                                          index]['documentId']);
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          ViewApplicationResponses(
+                                                        studentApplicationData:
+                                                            _studentApplications[
+                                                                index],
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                                title: Text(
+                                                  '${_studentApplications[index]['accomodationName']}',
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
                                                     fontWeight:
                                                         _studentApplications[
                                                                         index]
                                                                     ['read'] ==
                                                                 true
                                                             ? FontWeight.normal
-                                                            : FontWeight.w500,
-                                                    fontSize: 14),
+                                                            : FontWeight.w900,
+                                                  ),
+                                                ),
+                                                subtitle: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      _studentApplications[
+                                                                      index]
+                                                                  ['status'] ==
+                                                              true
+                                                          ? 'Hi ${_userData?['name'] ?? ''}, your application from ${_studentApplications[index]['accomodationName']} was successfully approved'
+                                                          : 'Hi ${_userData?['name'] ?? ''}, we regret to inform you that your application from ${_studentApplications[index]['accomodationName']} was Unsuccessful',
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            _studentApplications[
+                                                                            index]
+                                                                        [
+                                                                        'read'] ==
+                                                                    true
+                                                                ? FontWeight
+                                                                    .normal
+                                                                : FontWeight
+                                                                    .w900,
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      DateFormat(
+                                                              'yyyy-MM-dd HH:mm')
+                                                          .format(_studentApplications[
+                                                                      index][
+                                                                  'feedbackDate']
+                                                              .toDate()),
+                                                      style: TextStyle(
+                                                          fontWeight: _studentApplications[
+                                                                          index]
+                                                                      [
+                                                                      'read'] ==
+                                                                  true
+                                                              ? FontWeight
+                                                                  .normal
+                                                              : FontWeight.w500,
+                                                          fontSize: 14),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ],
-                                          ),
-                                        ),
-                                  SizedBox(
-                                    height: 5,
-                                  )
-                                ],
+                                        SizedBox(
+                                          height: 5,
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
+                          ],
                         ),
-                    ],
+                      ),
+                    ),
                   ),
                 ),
         ),

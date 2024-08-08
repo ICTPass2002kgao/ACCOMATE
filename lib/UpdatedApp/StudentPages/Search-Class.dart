@@ -18,12 +18,18 @@ class _SearchViewState extends State<SearchView> {
 
   @override
   Widget build(BuildContext context) {
+    double containerWidth =
+        MediaQuery.of(context).size.width < 550 ? double.infinity : 650;
+    bool isLargeScreen = MediaQuery.of(context).size.width > 650;
+
     return Scaffold(
+      backgroundColor: Colors.blue[100],
       appBar: AppBar(
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         title: SizedBox(
-          height: 40,
+          height: 50,
+          width: isLargeScreen ? 400 : double.infinity,
           child: TextField(
             onChanged: (value) {
               setState(() {
@@ -79,17 +85,24 @@ class _SearchViewState extends State<SearchView> {
                 amenities.any((amenity) => amenity.contains(searchName));
           }).toList();
 
-          return Container(
-            color: Colors.blue[100],
-            child: ListView.builder(
-              itemCount: filteredDocs.length,
-              itemBuilder: (context, index) {
-                var data = filteredDocs[index];
-                var landlordData = data.data() as Map<String, dynamic>;
-                return landlordData['accomodationStatus'] == true
-                    ? _buildListItem(landlordData, context)
-                    : Container();
-              },
+          return Center(
+            child: Container(
+              decoration: BoxDecoration(
+                  border: Border.all(
+                    color: isLargeScreen ? Colors.blue : Colors.transparent,
+                  ),
+                  borderRadius: BorderRadius.circular(10)),
+              width: containerWidth,
+              child: ListView.builder(
+                itemCount: filteredDocs.length,
+                itemBuilder: (context, index) {
+                  var data = filteredDocs[index];
+                  var landlordData = data.data() as Map<String, dynamic>;
+                  return landlordData['accomodationStatus'] == true
+                      ? _buildListItem(landlordData, context)
+                      : Container();
+                },
+              ),
             ),
           );
         },
@@ -170,48 +183,58 @@ class _SearchViewState extends State<SearchView> {
 
   Widget _buildListItem(
       Map<String, dynamic> landlordData, BuildContext context) {
+    double containerWidth =
+        MediaQuery.of(context).size.width < 550 ? double.infinity : 650;
+    bool isLargeScreen = MediaQuery.of(context).size.width > 650;
     return SingleChildScrollView(
-      child: Padding(
-        padding:
-            const EdgeInsets.only(bottom: 5.0, left: 10, right: 10, top: 5),
-        child: AnimatedCard(
-          direction: AnimatedCardDirection.bottom,
-          child: Container(
-            decoration: BoxDecoration(border: Border.all(color: Colors.blue)),
-            child: Column(
-              children: [
-                ListTile(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              AccomodationPage(landlordData: landlordData)),
-                    );
-                  },
-                  trailing: Icon(Icons.arrow_forward_rounded),
-                  leading: CircleAvatar(
-                    radius: 24,
-                    backgroundImage:
-                        NetworkImage(landlordData['profilePicture']),
-                  ),
-                  title: RichText(
-                    text: TextSpan(
-                      children: highlightOccurrences(
-                          landlordData['accomodationName'], searchName),
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 16,
+      child: Center(
+        child: Container(
+          decoration: BoxDecoration(
+              border: Border.all(
+                color: isLargeScreen ? Colors.blue : Colors.transparent,
+              ),
+              borderRadius: BorderRadius.circular(10)),
+          width: containerWidth,
+          child: Padding(
+            padding:
+                const EdgeInsets.only(bottom: 5.0, left: 10, right: 10, top: 5),
+            child: AnimatedCard(
+              direction: AnimatedCardDirection.bottom,
+              child: Column(
+                children: [
+                  ListTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                AccomodationPage(landlordData: landlordData)),
+                      );
+                    },
+                    trailing: Icon(Icons.arrow_forward_rounded),
+                    leading: CircleAvatar(
+                      radius: 24,
+                      backgroundImage:
+                          NetworkImage(landlordData['profilePicture']),
+                    ),
+                    title: RichText(
+                      text: TextSpan(
+                        children: highlightOccurrences(
+                            landlordData['accomodationName'], searchName),
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
+                    subtitle: Text(
+                      landlordData['email'],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  subtitle: Text(
-                    landlordData['email'],
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

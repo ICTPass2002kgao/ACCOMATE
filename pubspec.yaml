@@ -1,5 +1,5 @@
 name: api_com
-description: A new Flutter project.
+description: accomate.co.za.
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
@@ -57,12 +57,14 @@ dependencies:
   connectivity_plus: ^6.0.3
   lottie: ^3.1.0 
   flutter_swiper_view: ^1.1.8
+  url_strategy: ^0.2.0
   url_launcher: ^6.2.6
   pull_to_refresh: ^2.0.0
   flutter_intl_phone_field: ^0.0.4 
   flutter_credit_card: ^4.0.1 
   syncfusion_flutter_pdfviewer: ^26.1.40  
-  icon_badge: ^1.0.0 
+  icon_badge: ^1.0.0
+  badges: ^3.1.2 
   data_table_2: ^2.5.15
   text_field_validation: ^1.0.2 
   iconsax: ^0.0.8
@@ -73,7 +75,15 @@ dependencies:
   transition: ^2.0.2
   animated_loading_border: ^0.0.2
   image_picker_web: ^4.0.0
-  
+  cached_network_image: ^3.3.1
+  sidebarx: ^0.17.1
+  flexible_grid_view: ^0.0.2
+  animate_ease: ^0.0.1
+  page_transition: ^2.1.0
+   
+  liquid_progress_indicator_v2: ^0.5.0
+  colorful_circular_progress_indicator: ^0.0.2
+
     
 
 

@@ -1,9 +1,12 @@
 import 'dart:convert';
 
+import 'package:animate_ease/animate_ease.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/Tables.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -94,20 +97,36 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
 
   Future<void> sendEmail(
       String recipientEmail, String subject, String body) async {
-    final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
-    final message = Message()
-      ..from = Address('accomate33@gmail.com', 'Accomate Team')
-      ..recipients.add(recipientEmail)
-      ..subject = subject
-      ..html = body;
+    if (!kIsWeb) {
+      final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
+      final message = Message()
+        ..from = Address('accomate33@gmail.com', 'Accomate')
+        ..recipients.add(recipientEmail)
+        ..subject = subject
+        ..html = body;
 
-    try {
-      await send(message, smtpServer);
-      print('Email sent successfully');
-    } catch (e) {
-      print('Error sending email: $e');
+      try {
+        await send(message, smtpServer);
+        print('Email sent successfully');
+      } catch (e) {
+        print('Error sending email: $e');
+      }
+    } else {
+      try {
+        final result = await sendEmailCallable.call({
+          'to': recipientEmail,
+          'subject': subject,
+          'body': body,
+        });
+        print(result.data);
+      } catch (e) {
+        print(e.toString());
+      }
     }
   }
+
+  final HttpsCallable sendEmailCallable =
+      FirebaseFunctions.instance.httpsCallable('sendEmail');
 
   void _appliedStudent(String mess, String title) {
     showDialog(
@@ -237,11 +256,11 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
                       onPressed: () async {
                         Navigator.of(context).pop();
                         Navigator.pushReplacementNamed(context, '/studentPage');
-                        String? fcmToken = await _firebaseMessaging.getToken();
-                        _sendNotification(
-                            'Successful Application',
-                            'Hello, ${_userData?['name'] ?? ''}, your application was sent successfully.',
-                            fcmToken);
+                        // String? fcmToken = await _firebaseMessaging.getToken();
+                        // _sendNotification(
+                        //     'Successful Application',
+                        //     'Hello, ${_userData?['name'] ?? ''}, your application was sent successfully.',
+                        //     fcmToken);
                       },
                       child: Text('Done'),
                       style: ButtonStyle(
@@ -294,7 +313,7 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
       if (applicationSnapshot.exists) {
         Navigator.of(context).pop();
         _appliedStudent(
-            'Please note that an application cannot be duplicated, you are already applied on this residence.',
+            'Please note that an application cannot be duplicated, you\'ve already applied in this residence.',
             'Duplicating Application');
 
         return;
@@ -329,25 +348,36 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
         'applicationReviewed': false,
         'appliedDate': appliedDate,
       });
-      sendEmail(
-        widget.landlordData['email'] ?? '',
-        'Application Received',
-        '''<p>Hi ${widget.landlordData['accomodationName'] ?? ''} landlord, <br/>You have a new application from a student at ${_userData?['university']}.<br/>Name & Surname:${_userData?['name']} ${_userData?['surname']} <br/>Best Regards<br/>Your Accomate Team </p>''',
-      );
+      !kIsWeb
+          ? sendEmail(
+              widget.landlordData['email'] ?? '',
+              'Application Received',
+              '''<p>Hi ${widget.landlordData['accomodationName'] ?? ''} landlord, <br/>You have a new application from a student at ${_userData?['university']}.<br/>Name & Surname:${_userData?['name']} ${_userData?['surname']} <br/>Best Regards<br/>Your Accomate Team </p>''',
+            )
+          : sendEmail(
+              widget.landlordData['email'] ?? '',
+              'Application Received',
+              ' Hi ${widget.landlordData['accomodationName'] ?? ''} landlord, \nYou have a new application from a student at ${_userData?['university']}.\nName & Surname:${_userData?['name']} ${_userData?['surname']} \nBest Regards\nYour Accomate Team ',
+            );
 
-      await sendEmail(
-          _userData?['email'] ?? '',
-          'Application sent successfully',
-          '''<p>Hi ${_userData?['name'] ?? ''} , <br/>Your application was sent successfully to ${widget.landlordData['accomodationName'] ?? ''}, You will get further communication soon.<br/><br/>Best Regards<br/>Your Accomate Team</p> ''');
+      await !kIsWeb
+          ? sendEmail(
+              _userData?['email'] ?? '',
+              'Application sent successfully',
+              '''<p>Hi ${_userData?['name'] ?? ''} , <br/>Your application was sent successfully to ${widget.landlordData['accomodationName'] ?? ''}, You will get further communication soon.<br/><br/>Best Regards<br/>Your Accomate Team</p> ''')
+          : sendEmail(
+              _userData?['email'] ?? '',
+              'Application sent successfully',
+              'Hi ${_userData?['name'] ?? ''} , \nYour application was sent successfully to ${widget.landlordData['accomodationName'] ?? ''}, You will get further communication soon.\n\nBest Regards\nYour Accomate Team');
 
-      String? fcmToken = await _firebaseMessaging.getToken();
-      _sendNotification(
-          'Successful Application',
-          'Hello, ${_userData?['name'] ?? ''}, your application was sent successfully.',
-          fcmToken);
-
-      Navigator.of(context).pop();
       showLoadingDialog(context);
+
+      // String? fcmToken = await _firebaseMessaging.getToken();
+      // _sendNotification(
+      //     'Successful Application',
+      //     'Hello, ${_userData?['name'] ?? ''}, your application was sent successfully.',
+      //     fcmToken);
+ 
     } catch (e) {
       print(e);
     }
@@ -357,114 +387,142 @@ class _ApplyAccomodationState extends State<ApplyAccomodation> {
   Widget build(BuildContext context) {
     double buttonWidth =
         MediaQuery.of(context).size.width < 550 ? double.infinity : 500;
+    double containerWidth =
+        MediaQuery.of(context).size.width < 550 ? double.infinity : 650;
+    bool isLargeScreen = MediaQuery.of(context).size.width > 650;
+
     return Scaffold(
       backgroundColor: Colors.blue[100],
       appBar: AppBar(
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
-        title: Text('Apply Accomodation'),
+        title: Text('Submit Application'),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                  'Hi ${_userData?['name']}, we are informing you that you are about to apply for ${widget.landlordData['accomodationName']} with the following details'),
-              SizedBox(height: 16.0),
-              Tables(columnName: 'Name', columnValue: _userData?['name'] ?? ''),
-              Tables(
-                  columnName: 'Surname',
-                  columnValue: _userData?['surname'] ?? ''),
-              Tables(
-                  columnName: 'University',
-                  columnValue: _userData?['university'] ?? ''),
-              Tables(
-                  columnName: 'Email', columnValue: _userData?['email'] ?? ''),
-              Tables(
-                  columnName: 'Gender',
-                  columnValue: _userData?['gender'] ?? ''),
-              Tables(
-                  columnName: 'Phone Number',
-                  columnValue: _userData?['contactDetails'] ?? ''),
-              ExpansionTile(
-                title: Text('Select type of a room'),
-                children: widget.landlordData['roomType'].keys
-                    .map<Widget>((roomType) {
-                  return RadioListTile<String>(
-                    title: Text(roomType),
-                    value: roomType,
-                    groupValue: selectedRoomsType,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedRoomsType = value!;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-              SizedBox(height: 10),
-              ExpansionTile(
-                title: Text('Select period of study',
-                    style: TextStyle(
-                        color: _periodOfStudy.isEmpty
-                            ? Colors.red
-                            : Colors.black)),
-                children: _periodOfStudy.map((StudyDurationStudy) {
-                  return RadioListTile<String>(
-                    title: Text(StudyDurationStudy),
-                    value: StudyDurationStudy,
-                    groupValue: periodOfStudy,
-                    onChanged: (value) {
-                      setState(() {
-                        periodOfStudy = value!;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-              ExpansionTile(
-                title: Text('Select year of study',
-                    style: TextStyle(
-                        color:
-                            yearOfStudy.isEmpty ? Colors.red : Colors.black)),
-                children: _yearsOfStudy.map((year) {
-                  return RadioListTile<String>(
-                    title: Text(year),
-                    value: year,
-                    groupValue: yearOfStudy,
-                    onChanged: (value) {
-                      setState(() {
-                        yearOfStudy = value!;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-              // if (_userData?['isRegistered'] == false)
-              ElevatedButton(
-                onPressed: selectedRoomsType.isEmpty ||
-                        periodOfStudy.isEmpty ||
-                        yearOfStudy.isEmpty
-                    ? null
-                    : () => _saveApplicationDetails(),
-                child: Text('Submit Application'),
-                style: ButtonStyle(
-                  shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5))),
-                  minimumSize: WidgetStatePropertyAll(Size(buttonWidth, 50)),
-                  foregroundColor: WidgetStateProperty.all(Colors.white),
-                  backgroundColor: WidgetStateProperty.all(
-                      selectedRoomsType.isEmpty ||
-                              periodOfStudy.isEmpty ||
-                              yearOfStudy.isEmpty
-                          ? Colors.grey
-                          : Colors.blue),
+          child: Center(
+            child: Container(
+              width: containerWidth,
+              decoration: BoxDecoration(
+                  border: Border.all(
+                    color: isLargeScreen ? Colors.blue : Colors.transparent,
+                  ),
+                  borderRadius: BorderRadius.circular(10)),
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: AnimateEase(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                          'Hi ${_userData?['name']}, we are informing you that you are about to apply for ${widget.landlordData['accomodationName']} with the following details'),
+                      SizedBox(height: 16.0),
+                      Tables(
+                          columnName: 'Name',
+                          columnValue: _userData?['name'] ?? ''),
+                      Tables(
+                          columnName: 'Surname',
+                          columnValue: _userData?['surname'] ?? ''),
+                      Tables(
+                          columnName: 'University',
+                          columnValue: _userData?['university'] ?? ''),
+                      Tables(
+                          columnName: 'Email',
+                          columnValue: _userData?['email'] ?? ''),
+                      Tables(
+                          columnName: 'Gender',
+                          columnValue: _userData?['gender'] ?? ''),
+                      Tables(
+                          columnName: 'Phone Number',
+                          columnValue: _userData?['contactDetails'] ?? ''),
+                      ExpansionTile(
+                        title: Text('Select type of a room'),
+                        children: widget.landlordData['roomType'].keys
+                            .map<Widget>((roomType) {
+                          return RadioListTile<String>(
+                            title: Text(roomType),
+                            value: roomType,
+                            groupValue: selectedRoomsType,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedRoomsType = value!;
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      SizedBox(height: 10),
+                      ExpansionTile(
+                        title: Text('Select period of study',
+                            style: TextStyle(
+                                color: _periodOfStudy.isEmpty
+                                    ? Colors.red
+                                    : Colors.black)),
+                        children: _periodOfStudy.map((StudyDurationStudy) {
+                          return RadioListTile<String>(
+                            title: Text(StudyDurationStudy),
+                            value: StudyDurationStudy,
+                            groupValue: periodOfStudy,
+                            onChanged: (value) {
+                              setState(() {
+                                periodOfStudy = value!;
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      ExpansionTile(
+                        title: Text('Select year of study',
+                            style: TextStyle(
+                                color: yearOfStudy.isEmpty
+                                    ? Colors.red
+                                    : Colors.black)),
+                        children: _yearsOfStudy.map((year) {
+                          return RadioListTile<String>(
+                            title: Text(year),
+                            value: year,
+                            groupValue: yearOfStudy,
+                            onChanged: (value) {
+                              setState(() {
+                                yearOfStudy = value!;
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      ElevatedButton(
+                        onPressed: selectedRoomsType.isEmpty ||
+                                periodOfStudy.isEmpty ||
+                                yearOfStudy.isEmpty
+                            ? null
+                            : () => _saveApplicationDetails(),
+                        child: Text('Submit Application'),
+                        style: ButtonStyle(
+                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5))),
+                          minimumSize:
+                              WidgetStatePropertyAll(Size(double.infinity, 50)),
+                          foregroundColor: WidgetStateProperty.all(
+                              selectedRoomsType.isEmpty ||
+                                      periodOfStudy.isEmpty ||
+                                      yearOfStudy.isEmpty
+                                  ? Colors.blue
+                                  : Colors.white),
+                          backgroundColor: WidgetStateProperty.all(
+                              selectedRoomsType.isEmpty ||
+                                      periodOfStudy.isEmpty ||
+                                      yearOfStudy.isEmpty
+                                  ? Colors.blue[50]
+                                  : Colors.blue),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),

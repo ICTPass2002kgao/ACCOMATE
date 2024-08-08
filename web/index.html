@@ -18,7 +18,7 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="accomate.ac.za">
 
   <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -40,6 +40,8 @@
   <script src="flutter.js" defer></script>
 </head>
 <body>
+
+  <script src="https://www.gstatic.com/firebasejs/" ></script>
   <script>
     window.addEventListener('load', function(ev) {
       // Download main.dart.js
@@ -54,6 +56,28 @@
         }
       });
     });
-  </script>
+  </script> 
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage.js"></script> 
+  
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-analytics.js";
+
+  
+  const firebaseConfig = {
+    apiKey: "AIzaSyAjrEagv9XsigNJX68vnpDp3SWZgpoj_2w",
+    authDomain: "accomodationapp-9d851.firebaseapp.com",
+    databaseURL: "https://accomodationapp-9d851-default-rtdb.firebaseio.com",
+    projectId: "accomodationapp-9d851",
+    storageBucket: "accomodationapp-9d851.appspot.com",
+    messagingSenderId: "1088298291155",
+    appId: "1:1088298291155:web:3f58e16cc7f0f81b61a926",
+    measurementId: "G-DMQCCNN1RD"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 </body>
 </html>

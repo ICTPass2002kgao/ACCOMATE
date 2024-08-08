@@ -41,35 +41,35 @@ exports.sendEmail = functions.https.onCall(async (data) => {
   }
 });
 
-// exports.sendNotification = functions.https.onRequest(async (req, res) => {
+exports.sendNotification = functions.https.onRequest(async (req, res) => {
   
-//   if (req.method !== "POST") {
-//     return res.status(405).send("Method Not Allowed");
-//   }
+  if (req.method !== "POST") {
+    return res.status(405).send("Method Not Allowed");
+  }
  
-//   const { title, body, token } = req.body;
+  const { title, body, token } = req.body;
 
-//   if (!title || !body || !token) {
-//     return res.status(400).send("Missing parameters");
-//   }
+  if (!title || !body || !token) {
+    return res.status(400).send("Missing parameters");
+  }
 
-//   const message = {
-//     notification: {
-//       title: title,
-//       body: body,
-//     },
-//     token: token, // Use the token received from the request body
-//   };
+  const message = {
+    notification: {
+      title: title,
+      body: body,
+    },
+    token: token, // Use the token received from the request body
+  };
 
-//   try {
-//     await admin.messaging().send(message);
-//     console.log(`Notification sent to token: ${token}`);
-//     return res.status(200).send("Notification sent successfully");
-//   } catch (error) {
-//     console.error("Error sending notification:", error);
-//     return res.status(500).send("Error sending notification");
-//   }
-// });
+  try {
+    await admin.messaging().send(message);
+    console.log(`Notification sent to token: ${token}`);
+    return res.status(200).send("Notification sent successfully");
+  } catch (error) {
+    console.error("Error sending notification:", error);
+    return res.status(500).send("Error sending notification");
+  }
+});
 
 
 // //payments  

@@ -14,7 +14,7 @@ class AccountDetails extends StatefulWidget {
 
 class _AccountDetailsState extends State<AccountDetails> {
   late User? _user;
-  Map<String, dynamic>? _userData; // Make _userData nullable
+  Map<String, dynamic>? _userData;
 
   @override
   void initState() {
@@ -48,7 +48,8 @@ class _AccountDetailsState extends State<AccountDetails> {
   Widget build(BuildContext context) {
     double buttonWidth =
         MediaQuery.of(context).size.width < 550 ? double.infinity : 600;
-    bool status = _userData?['isNsfasAccredited'];
+    bool status = _userData?['isNsfasAccredited'] ?? false;
+
     return Scaffold(
         backgroundColor: Colors.blue[100],
         body: isLoading
@@ -69,11 +70,11 @@ class _AccountDetailsState extends State<AccountDetails> {
                           child: Swiper(
                             itemBuilder: (BuildContext context, int index) {
                               return Image.network(
-                                _userData?['displayedImages'][index],
+                                _userData?['displayedImages'][index] ?? '',
                                 fit: BoxFit.cover,
                               );
                             },
-                            itemCount: _userData?['displayedImages'].length,
+                            itemCount: _userData?['displayedImages']?.length ?? 0,
                             pagination: SwiperPagination(
                                 builder: SwiperPagination.rect),
                             control: SwiperControl(
@@ -90,7 +91,7 @@ class _AccountDetailsState extends State<AccountDetails> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               SizedBox(height: 5),
-                              _userData!['accomodationStatus'] == true
+                              (_userData?['accomodationStatus'] ?? false) == true
                                   ? Row(
                                       children: [
                                         Text('Status:'),
@@ -173,7 +174,7 @@ class _AccountDetailsState extends State<AccountDetails> {
                                       TextStyle(fontWeight: FontWeight.bold)),
                               SizedBox(height: 5),
                               for (String university
-                                  in _userData?['selectedUniversity'].keys)
+                                  in _userData?['selectedUniversity']?.keys ?? [])
                                 if (_userData?['selectedUniversity']
                                         ?[university] ??
                                     false)
@@ -189,13 +190,13 @@ class _AccountDetailsState extends State<AccountDetails> {
                                       children: [
                                         Radio(
                                           activeColor: Colors.green,
-                                          fillColor: WidgetStatePropertyAll(
+                                          fillColor: MaterialStatePropertyAll(
                                               Colors.green),
                                           value: false,
                                           groupValue: isFull,
                                           onChanged: (value) {
                                             setState(() {
-                                              isFull = value!;
+                                              isFull = value as bool;
                                             });
                                           },
                                         ),
@@ -207,13 +208,13 @@ class _AccountDetailsState extends State<AccountDetails> {
                                       children: [
                                         Radio(
                                           activeColor: Colors.red,
-                                          fillColor: WidgetStatePropertyAll(
+                                          fillColor: MaterialStatePropertyAll(
                                               Colors.red),
                                           value: true,
                                           groupValue: isFull,
                                           onChanged: (value) {
                                             setState(() {
-                                              isFull = value!;
+                                              isFull = value as bool;
                                             });
                                           },
                                         ),
@@ -293,18 +294,18 @@ class _AccountDetailsState extends State<AccountDetails> {
                                       },
                                       child: Text('Update'),
                                       style: ButtonStyle(
-                                          shape: WidgetStatePropertyAll(
+                                          shape: MaterialStatePropertyAll(
                                               RoundedRectangleBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                           5))),
                                           backgroundColor:
-                                              WidgetStatePropertyAll(
+                                              MaterialStatePropertyAll(
                                                   Colors.blue),
                                           foregroundColor:
-                                              WidgetStatePropertyAll(
+                                              MaterialStatePropertyAll(
                                                   Colors.white),
-                                          minimumSize: WidgetStatePropertyAll(
+                                          minimumSize: MaterialStatePropertyAll(
                                               Size(double.infinity, 50))),
                                     )
                                   : Container(),
@@ -333,7 +334,7 @@ class _AccountDetailsState extends State<AccountDetails> {
                                                 color: status == true
                                                     ? Colors.green
                                                     : Colors.red)),
-                                        value: true,
+                                        value: status,
                                         onChanged: (value) => {
                                               setState(() {
                                                 status = value;
@@ -351,7 +352,7 @@ class _AccountDetailsState extends State<AccountDetails> {
                                             fontWeight: FontWeight.bold)),
                                   ),
                                   for (String offers
-                                      in _userData?['selectedOffers'].keys)
+                                      in _userData?['selectedOffers']?.keys ?? [])
                                     if (_userData?['selectedOffers']?[offers] ??
                                         false)
                                       ListTile(
@@ -408,15 +409,15 @@ class _AccountDetailsState extends State<AccountDetails> {
                                 },
                                 child: Text('Sign-Out'),
                                 style: ButtonStyle(
-                                    shape: WidgetStatePropertyAll(
+                                    shape: MaterialStatePropertyAll(
                                         RoundedRectangleBorder(
                                             borderRadius:
                                                 BorderRadius.circular(5))),
                                     foregroundColor:
-                                        WidgetStatePropertyAll(Colors.blue),
+                                        MaterialStatePropertyAll(Colors.blue),
                                     backgroundColor:
-                                        WidgetStatePropertyAll(Colors.blue[50]),
-                                    minimumSize: WidgetStatePropertyAll(
+                                        MaterialStatePropertyAll(Colors.blue[50]),
+                                    minimumSize: MaterialStatePropertyAll(
                                         Size(double.infinity, 50))),
                               ),
                             ],

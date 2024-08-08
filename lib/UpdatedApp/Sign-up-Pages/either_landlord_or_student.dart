@@ -2,14 +2,17 @@
 
 import 'dart:math';
 
-import 'package:api_com/UpdatedApp/Sign-up-Pages/textfield.dart';
+import 'package:api_com/UpdatedApp/StudentPages/textfield.dart';
 import 'package:api_com/UpdatedApp/StudentPages/VerifyEmail.dart';
 import 'package:api_com/UpdatedApp/Sign-up-Pages/landlordFurntherRegistration.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter/foundation.dart';
 // import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_intl_phone_field/flutter_intl_phone_field.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:text_field_validation/text_field_validation.dart';
 
 class StudentOrLandlord extends StatefulWidget {
@@ -125,22 +128,38 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
     );
   }
 
-  Future<void> sendEmail(
+     Future<void> sendEmail(
       String recipientEmail, String subject, String body) async {
-    final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
-    final message = Message()
-      ..from = Address('accomate33@gmail.com', 'Accomate Team')
-      ..recipients.add(recipientEmail)
-      ..subject = subject
-      ..html = body;
+    if (!kIsWeb) {
+      final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
+      final message = Message()
+        ..from = Address('accomate33@gmail.com', 'Accomate')
+        ..recipients.add(recipientEmail)
+        ..subject = subject
+        ..html = body;
 
-    try {
-      await send(message, smtpServer);
-      print('Email sent successfully');
-    } catch (e) {
-      print('Error sending email: $e');
+      try {
+        await send(message, smtpServer);
+        print('Email sent successfully');
+      } catch (e) {
+        print('Error sending email: $e');
+      }
+    } else {
+      try {
+        final result = await sendEmailCallable.call({
+          'to': recipientEmail,
+          'subject': subject,
+          'body': body,
+        });
+        print(result.data);
+      } catch (e) {
+        print(e.toString());
+      }
     }
   }
+
+  final HttpsCallable sendEmailCallable =
+      FirebaseFunctions.instance.httpsCallable('sendEmail');
 
   String maskEmail(String email) {
     final emailParts = email.split('@');
@@ -166,14 +185,20 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
 
     String verificationCode = _generateRandomCode();
 
-    sendEmail(
-        emailController.text,
-        'Verification Code',
-        selectedGender == 'Male'
-            ? '''<p>Hello Mr ${surnameController.text}, <br/>We are aware that you are trying to register your account with Accomate <br/>Here  is your verification code:  $verificationCode <br/>Best Regards <br/>Yours Accomate</p>'''
-            : '''<p>Hello Mrs ${surnameController.text}, <br/>We are aware that you are trying to register your account with Accomate <br/>Here  is your verification code: $verificationCode <br/>Best Regards\nYours Accomate</p>''');
-
-    Navigator.of(context).pop();
+    kIsWeb? sendEmail(
+                          emailController.text,
+                          'Verification Code',
+                          selectedGender == 'Male'
+                              ? 'Hello Mr ${surnameController.text},\nWe are aware that you are trying to register your account on Accomate App.\nHere is your verification code: $verificationCode'
+                              : 'Hello Mrs ${surnameController.text},\nWe are aware that you are trying to register your account on Accomate App.\nHere is your verification code: $verificationCode',
+                        ):
+                         sendEmail(
+                          emailController.text,
+                          'Verification Code',
+                          selectedGender == 'Male'
+                              ? '''<p>Hello Mr ${surnameController.text},<br/>We are aware that you are trying to register your account on Accomate App.<br/>Here is your verification code: $verificationCode</p>'''
+                              : '''<p>Hello Mrs ${surnameController.text},<br/>We are aware that you are trying to register your account on Accomate App.<br/>Here is your verification code: $verificationCode</p>''',
+                        ); 
     showDialog(
       barrierDismissible: false,
       context: context,
@@ -194,10 +219,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
               onPressed: () async {
                 Navigator.of(context).pop();
 
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: ((context) => CodeVerificationPage(
+                Navigator.push(context, PageTransition(type: PageTransitionType.fade, child:CodeVerificationPage(
                             email: emailController.text,
                             verificationCode: verificationCode,
                             name: nameController.text,
@@ -207,7 +229,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
                             password: passwordController.text,
                             contactDetails: phoneNumber,
                             isLandlord: widget.isLandlord,
-                            isGuest: widget.guest))));
+                            isGuest: widget.guest)));
               },
               style: ButtonStyle(
                 shape: WidgetStatePropertyAll(RoundedRectangleBorder(
@@ -255,6 +277,7 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
     double buttonWidth =
         MediaQuery.of(context).size.width < 550 ? double.infinity : 400;
     return Scaffold(
+      backgroundColor: Colors.blue[100],
       appBar: AppBar(
         elevation: 10,
         foregroundColor: Colors.white,
@@ -266,380 +289,382 @@ class _StudentOrLandlordState extends State<StudentOrLandlord> {
         backgroundColor: Colors.blue,
         centerTitle: true,
       ),
-      body: Container(
-        height: double.infinity,
-        color: Colors.blue[100],
-        child: Padding(
-          padding: const EdgeInsets.only(
-            left: 20,
-            right: 20,
-          ),
-          child: !widget.isLandlord
-              ? SingleChildScrollView(
-                  physics: AlwaysScrollableScrollPhysics(),
-                  child: Center(
-                    child: Container(
-                      width: buttonWidth,
-                      child: Column(children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Center(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(105),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      const Color.fromARGB(255, 187, 222, 251),
-                                      Colors.blue,
-                                      const Color.fromARGB(255, 15, 76, 167)
-                                    ],
+      body: Center(
+        child: Container(
+          width: buttonWidth,
+          color: Colors.blue[100],
+          child: Padding(
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+            ),
+            child: !widget.isLandlord
+                ? SingleChildScrollView(
+                    physics: AlwaysScrollableScrollPhysics(),
+                    child: Center(
+                      child: Container(
+                        width: buttonWidth,
+                        child: Column(children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Center(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(105),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        const Color.fromARGB(255, 187, 222, 251),
+                                        Colors.blue,
+                                        const Color.fromARGB(255, 15, 76, 167)
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(100),
-                                    child: Image.asset(
-                                      'assets/icon.jpg',
-                                      width: 200,
-                                      height: 200,
-                                      fit: BoxFit.cover,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(100),
+                                      child: Image.asset(
+                                        'assets/icon.jpg',
+                                        width: 200,
+                                        height: 200,
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        Form(
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                          key: _formKey,
-                          child: Column(
-                            children: [
-                              AuthTextField(
-                                icon: Icons.person,
-                                placeholder: 'Name',
-                                controller: nameController,
-                                onValidate: (value) =>
-                                    TextFieldValidation.name(value!),
-                              ),
-                              SizedBox(height: 8),
-                              AuthTextField(
-                                icon: Icons.person,
-                                placeholder: 'Surname',
-                                controller: surnameController,
-                                onValidate: (value) => TextFieldValidation.name(
-                                    value!,
-                                    textResponse: TextValidateResponse(
-                                        empty: 'Surname is required',
-                                        invalid:
-                                            'Surname cannot have less than 3 chararacters')),
-                              ),
-                              SizedBox(height: 8),
-                              AuthTextField(
-                                placeholder: 'Email',
-                                controller: emailController,
-                                onValidate: (value) =>
-                                    TextFieldValidation.email(value!),
-                                icon: Icons.mail_outline_outlined,
-                              ),
-                              SizedBox(height: 8),
-                              AuthTextField(
-                                visible: _obscureText,
-                                placeholder: 'Password',
-                                controller: passwordController,
-                                onValidate: (value) =>
-                                    TextFieldValidation.strictPassword(value!,
-                                        textResponse: TextValidateResponse(
-                                            empty: 'Password is required',
-                                            invalid:
-                                                'Password should contain special character(!@#\$%^&*)\nNumbers(1234567890)\nUpperCase Chars(A-Z)\nLowerCase Chars(a-z)')),
-                                icon: Icons.password,
-                              ),
-                              SizedBox(height: 8),
-                              AuthTextField(
-                                  icon: Icons.password,
+                          Form(
+                            autovalidateMode: AutovalidateMode.onUserInteraction,
+                            key: _formKey,
+                            child: Column(
+                              children: [
+                                AuthTextField(
+                                  icon: Icons.person,
+                                  placeholder: 'Name',
+                                  controller: nameController,
+                                  onValidate: (value) =>
+                                      TextFieldValidation.name(value!),
+                                ),
+                                SizedBox(height: 8),
+                                AuthTextField(
+                                  icon: Icons.person,
+                                  placeholder: 'Surname',
+                                  controller: surnameController,
+                                  onValidate: (value) => TextFieldValidation.name(
+                                      value!,
+                                      textResponse: TextValidateResponse(
+                                          empty: 'Surname is required',
+                                          invalid:
+                                              'Surname cannot have less than 3 chararacters')),
+                                ),
+                                SizedBox(height: 8),
+                                AuthTextField(
+                                  placeholder: 'Email',
+                                  controller: emailController,
+                                  onValidate: (value) =>
+                                      TextFieldValidation.email(value!),
+                                  icon: Icons.mail_outline_outlined,
+                                ),
+                                SizedBox(height: 8),
+                                AuthTextField(
                                   visible: _obscureText,
-                                  placeholder: 'Confirm password',
-                                  controller: CpasswordController,
+                                  placeholder: 'Password',
+                                  controller: passwordController,
                                   onValidate: (value) =>
                                       TextFieldValidation.strictPassword(value!,
                                           textResponse: TextValidateResponse(
                                               empty: 'Password is required',
                                               invalid:
-                                                  'Password does not match!'))),
-                              SizedBox(height: 8),
-                              IntlPhoneField(
-                                decoration: InputDecoration(
-                                  labelText: 'Phone Number',
-                                  border: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.blue),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.blue),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  focusColor: Colors.blue,
-                                  fillColor: Colors.blue[50],
-                                  filled: true,
+                                                  'Password should contain special character(!@#\$%^&*)\nNumbers(1234567890)\nUpperCase Chars(A-Z)\nLowerCase Chars(a-z)')),
+                                  icon: Icons.password,
                                 ),
-                                initialCountryCode: 'ZA',
-                                onChanged: (phone) {
-                                  setState(() {
-                                    phoneNumber = phone.completeNumber;
-                                  });
-                                },
-                                controller: _phoneController,
-                              ),
-                              SizedBox(height: 8),
-                              ExpansionTile(
-                                title: Text('Select University'),
-                                children: universities.map((university) {
-                                  return RadioListTile<String>(
-                                    title: Text(university),
-                                    value: university,
-                                    groupValue: selectedUniversity,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        selectedUniversity = value!;
-                                      });
-                                    },
-                                  );
-                                }).toList(),
-                              ),
-                              SizedBox(height: 8),
-                              ExpansionTile(
-                                title: Text('Select Gender'),
-                                children: gender.map((gender) {
-                                  return RadioListTile<String>(
-                                    title: Text(gender),
-                                    value: gender,
-                                    groupValue: selectedGender,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        selectedGender = value!;
-                                      });
-                                    },
-                                  );
-                                }).toList(),
-                              ),
-                              SizedBox(height: 20),
-                              TextButton(
-                                onPressed: () async {
-                                  if (_formKey.currentState!.validate() &&
-                                      _phoneController.text.length == 9 &&
-                                      _phoneController.text.length == 9) {
-                                    if (CpasswordController.text ==
-                                        passwordController.text) {
-                                      checkStudentValues();
+                                SizedBox(height: 8),
+                                AuthTextField(
+                                    icon: Icons.password,
+                                    visible: _obscureText,
+                                    placeholder: 'Confirm password',
+                                    controller: CpasswordController,
+                                    onValidate: (value) =>
+                                        TextFieldValidation.strictPassword(value!,
+                                            textResponse: TextValidateResponse(
+                                                empty: 'Password is required',
+                                                invalid:
+                                                    'Password does not match!'))),
+                                SizedBox(height: 8),
+                                IntlPhoneField(
+                                  decoration: InputDecoration(
+                                    labelText: 'Phone Number',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(color: Colors.blue),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(color: Colors.blue),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    focusColor: Colors.blue,
+                                    fillColor: Colors.blue[50],
+                                    filled: true,
+                                  ),
+                                  initialCountryCode: 'ZA',
+                                  onChanged: (phone) {
+                                    setState(() {
+                                      phoneNumber = phone.completeNumber;
+                                    });
+                                  },
+                                  controller: _phoneController,
+                                ),
+                                SizedBox(height: 8),
+                                ExpansionTile(
+                                  title: Text('Select University'),
+                                  children: universities.map((university) {
+                                    return RadioListTile<String>(
+                                      title: Text(university),
+                                      value: university,
+                                      groupValue: selectedUniversity,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          selectedUniversity = value!;
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
+                                SizedBox(height: 8),
+                                ExpansionTile(
+                                  title: Text('Select Gender'),
+                                  children: gender.map((gender) {
+                                    return RadioListTile<String>(
+                                      title: Text(gender),
+                                      value: gender,
+                                      groupValue: selectedGender,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          selectedGender = value!;
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
+                                SizedBox(height: 20),
+                                TextButton(
+                                  onPressed: () async {
+                                    if (_formKey.currentState!.validate() &&
+                                        _phoneController.text.length == 9 &&
+                                        _phoneController.text.length == 9 &&selectedGender!='') {
+                                      if (CpasswordController.text ==
+                                          passwordController.text) {
+                                        checkStudentValues();
+                                      } else {
+                                        showError('Password does not Match');
+                                      }
                                     } else {
-                                      showError('Password does not Match');
+                                      showError(
+                                          'Cannot continue without the correct inputs and make sure that the gender is selected');
                                     }
-                                  } else {
-                                    showError(
-                                        'Cannot continue without the correct inputs');
-                                  }
-                                },
-                                child: Text(
-                                  'Continue',
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 18),
-                                ),
-                                style: ButtonStyle(
-                                    shape: WidgetStatePropertyAll(
-                                        RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(5))),
-                                    foregroundColor:
-                                        WidgetStatePropertyAll(Colors.blue),
-                                    backgroundColor:
-                                        WidgetStatePropertyAll(Colors.blue),
-                                    minimumSize: WidgetStatePropertyAll(
-                                        Size(buttonWidth, 50))),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ]),
-                    ),
-                  ),
-                )
-
-              //User registering as a landlord
-              : SingleChildScrollView(
-                  physics: AlwaysScrollableScrollPhysics(),
-                  child: Center(
-                    child: Container(
-                      width: buttonWidth,
-                      child: Column(children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Center(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(105),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      const Color.fromARGB(255, 187, 222, 251),
-                                      Colors.blue,
-                                      const Color.fromARGB(255, 15, 76, 167)
-                                    ],
+                                  },
+                                  child: Text(
+                                    'Continue',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 18),
                                   ),
+                                  style: ButtonStyle(
+                                      shape: WidgetStatePropertyAll(
+                                          RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(5))),
+                                      foregroundColor:
+                                          WidgetStatePropertyAll(Colors.blue),
+                                      backgroundColor:
+                                          WidgetStatePropertyAll(Colors.blue),
+                                      minimumSize: WidgetStatePropertyAll(
+                                          Size(buttonWidth, 50))),
                                 ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(100),
-                                    child: Image.asset(
-                                      'assets/icon.jpg',
-                                      width: 200,
-                                      height: 200,
-                                      fit: BoxFit.cover,
+                              ],
+                            ),
+                          ),
+                        ]),
+                      ),
+                    ),
+                  )
+        
+                //User registering as a landlord
+                : SingleChildScrollView(
+                    physics: AlwaysScrollableScrollPhysics(),
+                    child: Center(
+                      child: Container(
+                        width: buttonWidth,
+                        child: Column(children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Center(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(105),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        const Color.fromARGB(255, 187, 222, 251),
+                                        Colors.blue,
+                                        const Color.fromARGB(255, 15, 76, 167)
+                                      ],
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(100),
+                                      child: Image.asset(
+                                        'assets/icon.jpg',
+                                        width: 200,
+                                        height: 200,
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        Form(
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                          key: _formKey,
-                          child: Column(
-                            children: [
-                              AuthTextField(
-                                icon: Icons.person,
-                                placeholder: 'Email',
-                                controller: emailController,
-                                onValidate: (value) =>
-                                    TextFieldValidation.email(value!),
-                              ),
-                              SizedBox(height: 8),
-                              AuthTextField(
-                                icon: Icons.password_rounded,
-                                visible: _obscureText,
-                                placeholder: 'Password',
-                                controller: passwordController,
-                                onValidate: (value) =>
-                                    TextFieldValidation.strictPassword(value!,
-                                        textResponse: TextValidateResponse(
-                                            empty: 'Password is required',
-                                            invalid:
-                                                'Password should have special character(!@#\$%^&*)\nNumbers(1234567890)\nUpperCase Chars(A-Z)\nLowerCase Chars(a-z)')),
-                              ),
-                              SizedBox(height: 8),
-                              AuthTextField(
+                          Form(
+                            autovalidateMode: AutovalidateMode.onUserInteraction,
+                            key: _formKey,
+                            child: Column(
+                              children: [
+                                AuthTextField(
+                                  icon: Icons.person,
+                                  placeholder: 'Email',
+                                  controller: emailController,
+                                  onValidate: (value) =>
+                                      TextFieldValidation.email(value!),
+                                ),
+                                SizedBox(height: 8),
+                                AuthTextField(
                                   icon: Icons.password_rounded,
                                   visible: _obscureText,
-                                  placeholder: 'Confirm password',
-                                  controller: CpasswordController,
+                                  placeholder: 'Password',
+                                  controller: passwordController,
                                   onValidate: (value) =>
                                       TextFieldValidation.strictPassword(value!,
                                           textResponse: TextValidateResponse(
                                               empty: 'Password is required',
-                                              invalid: passwordController
-                                                          .text !=
-                                                      CpasswordController.text
-                                                  ? 'Password does not match!'
-                                                  : 'Password does not match!'))),
-                              SizedBox(height: 8),
-                              AuthTextField(
-                                placeholder: 'Residence Name',
-                                controller: accomodationName,
-                                onValidate: (value) => TextFieldValidation.name(
-                                    value!,
-                                    textResponse: TextValidateResponse(
-                                        empty: 'Residence name required',
-                                        invalid:
-                                            'Please provide the Residence name')),
-                                icon: Icons.home_work,
-                              ),
-                              SizedBox(height: 8),
-                              IntlPhoneField(
-                                decoration: InputDecoration(
-                                  labelText: 'Phone Number',
-                                  border: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.blue),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.blue),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  focusColor: Colors.blue,
-                                  fillColor: Colors.blue[50],
-                                  filled: true,
+                                              invalid:
+                                                  'Password should have special character(!@#\$%^&*)\nNumbers(1234567890)\nUpperCase Chars(A-Z)\nLowerCase Chars(a-z)')),
                                 ),
-                                initialCountryCode: 'ZA',
-                                onChanged: (phone) {
-                                  setState(() {
-                                    phoneNumber = phone.completeNumber;
-                                  });
-                                },
-                                controller: _phoneController,
-                              ),
-                              SizedBox(height: 10),
-                              TextButton(
-                                onPressed: () async {
-                                  if (_formKey.currentState!.validate() &&
-                                      _phoneController.text.length == 9) {
-                                    if (CpasswordController.text ==
-                                        passwordController.text) {
-                                      Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: ((context) =>
-                                                  LandlordFurtherRegistration(
-                                                    password:
-                                                        passwordController.text,
-                                                    contactDetails: phoneNumber,
-                                                    isLandlord:
-                                                        widget.isLandlord,
-                                                    accomodationName:
-                                                        accomodationName.text,
-                                                    landlordEmail:
-                                                        emailController.text,
-                                                  ))));
+                                SizedBox(height: 8),
+                                AuthTextField(
+                                    icon: Icons.password_rounded,
+                                    visible: _obscureText,
+                                    placeholder: 'Confirm password',
+                                    controller: CpasswordController,
+                                    onValidate: (value) =>
+                                        TextFieldValidation.strictPassword(value!,
+                                            textResponse: TextValidateResponse(
+                                                empty: 'Password is required',
+                                                invalid: passwordController
+                                                            .text !=
+                                                        CpasswordController.text
+                                                    ? 'Password does not match!'
+                                                    : 'Password does not match!'))),
+                                SizedBox(height: 8),
+                                AuthTextField(
+                                  placeholder: 'Residence Name',
+                                  controller: accomodationName,
+                                  onValidate: (value) => TextFieldValidation.name(
+                                      value!,
+                                      textResponse: TextValidateResponse(
+                                          empty: 'Residence name required',
+                                          invalid:
+                                              'Please provide the Residence name')),
+                                  icon: Icons.home_work,
+                                ),
+                                SizedBox(height: 8),
+                                IntlPhoneField(
+                                  decoration: InputDecoration(
+                                    labelText: 'Phone Number',
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(color: Colors.blue),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(color: Colors.blue),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    focusColor: Colors.blue,
+                                    fillColor: Colors.blue[50],
+                                    filled: true,
+                                  ),
+                                  initialCountryCode: 'ZA',
+                                  onChanged: (phone) {
+                                    setState(() {
+                                      phoneNumber = phone.completeNumber;
+                                    });
+                                  },
+                                  controller: _phoneController,
+                                ),
+                                SizedBox(height: 10),
+                                TextButton(
+                                  onPressed: () async {
+                                    if (_formKey.currentState!.validate() &&
+                                        _phoneController.text.length == 9) {
+                                      if (CpasswordController.text ==
+                                          passwordController.text) {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: ((context) =>
+                                                    LandlordFurtherRegistration(
+                                                      password:
+                                                          passwordController.text,
+                                                      contactDetails: phoneNumber,
+                                                      isLandlord:
+                                                          widget.isLandlord,
+                                                      accomodationName:
+                                                          accomodationName.text,
+                                                      landlordEmail:
+                                                          emailController.text,
+                                                    ))));
+                                      } else {
+                                        showError('Password does not Match');
+                                      }
                                     } else {
-                                      showError('Password does not Match');
+                                      showError(
+                                          'Cannot continue without the correct inputs');
                                     }
-                                  } else {
-                                    showError(
-                                        'Cannot continue without the correct inputs');
-                                  }
-                                },
-                                child: Text(
-                                  'Continue',
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 18),
+                                  },
+                                  child: Text(
+                                    'Continue',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 18),
+                                  ),
+                                  style: ButtonStyle(
+                                      shape: WidgetStatePropertyAll(
+                                          RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(5))),
+                                      foregroundColor:
+                                          WidgetStatePropertyAll(Colors.blue),
+                                      backgroundColor:
+                                          WidgetStatePropertyAll(Colors.blue),
+                                      minimumSize: WidgetStatePropertyAll(
+                                          Size(buttonWidth, 50))),
                                 ),
-                                style: ButtonStyle(
-                                    shape: WidgetStatePropertyAll(
-                                        RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(5))),
-                                    foregroundColor:
-                                        WidgetStatePropertyAll(Colors.blue),
-                                    backgroundColor:
-                                        WidgetStatePropertyAll(Colors.blue),
-                                    minimumSize: WidgetStatePropertyAll(
-                                        Size(buttonWidth, 50))),
-                              ),
-                              SizedBox(height: 10),
-                            ],
+                                SizedBox(height: 10),
+                              ],
+                            ),
                           ),
-                        ),
-                      ]),
+                        ]),
+                      ),
                     ),
                   ),
-                ),
+          ),
         ),
       ),
     );

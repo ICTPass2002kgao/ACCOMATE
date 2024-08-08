@@ -3,7 +3,9 @@
 // import 'package:api_com/UpdatedApp/DocumentViewer.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/Tables.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mailer/mailer.dart';
@@ -230,25 +232,42 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
         // 'registeredDate': _userData?['registeredDate'] ?? '',
         // 'Duration': _userData?['Duration'] ?? '',
       });
-
-      await sendEmail(
-        _userData?['email'] ?? '',
-        'Response sent successfully',
-        '''<p>Hi ${_userData?['accomodationName']} landlord, <br/>Your feedback was sent successfully to ${widget.studentApplicationData['name']} ${widget.studentApplicationData['surname']}.<br/>Best Regards<br/>Your Accomate Team</p>''',
-      );
+      !kIsWeb
+          ? await sendEmail(
+              _userData?['email'] ?? '',
+              'Response sent successfully',
+              '''<p>Hi ${_userData?['accomodationName']} landlord, <br/>Your feedback was sent successfully to ${widget.studentApplicationData['name']} ${widget.studentApplicationData['surname']}.<br/>Best Regards<br/>Your Accomate Team</p>''',
+            )
+          : await sendEmail(
+              _userData?['email'] ?? '',
+              'Response sent successfully',
+              'Hi ${_userData?['accomodationName']} landlord, \nYour feedback was sent successfully to ${widget.studentApplicationData['name']} ${widget.studentApplicationData['surname']}.\nBest Regards\nYour Accomate Team',
+            );
 
       if (status == true) {
-        await sendEmail(
-          widget.studentApplicationData['email'],
-          'Application Approved',
-          '''<p>Hi ${widget.studentApplicationData['name']} , <br/>Your application from ${_userData?['accomodationName']} have been approved. Go to notification page in our app for more information.<br/>Best Regards<br/>Your Accomate Team</p>''',
-        );
+        !kIsWeb
+            ? sendEmail(
+                widget.studentApplicationData['email'],
+                'Application Approved',
+                '''<p>Hi ${widget.studentApplicationData['name']} , <br/>Your application from ${_userData?['accomodationName']} have been approved. Go to notification page in our app for more information.<br/>Best Regards<br/>Your Accomate Team</p>''',
+              )
+            : sendEmail(
+                widget.studentApplicationData['email'],
+                'Application Approved',
+                'Hi ${widget.studentApplicationData['name']} , \nYour application from ${_userData?['accomodationName']} have been approved. Go to notification page in our app for more information.\nBest Regards\nYour Accomate Team',
+              );
       } else {
-        await sendEmail(
-          widget.studentApplicationData['email'],
-          'Application Rejected',
-          '''<p>Hi ${widget.studentApplicationData['name']} , <br/>Your application from ${_userData?['accomodationName']} have been rejected due to some reasons. Go to notification page in our app for more information.<br/>Best Regards<br/>Your Accomate Team</p>''',
-        );
+        kIsWeb
+            ? sendEmail(
+                widget.studentApplicationData['email'],
+                'Application Rejected',
+                'Hi ${widget.studentApplicationData['name']} , \nYour application from ${_userData?['accomodationName']} have been rejected due to some reasons. Go to notification page in our app for more information.\nBest Regards\nYour Accomate Team',
+              )
+            : sendEmail(
+                widget.studentApplicationData['email'],
+                'Application Rejected',
+                '''<p>Hi ${widget.studentApplicationData['name']} , <br/>Your application from ${_userData?['accomodationName']} have been rejected due to some reasons. Go to notification page in our app for more information.<br/>Best Regards<br/>Your Accomate Team</p>''',
+              );
       }
 
       Navigator.of(context).pop();
@@ -296,24 +315,37 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
   }
 
   Future<void> sendEmail(
-    String recipientEmail,
-    String subject,
-    String body,
-  ) async {
-    final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
-    final message = Message()
-      ..from = Address('accomate33@gmail.com', 'Accomate')
-      ..recipients.add(recipientEmail)
-      ..subject = subject
-      ..html = body;
+      String recipientEmail, String subject, String body) async {
+    if (!kIsWeb) {
+      final smtpServer = gmail('accomate33@gmail.com', 'nhle ndut leqq baho');
+      final message = Message()
+        ..from = Address('accomate33@gmail.com', 'Accomate')
+        ..recipients.add(recipientEmail)
+        ..subject = subject
+        ..html = body;
 
-    try {
-      await send(message, smtpServer);
-      print('Email sent successfully');
-    } catch (e) {
-      print('Error sending email: $e');
+      try {
+        await send(message, smtpServer);
+        print('Email sent successfully');
+      } catch (e) {
+        print('Error sending email: $e');
+      }
+    } else {
+      try {
+        final result = await sendEmailCallable.call({
+          'to': recipientEmail,
+          'subject': subject,
+          'body': body,
+        });
+        print(result.data);
+      } catch (e) {
+        print(e.toString());
+      }
     }
   }
+
+  final HttpsCallable sendEmailCallable =
+      FirebaseFunctions.instance.httpsCallable('sendEmail');
 
   @override
   Widget build(BuildContext context) {
@@ -361,6 +393,10 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                             columnValue:
                                 widget.studentApplicationData['surname'] ?? ''),
                         Tables(
+                            columnName: 'Gender',
+                            columnValue:
+                                widget.studentApplicationData['gender'] ?? ''),
+                        Tables(
                             columnName: 'Cellphone Number',
                             columnValue: widget
                                     .studentApplicationData['contactDetails'] ??
@@ -400,118 +436,124 @@ class _ViewApplicantDetailsState extends State<ViewApplicantDetails> {
                         Center(
                           child: Container(
                             width: buttonWidth,
-                            child: ExpansionTile(
-                              title: Text('Choose Status'),
+                            child: Column(
                               children: [
-                                Row(
+                                ExpansionTile(
+                                  title: Text('Choose Status'),
                                   children: [
-                                    Radio(
-                                      activeColor: Colors.green,
-                                      fillColor: MaterialStatePropertyAll(
-                                          Colors.green),
-                                      value: true,
-                                      groupValue: status,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          status = value!;
-                                        });
-                                      },
+                                    Row(
+                                      children: [
+                                        Radio(
+                                          activeColor: Colors.green,
+                                          fillColor: MaterialStatePropertyAll(
+                                              Colors.green),
+                                          value: true,
+                                          groupValue: status,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              status = value!;
+                                            });
+                                          },
+                                        ),
+                                        Text('Accept applicant'),
+                                      ],
                                     ),
-                                    Text('Accept applicant'),
+                                    SizedBox(width: 16),
+                                    Row(
+                                      children: [
+                                        Radio(
+                                          activeColor: Colors.red,
+                                          fillColor: MaterialStatePropertyAll(
+                                              Colors.red),
+                                          value: false,
+                                          groupValue: status,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              status = value!;
+                                            });
+                                          },
+                                        ),
+                                        Text('Reject applicant'),
+                                      ],
+                                    ),
                                   ],
                                 ),
-                                SizedBox(width: 16),
-                                Row(
-                                  children: [
-                                    Radio(
-                                      activeColor: Colors.red,
-                                      fillColor:
-                                          MaterialStatePropertyAll(Colors.red),
-                                      value: false,
-                                      groupValue: status,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          status = value!;
-                                        });
-                                      },
-                                    ),
-                                    Text('Reject applicant'),
-                                  ],
+                                SizedBox(
+                                  height: 20,
+                                ),
+                                if (status == false)
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                          'Please provide the reason a student is rejected & let the student know that they can reApply if their prefered room is not available or the problem can be resolved.'),
+                                      SizedBox(
+                                        height: 20,
+                                      ),
+                                      // OutlinedButton(
+                                      //   onPressed: () {
+                                      //     Navigator.push(
+                                      //         context,
+                                      //         MaterialPageRoute(
+                                      //             builder: (context) => Documentviewer(
+                                      //                   userData: _userData,
+                                      //                 )));
+                                      //   },
+                                      //   child: Text(
+                                      //     'View Contract',
+                                      //   ),
+                                      //   style: ButtonStyle(
+                                      //       shape: WidgetStatePropertyAll(
+                                      //           RoundedRectangleBorder(
+                                      //               borderRadius:
+                                      //                   BorderRadius.circular(5))),
+                                      //       foregroundColor:
+                                      //           WidgetStatePropertyAll(Colors.blue),
+                                      //       backgroundColor:
+                                      //           WidgetStatePropertyAll(Colors.blue[50]),
+                                      //       minimumSize: WidgetStatePropertyAll(
+                                      //           Size(buttonWidth, 50))),
+                                      // ),
+                                      // SizedBox(
+                                      //   height: 10,
+                                      // ),
+                                      Container(
+                                        width: buttonWidth,
+                                        child: TextField(
+                                          maxLines: 4,
+                                          controller: messageController,
+                                          decoration: InputDecoration(
+                                              border: OutlineInputBorder(),
+                                              labelText: "Rejected reason"),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    _saveApplicationResponse();
+                                  },
+                                  child: Text('Send Response'),
+                                  style: ButtonStyle(
+                                      shape: MaterialStatePropertyAll(
+                                          RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(5))),
+                                      foregroundColor: MaterialStatePropertyAll(
+                                          Colors.white),
+                                      backgroundColor: MaterialStatePropertyAll(
+                                          status == true
+                                              ? Colors.green
+                                              : Colors.red[300]),
+                                      minimumSize: MaterialStatePropertyAll(
+                                          Size(buttonWidth, 50))),
                                 ),
                               ],
                             ),
                           ),
-                        ),
-                        SizedBox(
-                          height: 20,
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                                'Please provide the reason a student is rejected & let the student know that they can reApply if their prefered room is not available or the problem can be resolved.'),
-                            SizedBox(
-                              height: 20,
-                            ),
-                            // OutlinedButton(
-                            //   onPressed: () {
-                            //     Navigator.push(
-                            //         context,
-                            //         MaterialPageRoute(
-                            //             builder: (context) => Documentviewer(
-                            //                   userData: _userData,
-                            //                 )));
-                            //   },
-                            //   child: Text(
-                            //     'View Contract',
-                            //   ),
-                            //   style: ButtonStyle(
-                            //       shape: WidgetStatePropertyAll(
-                            //           RoundedRectangleBorder(
-                            //               borderRadius:
-                            //                   BorderRadius.circular(5))),
-                            //       foregroundColor:
-                            //           WidgetStatePropertyAll(Colors.blue),
-                            //       backgroundColor:
-                            //           WidgetStatePropertyAll(Colors.blue[50]),
-                            //       minimumSize: WidgetStatePropertyAll(
-                            //           Size(buttonWidth, 50))),
-                            // ),
-                            // SizedBox(
-                            //   height: 10,
-                            // ),
-                            Container(
-                              width: buttonWidth,
-                              child: TextField(
-                                maxLines: 4,
-                                controller: messageController,
-                                decoration: InputDecoration(
-                                    border: OutlineInputBorder(),
-                                    labelText: "Rejected reason"),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            _saveApplicationResponse();
-                          },
-                          child: Text('Send Response'),
-                          style: ButtonStyle(
-                              shape: MaterialStatePropertyAll(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(5))),
-                              foregroundColor:
-                                  MaterialStatePropertyAll(Colors.white),
-                              backgroundColor: MaterialStatePropertyAll(
-                                  status == true
-                                      ? Colors.green
-                                      : Colors.red[300]),
-                              minimumSize: MaterialStatePropertyAll(
-                                  Size(buttonWidth, 50))),
                         ),
                         SizedBox(
                           width: 10,

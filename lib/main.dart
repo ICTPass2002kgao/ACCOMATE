@@ -13,6 +13,7 @@ import 'package:api_com/UpdatedApp/Accomate%20pages/help-page.dart';
  
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:url_strategy/url_strategy.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +26,9 @@ void main() async {
     messagingSenderId: '1088298291155',
     appId: '1:1088298291155:android:61a70167a445cb5f61a926',
   ));
+   setPathUrlStrategy();
   runApp(
+
     MyApp(),
   );
 }

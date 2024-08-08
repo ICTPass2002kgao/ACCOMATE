@@ -1,10 +1,13 @@
 // ignore_for_file: unnecessary_const, prefer_const_constructors, avoid_unnecessary_containers, sort_child_properties_last, prefer_const_literals_to_create_immutables, sized_box_for_whitespace, avoid_print, use_build_context_synchronously, unrelated_type_equality_checks
 
+import 'package:animate_ease/animate_ease.dart';
 import 'package:animated_card/animated_card.dart';
 import 'package:api_com/UpdatedApp/Sign-up-Pages/CreateAnAccount.dart';
 import 'package:api_com/UpdatedApp/Sign-Page/forgot_password.dart';
-import 'package:api_com/UpdatedApp/Sign-up-Pages/textfield.dart';
+import 'package:api_com/UpdatedApp/StudentPages/textfield.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:colorful_circular_progress_indicator/colorful_circular_progress_indicator.dart';
+import 'package:colorful_circular_progress_indicator/colorful_circular_progress_indicator.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -33,9 +36,9 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   bool isLoading = true;
+  @override
+  bool get wantKeepAlive => true;
 
-  bool showError = false;
-  // late FirebaseAuth _auth;
   @override
   void initState() {
     super.initState();
@@ -90,7 +93,7 @@ class _LoginPageState extends State<LoginPage> {
           userRole = studentSnapshot['userRole'];
         }
 
-        Navigator.pop(context); 
+        Navigator.pop(context);
 
         if (userRole != null) {
           if (userRole == 'student') {
@@ -98,16 +101,15 @@ class _LoginPageState extends State<LoginPage> {
           } else if (userRole == 'landlord') {
             Navigator.pushReplacementNamed(context, '/landlordPage');
           } else {
-           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            showCloseIcon: true,
-            content: Text('Account does not exists.'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
-          ));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              showCloseIcon: true,
+              content: Text('Account does not exists.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ));
           }
         } else {
-           Navigator.pushReplacementNamed(context, '/adminPage');
-          
+          Navigator.pushReplacementNamed(context, '/adminPage');
         }
       }
     } on FirebaseAuthException catch (e) {
@@ -151,293 +153,287 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: Colors.blue[100],
       body: MediaQuery.of(context).size.width < 768
-          ? Container(
-              height: double.infinity,
-              color: Colors.blue[100],
-              child: Padding(
-                padding: EdgeInsets.only(left: 20, right: 20),
-                child: SingleChildScrollView(
+          ? Padding(
+              padding: EdgeInsets.only(left: 20, right: 20),
+              child: Center(
+                child: AnimateEase(
+                  child: SingleChildScrollView(
                     physics: AlwaysScrollableScrollPhysics(),
-                    child: Center(
-                      child: Container(
-                        width: buttonWidth,
-                        child: Center(
-                          child: Column(children: [
-                            Column(
-                              children: [
-                                SizedBox(height: 10),
-                                Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: AnimatedCard(
-                              duration: Duration(seconds: 2), 
-                              direction: AnimatedCardDirection.top,
-                                    child: Center(
-                                      child: ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(105),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                              colors: [
-                                                const Color.fromARGB(
-                                                    255, 187, 222, 251),
-                                                Colors.blue,
-                                                const Color.fromARGB(
-                                                    255, 15, 76, 167)
-                                              ],
-                                            ),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(7.0),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(100),
-                                              child: Image.asset(
-                                                'assets/icon.jpg',
-                                                width: 200,
-                                                height: 200,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                Form(
-                                  autovalidateMode:
-                                      AutovalidateMode.onUserInteraction,
-                                  key: _formKey,
-                                  child: Column(
-                                    children: [
-                                      AuthTextField(
-                                        icon: Icons.person,
-                                        placeholder: 'Email',
-                                        controller: txtEmail,
-                                        onValidate: (value) =>
-                                            TextFieldValidation.email(value!),
-                                      ),
-                                      SizedBox(height: 8),
-                                      AuthTextField(
-                                        icon: Icons.password_rounded,
-                                        visible: _obscureText,
-                                        placeholder: 'Password',
-                                        controller: txtPassword,
-                                        onValidate: (value) =>
-                                            TextFieldValidation.password(
-                                                value!),
-                                      ),
-                                      // Padding(
-                                      //   padding: EdgeInsets.only(left: 0, top: 5),
-                                      //   child: TextField(
-                                      //     controller: txtPassword,
-                                      //     decoration: InputDecoration(
-                                      //         border: OutlineInputBorder(
-                                      //           borderSide:
-                                      //               BorderSide(color: Colors.blue),
-                                      //           borderRadius:
-                                      //               BorderRadius.circular(10),
-                                      //         ),
-                                      //         focusedBorder: OutlineInputBorder(
-                                      //           borderSide:
-                                      //               BorderSide(color: Colors.blue),
-                                      //           borderRadius:
-                                      //               BorderRadius.circular(10),
-                                      //         ),
-                                      //         focusColor: Colors.blue,
-                                      //         fillColor: Colors.blue[50],
-                                      //         filled: true,
-                                      //         suffixIcon: IconButton(
-                                      //           icon: Icon(
-                                      //             _obscureText
-                                      //                 ? Icons.visibility
-                                      //                 : Icons.visibility_off,
-                                      //             color: Colors.blue,
-                                      //           ),
-                                      //           onPressed: () {
-                                      //             setState(() {
-                                      //               _obscureText = !_obscureText;
-                                      //             });
-                                      //           },
-                                      //         ),
-                                      //         prefixIcon: Icon(
-                                      //           Icons.lock,
-                                      //           color: Colors.blue,
-                                      //         ),
-                                      //         hintText: 'Password'),
-                                      //     obscureText: _obscureText,
-                                      //   ),
-                                      // ),
-                                      SizedBox(
-                                        height: 5,
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          GestureDetector(
-                                            onTap: () async {
-                                              isLoading
-                                                  ? Center(
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                        valueColor:
-                                                            AlwaysStoppedAnimation<
-                                                                    Color>(
-                                                                Colors.blue),
-                                                      ),
-                                                    )
-                                                  : Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: ((context) =>
-                                                              ForgotPasswordPage())));
-                                            },
-                                            child: Text(
-                                              'Forgot Password ?',
-                                              style: TextStyle(
-                                                  decorationColor:
-                                                      Colors.blue,
-                                                  decoration: TextDecoration
-                                                      .underline,
-                                                  color: Colors.blue,
-                                                  decorationThickness: 0.5,
-                                                  decorationStyle:
-                                                      TextDecorationStyle
-                                                          .solid,
-                                                  fontSize: 16),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(
-                                        height: 20,
-                                      ),
-                                      OutlinedButton(
-                                        onPressed: () {
-                                          if (_formKey.currentState!
-                                              .validate()) _loginFunction();
-                                        },
-                                        child: Text(
-                                          'Sign-in',
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 18),
-                                        ),
-                                        style: ButtonStyle(
-                                            shape: WidgetStatePropertyAll(
-                                                RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            5))),
-                                            foregroundColor:
-                                                WidgetStatePropertyAll(
-                                                    Colors.blue),
-                                            backgroundColor:
-                                                WidgetStatePropertyAll(
-                                                    Colors.blue),
-                                            minimumSize:
-                                                WidgetStatePropertyAll(
-                                                    Size(buttonWidth, 50))),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                OutlinedButton(
-                                  onPressed: () {
-                                    FirebaseAuth.instance.signOut();
-                                    FirebaseAuth.instance.signInAnonymously();
-                                    Navigator.pushReplacementNamed(
-                                        context, '/studentPage');
-                                  },
-                                  child: Text(
-                                    'Proceed without Sign-in',
-                                    style: TextStyle(fontSize: 18),
-                                  ),
-                                  style: ButtonStyle(
-                                      shape: WidgetStatePropertyAll(
-                                          RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(5))),
-                                      foregroundColor:
-                                          WidgetStatePropertyAll(Colors.blue),
-                                      backgroundColor: WidgetStatePropertyAll(
-                                          Colors.white),
-                                      minimumSize: WidgetStatePropertyAll(
-                                          Size(buttonWidth, 50))),
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: <Widget>[
-                                    Expanded(
-                                      child: Divider(
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8.0),
-                                      child: Text(
-                                        'OR ',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Divider(
-                                        color: Colors.black,
-                                      ),
-                                    ),
+                    child: Column(
+                      children: [
+                        Center(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(105),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    const Color.fromARGB(255, 187, 222, 251),
+                                    Colors.blue,
+                                    const Color.fromARGB(255, 15, 76, 167)
                                   ],
                                 ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                GestureDetector(
-                                  onTap: () async {
-                                    isLoading
-                                        ? Center(
-                                            child: CircularProgressIndicator(
-                                              valueColor:
-                                                  AlwaysStoppedAnimation<
-                                                      Color>(Colors.blue),
-                                            ),
-                                          )
-                                        : Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: ((context) =>
-                                                    RegistrationOption())));
-                                  },
-                                  child: Text(
-                                    'Create new account',
-                                    style: TextStyle(
-                                        decorationColor: Colors.blue,
-                                        decoration: TextDecoration.underline,
-                                        color: Colors.blue,
-                                        decorationThickness: 2,
-                                        decorationStyle:
-                                            TextDecorationStyle.solid,
-                                        fontSize: 16),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(7.0),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(100),
+                                  child: Image.asset(
+                                    'assets/icon.jpg',
+                                    width: 200,
+                                    height: 200,
+                                    fit: BoxFit.cover,
                                   ),
                                 ),
-                              ],
-                            )
-                          ]),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    )),
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                                'Bridging a gap between \nStudents and Landlords!',
+                                style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue[700])),
+                          ),
+                        ),
+                        SizedBox(height: 6),
+                        Form(
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              AuthTextField(
+                                icon: Icons.person,
+                                placeholder: 'Email',
+                                controller: txtEmail,
+                                onValidate: (value) =>
+                                    TextFieldValidation.email(value!),
+                              ),
+                              SizedBox(height: 8),
+                              // AuthTextField(
+                              //   icon: Icons.password_rounded,
+                              //   visible: _obscureText,
+                              //   placeholder: 'Password',
+                              //   controller: txtPassword,
+                              //   onValidate: (value) =>
+                              //       TextFieldValidation.password(
+                              //           value!),
+                              // ),
+                              Padding(
+                                padding: EdgeInsets.only(left: 0, top: 5),
+                                child: TextField(
+                                  controller: txtPassword,
+                                  decoration: InputDecoration(
+                                      border: OutlineInputBorder(
+                                        borderSide:
+                                            BorderSide(color: Colors.blue),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide:
+                                            BorderSide(color: Colors.blue),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      focusColor: Colors.blue,
+                                      fillColor: Colors.blue[50],
+                                      filled: true,
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          _obscureText
+                                              ? Icons.visibility
+                                              : Icons.visibility_off,
+                                          color: Colors.blue,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _obscureText = !_obscureText;
+                                          });
+                                        },
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.lock,
+                                        color: Colors.blue,
+                                      ),
+                                      hintText: 'Password'),
+                                  obscureText: _obscureText,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 5,
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  GestureDetector(
+                                    onTap: () async {
+                                      isLoading
+                                          ? Center(
+                                              child: CircularProgressIndicator(
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                        Color>(Colors.blue),
+                                              ),
+                                            )
+                                          : Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: ((context) =>
+                                                      ForgotPasswordPage())));
+                                    },
+                                    child: Text(
+                                      'Forgot Password ?',
+                                      style: TextStyle(
+                                          decorationColor: Colors.blue,
+                                          decoration: TextDecoration.underline,
+                                          color: Colors.blue,
+                                          decorationThickness: 0.5,
+                                          decorationStyle:
+                                              TextDecorationStyle.solid,
+                                          fontSize: 16),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(
+                                height: 20,
+                              ),
+                              OutlinedButton(
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate())
+                                    _loginFunction();
+                                },
+                                child: Text(
+                                  'Sign-in',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 18),
+                                ),
+                                style: ButtonStyle(
+                                    shape: WidgetStatePropertyAll(
+                                        RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(5))),
+                                    foregroundColor:
+                                        WidgetStatePropertyAll(Colors.blue),
+                                    backgroundColor:
+                                        WidgetStatePropertyAll(Colors.blue),
+                                    minimumSize: WidgetStatePropertyAll(
+                                        Size(buttonWidth, 50))),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        OutlinedButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (BuildContext context) {
+                                return Center(
+                                    child: ColorfulCircularProgressIndicator(
+                                  colors: [
+                                    Colors.blue,
+                                    Colors.red,
+                                    Colors.purple,
+                                    Colors.green,
+                                    Colors.grey
+                                  ], 
+                                  strokeWidth: 5,
+                                  indicatorHeight: 40,
+                                  indicatorWidth: 40,
+                                ));
+                              },
+                            );
+
+                            FirebaseAuth.instance.signOut();
+                            FirebaseAuth.instance.signInAnonymously();
+                            Navigator.pushReplacementNamed(
+                                context, '/studentPage');
+                          },
+                          child: Text(
+                            'Proceed without Sign-in',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                          style: ButtonStyle(
+                              shape: WidgetStatePropertyAll(
+                                  RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(5))),
+                              foregroundColor:
+                                  WidgetStatePropertyAll(Colors.blue),
+                              backgroundColor:
+                                  WidgetStatePropertyAll(Colors.white),
+                              minimumSize: WidgetStatePropertyAll(
+                                  Size(buttonWidth, 50))),
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Expanded(
+                              child: Divider(
+                                color: Colors.black,
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Text(
+                                'OR ',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Divider(
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        GestureDetector(
+                          onTap: () async {
+                            isLoading
+                                ? Center(
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.blue),
+                                    ),
+                                  )
+                                : Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: ((context) =>
+                                            RegistrationOption())));
+                          },
+                          child: Text(
+                            'Create new account',
+                            style: TextStyle(
+                                decorationColor: Colors.blue,
+                                decoration: TextDecoration.underline,
+                                color: Colors.blue,
+                                decorationThickness: 2,
+                                decorationStyle: TextDecorationStyle.solid,
+                                fontSize: 16),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             )
           : Center(
@@ -457,9 +453,7 @@ class _LoginPageState extends State<LoginPage> {
                                 Center(
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
-                                    child: AnimatedCard(
-                              duration: Duration(seconds: 2), 
-                              direction: AnimatedCardDirection.top, 
+                                    child: AnimateEase(
                                       child: Center(
                                         child: ClipRRect(
                                           borderRadius:
@@ -479,7 +473,8 @@ class _LoginPageState extends State<LoginPage> {
                                               ),
                                             ),
                                             child: Padding(
-                                              padding: const EdgeInsets.all(5.0),
+                                              padding:
+                                                  const EdgeInsets.all(5.0),
                                               child: ClipRRect(
                                                 borderRadius:
                                                     BorderRadius.circular(100),
@@ -501,7 +496,7 @@ class _LoginPageState extends State<LoginPage> {
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Text(
-                                        'You are Logging in as a Landlord',
+                                        'Bridging a gap between Students and Landlords!',
                                         style: TextStyle(
                                             fontSize: 25,
                                             fontWeight: FontWeight.bold,
@@ -652,6 +647,32 @@ class _LoginPageState extends State<LoginPage> {
                                           WidgetStatePropertyAll(Colors.blue),
                                       backgroundColor:
                                           WidgetStatePropertyAll(Colors.blue),
+                                      minimumSize: WidgetStatePropertyAll(
+                                          Size(buttonWidth, 50))),
+                                ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                OutlinedButton(
+                                  onPressed: () {
+                                    FirebaseAuth.instance.signOut();
+                                    FirebaseAuth.instance.signInAnonymously();
+                                    Navigator.pushReplacementNamed(
+                                        context, '/studentPage');
+                                  },
+                                  child: Text(
+                                    'Proceed without Sign-in',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                  style: ButtonStyle(
+                                      shape: WidgetStatePropertyAll(
+                                          RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(5))),
+                                      foregroundColor:
+                                          WidgetStatePropertyAll(Colors.blue),
+                                      backgroundColor:
+                                          WidgetStatePropertyAll(Colors.white),
                                       minimumSize: WidgetStatePropertyAll(
                                           Size(buttonWidth, 50))),
                                 ),

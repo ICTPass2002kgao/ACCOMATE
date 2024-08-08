@@ -5,7 +5,7 @@ import 'dart:math';
 
 import 'package:api_com/UpdatedApp/Sign-Page/login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart'; 
+import 'package:cloud_functions/cloud_functions.dart';
 // import 'package:encrypt/encrypt.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -323,9 +323,7 @@ class _OffersPageState extends State<OffersPage> {
 
   void _registerUserToFirebase() async {
     List<String> images = pickedImages.map((file) => file.path).toList();
-    if (images.length < 5) {
-      
-    }
+    if (images.length < 5) {}
     try {
       showDialog(
         context: context,
@@ -343,14 +341,18 @@ class _OffersPageState extends State<OffersPage> {
         password: widget.password,
       );
 
-      Reference storageReference = FirebaseStorage.instance
-          .ref('Residence Logos')
-          .child('${widget.accomodationName}(${DateTime.now().toString()})');
-      UploadTask uploadTask =
-          storageReference.putFile(File(widget.residenceLogo!.path));
-      TaskSnapshot storageTaskSnapshot =
-          await uploadTask.whenComplete(() => null);
-      String downloadUrl = await storageTaskSnapshot.ref.getDownloadURL();
+      // Handle logo upload
+      String downloadUrl;
+      if (kIsWeb) {
+        Uint8List? logoData = await widget.residenceLogo!.readAsBytes();
+        downloadUrl = await uploadFileToFirebaseStorageWeb(
+            logoData, 'Residence Logos', widget.accomodationName);
+      } else {
+        downloadUrl = await uploadFileToFirebaseStorageMobile(
+            widget.residenceLogo!.path,
+            'Residence Logos',
+            widget.accomodationName);
+      }
 
       List<String> downloadUrls = await uploadImagesToFirebaseStorage(images);
 
@@ -385,15 +387,10 @@ class _OffersPageState extends State<OffersPage> {
       });
 
       sendEmail('accomate33@gmail.com', 'Review Accommodation',
-          '''Gooday Review officer, <br/>You have a new review request from ${widget.accomodationName}.<br/><br/><p>Best Regards<br/>Yours Accomate</p>''');
+          'Gooday Review officer,\nYou have a new review request from ${widget.accomodationName}.\n\nBest Regards\nYours Accomate');
 
       sendEmail(userEmail ?? '', 'Successful Account',
-          '''<p>Good day ${widget.accomodationName} landlord,</p>
-          
-          <p>Your account has been registered successfully. Please note that your accommodation will undergo a review for verification. You will receive further communication soon.</p>
-          
-           
-          <p>Best Regards,<br/>Yours Accomate</p>''');
+          'Good day ${widget.accomodationName} landlord,\nYour account has been registered successfully. Please note that your accommodation will undergo a review for verification. You will receive further communication soon.\nBest Regards,\nYours Accomate');
 
       showDialog(
           context: context,
@@ -474,23 +471,42 @@ class _OffersPageState extends State<OffersPage> {
     });
   }
 
-  String duration = '';
+  Future<String> uploadFileToFirebaseStorageWeb(
+      Uint8List fileData, String folder, String fileName) async {
+    Reference storageReference = FirebaseStorage.instance
+        .ref('$folder/$fileName (${DateTime.now().toString()})');
+    UploadTask uploadTask = storageReference.putData(fileData);
+    TaskSnapshot storageTaskSnapshot =
+        await uploadTask.whenComplete(() => null);
+    return await storageTaskSnapshot.ref.getDownloadURL();
+  }
+
+  Future<String> uploadFileToFirebaseStorageMobile(
+      String filePath, String folder, String fileName) async {
+    File file = File(filePath);
+    Reference storageReference = FirebaseStorage.instance
+        .ref('$folder/$fileName (${DateTime.now().toString()})');
+    UploadTask uploadTask = storageReference.putFile(file);
+    TaskSnapshot storageTaskSnapshot =
+        await uploadTask.whenComplete(() => null);
+    return await storageTaskSnapshot.ref.getDownloadURL();
+  }
+
   Future<List<String>> uploadImagesToFirebaseStorage(
       List<String> imagePaths) async {
     String accomodationName = widget.accomodationName;
     List<String> downloadUrls = [];
 
     for (var imagePath in imagePaths) {
-      File file = File(imagePath);
-
-      Reference storageReference = FirebaseStorage.instance
-          .ref('Residence Images')
-          .child(
-              '$accomodationName Images/${accomodationName} (${DateTime.now().toString()})');
-      UploadTask uploadTask = storageReference.putFile(file);
-      TaskSnapshot storageTaskSnapshot =
-          await uploadTask.whenComplete(() => null);
-      String downloadUrl = await storageTaskSnapshot.ref.getDownloadURL();
+      String downloadUrl;
+      if (kIsWeb) {
+        Uint8List imageData = await XFile(imagePath).readAsBytes();
+        downloadUrl = await uploadFileToFirebaseStorageWeb(imageData,
+            'Residence Images/$accomodationName Images', accomodationName);
+      } else {
+        downloadUrl = await uploadFileToFirebaseStorageMobile(imagePath,
+            'Residence Images/$accomodationName Images', accomodationName);
+      }
 
       downloadUrls.add(downloadUrl);
     }
@@ -622,7 +638,7 @@ class _OffersPageState extends State<OffersPage> {
                         ),
                         children: roomData.keys.map((roomType) {
                           final isSelected =
-                              roomData[roomType]!['selected'] as bool; 
+                              roomData[roomType]!['selected'] as bool;
 
                           final controller = controllers[roomType]!;
 
@@ -801,13 +817,8 @@ class _OffersPageState extends State<OffersPage> {
                     TextButton(
                       onPressed: () async {
                         print(widget.landlordEmail);
-                        sendEmail(widget.landlordEmail, 'Verification Code', '''
-              <p>Hi ${widget.accomodationName} landlord,</p>
-              <p>This is your verification code: $verificationCode</p>
-              <p>Please use it to register your account with Accomate.</p>
-              <p>Best Regards,</p>
-              <p>Yours Accomate Team</p>
-            ''');
+                        sendEmail(widget.landlordEmail, 'Verification Code',
+                            'Hi ${widget.accomodationName} landlord,\nThis is your verification code: $verificationCode\n\nPlease use it to register your account with Accomate.\nBest Regards\nYours Accomate Team');
                         showDialog(
                           barrierDismissible: false,
                           context: context,
