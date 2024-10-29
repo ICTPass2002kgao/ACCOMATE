@@ -17,7 +17,7 @@ class _AccountDetailsState extends State<AccountDetails> {
   Map<String, dynamic>? _userData;
 
   @override
-  void initState() {
+  void initState() {          
     super.initState();
     _user = FirebaseAuth.instance.currentUser;
     _loadUserData();

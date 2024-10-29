@@ -354,6 +354,7 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
         foregroundColor: Colors.white,
         centerTitle: true,
       ), 
+      backgroundColor:Colors.blue[100],
       body: Center(
         child: Container( 
           width: buttonWidth,

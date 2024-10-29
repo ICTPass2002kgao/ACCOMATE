@@ -2,6 +2,7 @@ import 'package:api_com/UpdatedApp/LandlordPages/AccountDetails.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/Notification.dart';
 import 'package:api_com/UpdatedApp/LandlordPages/Home.dart';
 import 'package:api_com/UpdatedApp/Accomate%20pages/Functions.dart';
+import 'package:api_com/UpdatedApp/Sign-Page/login_page.dart';
 import 'package:api_com/UpdatedApp/StudentPages/SettingPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -21,6 +22,66 @@ class LandlordPage extends StatefulWidget {
 
 class _LandlordPageState extends State<LandlordPage> {
   TextEditingController messageController = TextEditingController();
+
+  void loadUser() {
+    if (_user?.uid == null) {
+      showDialog(
+        context: context,
+        builder: (context) => Container(
+          height: 250,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
+            title: Text(
+              'Guest User',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+            content: Container(
+              height: 200,
+              child: Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(40),
+                    child: Container(
+                        color: Colors.red[400],
+                        width: 80,
+                        height: 80,
+                        child: Center(
+                          child: Text(
+                            'x',
+                            style: TextStyle(fontSize: 40, color: Colors.white),
+                          ),
+                        )),
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    'To apply for this Residence you need to sign in with an existing account otherwise you can sign up.',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                },
+                child: Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => LoginPage()));
+                },
+                child: Text('Sign-in'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
 
   late User? _user;
   Map<String, dynamic>? _userData;

@@ -51,22 +51,22 @@ dependencies:
   path: ^1.8.3 
   dio: ^5.4.0
   path_provider: ^2.1.1
-  intl: ^0.18.1  
-  google_sign_in: ^6.2.1
   firebase_messaging: ^14.7.21
   connectivity_plus: ^6.0.3
   lottie: ^3.1.0 
+  intl: ^0.18.1  
+  syncfusion_flutter_pdfviewer: ^26.1.40  
+  url_launcher: ^6.2.6
   flutter_swiper_view: ^1.1.8
   url_strategy: ^0.2.0
-  url_launcher: ^6.2.6
   pull_to_refresh: ^2.0.0
-  flutter_intl_phone_field: ^0.0.4 
-  flutter_credit_card: ^4.0.1 
-  syncfusion_flutter_pdfviewer: ^26.1.40  
+  flutter_intl_phone_field: ^0.0.4
+  text_field_validation: ^1.0.2  
+  google_sign_in: ^6.2.1 
   icon_badge: ^1.0.0
+  flutter_credit_card: ^4.0.1
   badges: ^3.1.2 
   data_table_2: ^2.5.15
-  text_field_validation: ^1.0.2 
   iconsax: ^0.0.8
   skeletonizer: ^1.4.1+1
   animated_card: ^2.0.0
@@ -79,8 +79,7 @@ dependencies:
   sidebarx: ^0.17.1
   flexible_grid_view: ^0.0.2
   animate_ease: ^0.0.1
-  page_transition: ^2.1.0
-   
+  page_transition: ^2.1.0 
   liquid_progress_indicator_v2: ^0.5.0
   colorful_circular_progress_indicator: ^0.0.2
 

@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:icon_badge/icon_badge.dart';
 import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
@@ -24,26 +23,20 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _user = FirebaseAuth.instance.currentUser;
-    // _loadUserData();
+    _loadUserData();
     loadData();
   }
 
-  // Map<String, dynamic>? _userData;
-  // Future<void> _loadUserData() async {
-  //   try {
-  //     DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
-  //         .collection('Landlords')
-  //         .doc(_user?.uid)
-  //         .get(); 
-  //     // await _loadStudentApplications();
-  //   } catch (e) {
-  //     print('Error loading user data: $e');
-  //     setState(() {
-  //       isLoading = false;
-  //     });
-  //   }
-  // }
-
+  Map<String, dynamic>? _userData;
+  Future<void> _loadUserData() async {
+    DocumentSnapshot userDataSnapshot = await FirebaseFirestore.instance
+        .collection('Landlords')
+        .doc(_user?.uid)
+        .get();
+    setState(() {
+      _userData = userDataSnapshot.data() as Map<String, dynamic>?;
+    });
+  }
   // Future<void> _loadStudentApplications() async {
   //   try {
   //     String landlordId = _userData?['userId'] ?? '';
@@ -88,7 +81,7 @@ class _HomePageState extends State<HomePage> {
   //     ),
   //   );
   // }
-
+  late ScrollController _scrollController;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,110 +94,194 @@ class _HomePageState extends State<HomePage> {
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              List<Map<String, dynamic>> registeredStudents = snapshot
-                  .data!.docs
+              List<Map<String, dynamic>> appliedStudents = snapshot.data!.docs
                   .map((doc) => doc.data() as Map<String, dynamic>)
                   .toList();
 
-              return SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconBadge(
-                      hideZero: true,
-                      maxCount: registeredStudents.length,
-                      badgeColor: Colors.blue,
-                      itemCount: registeredStudents.length,
-                      icon:
-                          Icon(Icons.people_sharp, size: 100, color: Colors.blue),
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                              width: 200,
+                              height: 150,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  color: Colors.pink[900]),
+                              child: Row(
+                                children: [
+                                  Center(
+                                    child: Icon(
+                                      Icons.people_alt_outlined,
+                                      color: Colors.white,
+                                      size: 100,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+                                  Expanded(
+                                    child: Center(
+                                      child: Container(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              "Number of Applied Students",
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                            Text(
+                                              "${appliedStudents.length}\nApplications",
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 30),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              )),
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Expanded(
+                          child: Container(
+                              width: 300,
+                              height: 150,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.blue[900]),
+                              child: Row(
+                                children: [
+                                  Center(
+                                    child: Icon(
+                                      Icons.remove_red_eye_outlined,
+                                      color: Colors.white,
+                                      size: 100,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+                                  Expanded(
+                                    child: Center(
+                                      child: Container(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              "Number of Views from Students",
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                            Text(
+                                              "${_userData?['views'] ?? 10} \nViews",
+                                              style: TextStyle(
+                                                  fontSize: 30,
+                                                  color: Colors.white),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              )),
+                        ),
+                      ],
                     ),
-                    Text(
-                      'Total number of students who Applied [${registeredStudents.length}]',
-                      style: TextStyle(
-                        fontSize: 24,
-                      ),
+                  ),
+                  Expanded(
+                    child: DataTable2(
+                      isVerticalScrollBarVisible: true,
+                      headingRowColor: WidgetStatePropertyAll(Colors.grey),
+                      dataRowColor: WidgetStatePropertyAll(Colors.blue[50]),
+                      columnSpacing: 8,
+                      horizontalMargin: 10,
+                      minWidth: 600,
+                      border: TableBorder.all(
+                          style: BorderStyle.solid,
+                          width: 1,
+                          color: Color.fromARGB(255, 145, 204, 252)),
+                      columns: [
+                        DataColumn2(
+                          label: Text('Name'),
+                          size: ColumnSize.S,
+                        ),
+                        DataColumn(
+                          label: Text('Surname'),
+                        ),
+                        DataColumn(
+                          label: Text('Email'),
+                        ),
+                        DataColumn(
+                          label: Text('Phone Number'),
+                        ),
+                        DataColumn(
+                          label: Text('University'),
+                        ),
+                        DataColumn(
+                          label: Text('Gender'),
+                        ),
+                        DataColumn(
+                          label: Text('Application Date and Time'),
+                        ),
+                      ],
+                      rows: appliedStudents
+                          .map((student) => DataRow(cells: [
+                                DataCell(onTap: () {
+                                  ViewApplicantDetails(
+                                    studentApplicationData: student,
+                                  );
+                                }, Text(student['name'] ?? '')),
+                                DataCell(onTap: () {
+                                  ViewApplicantDetails(
+                                    studentApplicationData: student,
+                                  );
+                                }, Text(student['surname'] ?? '')),
+                                DataCell(onTap: () {
+                                  ViewApplicantDetails(
+                                    studentApplicationData: student,
+                                  );
+                                }, Text(student['email'] ?? '')),
+                                DataCell(onTap: () {
+                                  ViewApplicantDetails(
+                                    studentApplicationData: student,
+                                  );
+                                }, Text(student['contactDetails'] ?? '')),
+                                DataCell(onTap: () {
+                                  ViewApplicantDetails(
+                                    studentApplicationData: student,
+                                  );
+                                }, Text(student['university'] ?? '')),
+                                DataCell(onTap: () {
+                                  ViewApplicantDetails(
+                                    studentApplicationData: student,
+                                  );
+                                }, Text(student['gender'] ?? '')),
+                                DataCell(onTap: () {
+                                  ViewApplicantDetails(
+                                    studentApplicationData: student,
+                                  );
+                                },
+                                    Text(DateFormat('yyyy-MM-dd HH:mm').format(
+                                        student['appliedDate'].toDate() ??
+                                            DateTime.now()))),
+                              ]))
+                          .toList(),
                     ),
-                    Expanded(
-                      child: DataTable2(
-                        headingRowColor: WidgetStatePropertyAll(Colors.grey),
-                        dataRowColor: WidgetStatePropertyAll(Colors.blue[50]),
-                        columnSpacing: 8,
-                        horizontalMargin: 10,
-                        minWidth: 600,
-                        border: TableBorder.all(
-                            style: BorderStyle.solid,
-                            width: 1,
-                            color: Color.fromARGB(255, 145, 204, 252)),
-                        columns: [
-                          DataColumn2(
-                            label: Text('Name'),
-                            size: ColumnSize.S,
-                          ),
-                          DataColumn(
-                            label: Text('Surname'),
-                          ),
-                          DataColumn(
-                            label: Text('Email'),
-                          ),
-                          DataColumn(
-                            label: Text('Phone Number'),
-                          ),
-                          DataColumn(
-                            label: Text('University'),
-                          ),
-                          DataColumn(
-                            label: Text('Gender'),
-                          ),
-                          DataColumn(
-                            label: Text('Application Date and Time'),
-                          ),
-                        ],
-                        rows: registeredStudents
-                            .map((student) => DataRow(cells: [
-                                  DataCell(onTap: () {
-                                    ViewApplicantDetails(
-                                      studentApplicationData: student,
-                                    );
-                                  }, Text(student['name'] ?? '')),
-                                  DataCell(onTap: () {
-                                    ViewApplicantDetails(
-                                      studentApplicationData: student,
-                                    );
-                                  }, Text(student['surname'] ?? '')),
-                                  DataCell(onTap: () {
-                                    ViewApplicantDetails(
-                                      studentApplicationData: student,
-                                    );
-                                  }, Text(student['email'] ?? '')),
-                                  DataCell(onTap: () {
-                                    ViewApplicantDetails(
-                                      studentApplicationData: student,
-                                    );
-                                  }, Text(student['contactDetails'] ?? '')),
-                                  DataCell(onTap: () {
-                                    ViewApplicantDetails(
-                                      studentApplicationData: student,
-                                    );
-                                  }, Text(student['university'] ?? '')),
-                                  DataCell(onTap: () {
-                                    ViewApplicantDetails(
-                                      studentApplicationData: student,
-                                    );
-                                  }, Text(student['gender'] ?? '')),
-                                  DataCell(onTap: () {
-                                    ViewApplicantDetails(
-                                      studentApplicationData: student,
-                                    );
-                                  },
-                                      Text(DateFormat('yyyy-MM-dd HH:mm').format(
-                                          student['appliedDate'].toDate() ??
-                                              DateTime.now()))),
-                                ]))
-                            .toList(),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               );
             } else if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));

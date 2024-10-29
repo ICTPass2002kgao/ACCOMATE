@@ -383,7 +383,7 @@ class _OffersPageState extends State<OffersPage> {
         'registeredDate': registeredDate,
         'Duration': _selectedDuration,
         if (requireDeposit == true) 'roomDetails': roomData
-        // 'contract': downloadContractUrl,
+    
       });
 
       sendEmail('accomate33@gmail.com', 'Review Accommodation',

@@ -47,7 +47,9 @@ class _HomePageState extends State<HomePage>
             width: containerWidth,
             decoration: BoxDecoration(
                 border: Border.all(
-                  color: isLargeScreen ? const Color.fromARGB(255, 223, 223, 223) : Colors.transparent,
+                  color: isLargeScreen
+                      ? const Color.fromARGB(255, 223, 223, 223)
+                      : Colors.transparent,
                 ),
                 borderRadius: BorderRadius.circular(2)),
             child: Column(
@@ -135,7 +137,18 @@ class _HomePageState extends State<HomePage>
         filteredList.length,
         (index) => GestureDetector(
           onTap: () {
-            Navigator.push(context, PageTransition(type: PageTransitionType.fade, child: AccomodationPage(landlordData: filteredList[index],)));
+            for (Map<String, dynamic> landlordsData in filteredList)
+              FirebaseFirestore.instance
+                  .collection('Landlords')
+                  .doc(landlordsData['userId'])
+                  .update({'views': landlordsData['views'] + 1});
+            Navigator.push(
+                context,
+                PageTransition(
+                    type: PageTransitionType.fade,
+                    child: AccomodationPage(
+                      landlordData: filteredList[index],
+                    )));
             // Navigator.push(
             //   context,
             //   MaterialPageRoute(
@@ -210,6 +223,10 @@ class _HomePageState extends State<HomePage>
               for (Map<String, dynamic> landlordData in sectionList)
                 GestureDetector(
                   onTap: () {
+                    FirebaseFirestore.instance
+                        .collection('Landlords')
+                        .doc(landlordData['userId'])
+                        .update({'views': landlordData['views'] + 1});
                     Navigator.push(
                       context,
                       MaterialPageRoute(
